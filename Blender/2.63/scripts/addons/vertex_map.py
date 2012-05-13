@@ -11,12 +11,13 @@ bl_info = {
 }
 
 def vertex_data_map(obj, width=1024):
+    bias = 1. / width * 0.5
     uv_layer = obj.data.uv_layers.active
     for i, uv in enumerate(uv_layer.data):
         x = int(i % width) / width
         y = int(i / width) / width
-        uv.uv.x = x
-        uv.uv.y = y
+        uv.uv.x = x + bias
+        uv.uv.y = y + bias
 
 class VertexDataMap(bpy.types.Operator):
     bl_idname = 'mesh.vertex_data_map'

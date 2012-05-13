@@ -188,7 +188,7 @@ def export_unity_lines(
                         fp.write('            GL.TexCoord2 (%s, %s);\n' % (u, v))
                         last_vertex = vertex
                     x, y, z = floats_to_strings(vertex.co, precision)
-                    fp.write('            GL.Vertex3 (%s, %s, %s);\n' % (x, y, z))
+                    fp.write('            GL.Vertex3 (-%s, %s, %s);\n' % (x, y, z))
 
         fp.write('        GL.End ();\n')
         fp.write('    }\n')
