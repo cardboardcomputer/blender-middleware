@@ -1,4 +1,5 @@
 import bpy
+import math
 
 bl_info = {
     'name': 'Map Vertex Colors',
@@ -16,7 +17,7 @@ def map_vertex_colors(obj, index=0):
     pixels = image.pixels
     colors = obj.data.vertex_colors.active.data
     stride = int(image.depth / 8)
-    offset = ((int((len(colors) - 1) / width)) * width * stride) * index
+    offset = int(math.ceil(len(colors) / width) * width * stride * index)
 
     for i, c in enumerate(colors):
         p = offset + i * stride

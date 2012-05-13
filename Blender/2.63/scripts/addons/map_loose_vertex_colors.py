@@ -1,4 +1,5 @@
 import bpy
+import math
 
 bl_info = {
     'name': 'Map Loose Vertex Colors',
@@ -59,7 +60,7 @@ def map_loose_vertex_colors(obj, image_name, index=0):
     width = image.size[0]
     pixels = image.pixels
     stride = int(image.depth / 8)
-    offset = ((int((len(vertices) - 1) / width)) * image.size[0] * stride) * index
+    offset = int(math.ceil(len(vertices) / width) * width * stride * index)
 
     for i, v in enumerate(vertices):
         color = get_loose_vertex_color(obj, v)
