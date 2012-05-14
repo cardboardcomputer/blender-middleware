@@ -161,7 +161,7 @@ def export_unity_lines(
         lines.append(line)
 
     with open(filepath, 'w') as fp:
-        class_name = os.path.basename(filepath).rstrip('.js')
+        class_name = os.path.basename(filepath)[:-3]
         fp.write('class %s extends %s {\n' % (class_name, base_class))
 
         min_x, min_y, min_z = floats_to_strings((-min_x, min_y, min_z), precision)
