@@ -24,21 +24,26 @@ class Color(object):
     def __iter__(self):
         return iter((self.r, self.g, self.b, self.a))
 
-def get_loose_vertex_color(obj, vertex):
-    if 'red' in obj.vertex_groups:
-        red = obj.vertex_groups['red']
+def get_loose_vertex_color(obj, vertex, index):
+    red_name = 'red_%i' % index
+    green_name = 'green_%i' % index
+    blue_name = 'blue_%i' % index
+    alpha_name = 'alpha_%i' % index
+
+    if red_name in obj.vertex_groups:
+        red = obj.vertex_groups[red_name]
     else:
         return
-    if 'green' in obj.vertex_groups:
-        green = obj.vertex_groups['green']
+    if green_name in obj.vertex_groups:
+        green = obj.vertex_groups[green_name]
     else:
         return
-    if 'blue' in obj.vertex_groups:
-        blue = obj.vertex_groups['blue']
+    if blue_name in obj.vertex_groups:
+        blue = obj.vertex_groups[blue_name]
     else:
         return
-    if 'alpha' in obj.vertex_groups:
-        alpha = obj.vertex_groups['alpha']
+    if alpha_name in obj.vertex_groups:
+        alpha = obj.vertex_groups[alpha_name]
     else:
         return
 
@@ -63,7 +68,7 @@ def map_loose_vertex_colors(obj, image_name, index=0):
     offset = int(math.ceil(len(vertices) / width) * width * stride * index)
 
     for i, v in enumerate(vertices):
-        color = get_loose_vertex_color(obj, v)
+        color = get_loose_vertex_color(obj, v, index)
         if color is None:
             color = Color(1, 1, 1, 1)
         p = offset + i * stride

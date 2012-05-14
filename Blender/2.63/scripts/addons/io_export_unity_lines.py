@@ -79,21 +79,26 @@ def floats_to_strings(floats, precision=6):
     ret = map(lambda s: '0' if s == '-0' else s, ret)
     return ret
 
-def get_loose_vertex_color(obj, vertex):
-    if 'red' in obj.vertex_groups:
-        red = obj.vertex_groups['red']
+def get_loose_vertex_color(obj, vertex, index):
+    red_name = 'red_%i' % index
+    green_name = 'green_%i' % index
+    blue_name = 'blue_%i' % index
+    alpha_name = 'alpha_%i' % index
+
+    if red_name in obj.vertex_groups:
+        red = obj.vertex_groups[red_name]
     else:
         return
-    if 'green' in obj.vertex_groups:
-        green = obj.vertex_groups['green']
+    if green_name in obj.vertex_groups:
+        green = obj.vertex_groups[green_name]
     else:
         return
-    if 'blue' in obj.vertex_groups:
-        blue = obj.vertex_groups['blue']
+    if blue_name in obj.vertex_groups:
+        blue = obj.vertex_groups[blue_name]
     else:
         return
-    if 'alpha' in obj.vertex_groups:
-        alpha = obj.vertex_groups['alpha']
+    if alpha_name in obj.vertex_groups:
+        alpha = obj.vertex_groups[alpha_name]
     else:
         return
 
@@ -117,8 +122,10 @@ def export_unity_lines(
     apply_modifiers,
     export_colors,
     export_map,
-    map_size):
+    map_size,
+    color_index):
 
+    bias = 1. / map_size * 0.5
     vertices = []
     edges = []
     lines = []
@@ -126,7 +133,7 @@ def export_unity_lines(
     min_x = min_y = min_z = max_x = max_y = max_z = 0
 
     for i, v in enumerate(obj.data.vertices):
-        color = get_loose_vertex_color(obj, v)
+        color = get_loose_vertex_color(obj, v, color_index)
         if color is None:
             color = Color(1, 1, 1, 1)
         if v.co.x < min_x:
@@ -182,8 +189,8 @@ def export_unity_lines(
                         r, g, b, a = floats_to_strings(color, precision)
                         fp.write('            GL.Color (Color (%s, %s, %s, %s));\n' % (r, g, b, a))
                     if export_map and last_vertex != vertex:
-                        u = int(vertex.index % map_size) / map_size
-                        v = int(vertex.index / map_size) / map_size
+                        u = int(vertex.index % map_size) / map_size + bias
+                        v = int(vertex.index / map_size) / map_size + bias
                         u, v = floats_to_strings((u, v), precision)
                         fp.write('            GL.TexCoord2 (%s, %s);\n' % (u, v))
                         last_vertex = vertex
@@ -229,6 +236,8 @@ class UnityLineExporter(bpy.types.Operator):
         name='Vertex data map size',
         description='Vertex data map size',
         default=1024)
+    color_index = bpy.props.IntProperty(
+        name='Color Index', default=0)
 
     @classmethod
     def poll(cls, context):
@@ -244,7 +253,8 @@ class UnityLineExporter(bpy.types.Operator):
             self.apply_modifiers,
             self.export_colors,
             self.export_map,
-            self.map_size)
+            self.map_size,
+            self.color_index)
         return {'FINISHED'}
 
     def invoke(self, context, event):

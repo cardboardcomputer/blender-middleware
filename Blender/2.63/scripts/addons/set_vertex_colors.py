@@ -11,40 +11,45 @@ bl_info = {
     'category': 'Mesh'
 }
 
-def get_or_create_groups(obj):
+def get_or_create_groups(obj, index):
     bpy.ops.object.editmode_toggle()
 
-    if 'red' not in obj.vertex_groups:
+    red_name = 'red_%i' % index
+    green_name = 'green_%i' % index
+    blue_name = 'blue_%i' % index
+    alpha_name = 'alpha_%i' % index
+
+    if red_name not in obj.vertex_groups:
         bpy.ops.object.vertex_group_add()
         red = obj.vertex_groups[-1]
-        red.name = 'red'
+        red.name = red_name
     else:
-        red = obj.vertex_groups['red']
-    if 'green' not in obj.vertex_groups:
+        red = obj.vertex_groups[red_name]
+    if green_name not in obj.vertex_groups:
         bpy.ops.object.vertex_group_add()
         green = obj.vertex_groups[-1]
-        green.name = 'green'
+        green.name = green_name
     else:
-        green = obj.vertex_groups['green']
-    if 'blue' not in obj.vertex_groups:
+        green = obj.vertex_groups[green_name]
+    if blue_name not in obj.vertex_groups:
         bpy.ops.object.vertex_group_add()
         blue = obj.vertex_groups[-1]
-        blue.name = 'blue'
+        blue.name = blue_name
     else:
-        blue = obj.vertex_groups['blue']
-    if 'alpha' not in obj.vertex_groups:
+        blue = obj.vertex_groups[blue_name]
+    if alpha_name not in obj.vertex_groups:
         bpy.ops.object.vertex_group_add()
         alpha = obj.vertex_groups[-1]
-        alpha.name = 'alpha'
+        alpha.name = alpha_name
     else:
-        alpha = obj.vertex_groups['alpha']
+        alpha = obj.vertex_groups[alpha_name]
 
     bpy.ops.object.editmode_toggle()
 
     return red, green, blue, alpha
 
-def get_default_color_and_alpha(obj):
-    red, green, blue, alpha = get_or_create_groups(obj)
+def get_default_color_and_alpha(obj, index):
+    red, green, blue, alpha = get_or_create_groups(obj, index)
     bpy.ops.object.editmode_toggle()
 
     freq = {}
@@ -76,8 +81,8 @@ def get_default_color_and_alpha(obj):
     else:
         return None, None
 
-def set_loose_vertex_colors(obj, color, alpha_):
-    red, green, blue, alpha = get_or_create_groups(obj)
+def set_loose_vertex_colors(obj, index, color, alpha_):
+    red, green, blue, alpha = get_or_create_groups(obj, index)
 
     bpy.ops.object.editmode_toggle()
 
@@ -96,6 +101,7 @@ class SetLooseVertexColors(bpy.types.Operator):
     bl_label = 'Set Loose Vertex Colors'
     bl_options = {'REGISTER', 'UNDO'}
 
+    index = bpy.props.IntProperty(name="Index", default=0)
     color = bpy.props.FloatVectorProperty(
         name="Color", subtype='COLOR_GAMMA',
         min=0, max=1, step=1,
@@ -111,7 +117,7 @@ class SetLooseVertexColors(bpy.types.Operator):
         return (obj and obj.type == 'MESH')
 
     def invoke(self, context, event):
-        color, alpha = get_default_color_and_alpha(context.active_object)
+        color, alpha = get_default_color_and_alpha(context.active_object, self.index)
         if color is not None and alpha is not None:
             self.color = color
             self.alpha = alpha
@@ -121,7 +127,7 @@ class SetLooseVertexColors(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
     def execute(self, context):
-        set_loose_vertex_colors(context.active_object, self.color, self.alpha)
+        set_loose_vertex_colors(context.active_object, self.index, self.color, self.alpha)
         return {'FINISHED'}
 
 def menu_func(self, context):
