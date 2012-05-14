@@ -130,7 +130,7 @@ def export_unity_lines(
     edges = []
     lines = []
 
-    min_x = min_y = min_z = max_x = max_y = max_z = 0
+    (min_x, min_y, min_z) = (max_x, max_y, max_z) = obj.data.vertices[0].co
 
     for i, v in enumerate(obj.data.vertices):
         color = get_loose_vertex_color(obj, v, color_index)
@@ -164,8 +164,8 @@ def export_unity_lines(
         class_name = os.path.basename(filepath).rstrip('.js')
         fp.write('class %s extends %s {\n' % (class_name, base_class))
 
-        min_x, min_y, min_z = floats_to_strings((min_x, min_y, min_z), precision)
-        max_x, max_y, max_z = floats_to_strings((max_x, max_y, max_z), precision)
+        min_x, min_y, min_z = floats_to_strings((-min_x, min_y, min_z), precision)
+        max_x, max_y, max_z = floats_to_strings((-max_x, max_y, max_z), precision)
 
         fp.write('    function GetMinPoint () : Vector3 {\n')
         fp.write('        return Vector3 (%s, %s, %s);\n' % (min_x, min_y, min_z))
@@ -194,8 +194,8 @@ def export_unity_lines(
                         u, v = floats_to_strings((u, v), precision)
                         fp.write('            GL.TexCoord2 (%s, %s);\n' % (u, v))
                         last_vertex = vertex
-                    x, y, z = floats_to_strings(vertex.co, precision)
-                    fp.write('            GL.Vertex3 (-%s, %s, %s);\n' % (x, y, z))
+                    x, y, z = floats_to_strings((-vertex.co.x, vertex.co.y, vertex.co.z), precision)
+                    fp.write('            GL.Vertex3 (%s, %s, %s);\n' % (x, y, z))
 
         fp.write('        GL.End ();\n')
         fp.write('    }\n')
