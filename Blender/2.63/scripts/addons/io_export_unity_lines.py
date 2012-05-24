@@ -2,11 +2,11 @@ import os
 import bpy
 
 bl_info = {
-    'name': 'Unity Lines (.js)',
+    'name': 'Unity Lines (.cs)',
     'author': 'Tamas Kemenczy',
     'version': (0, 1),
     'blender': (2, 6, 3),
-    'location': 'File > Import-Export > Unity Lines (.js)',
+    'location': 'File > Import-Export > Unity Lines (.cs)',
     'description': 'Export loose edges of a mesh as Unity GL immediate-mode commands',
     'category': 'Import-Export',
 }
@@ -162,21 +162,25 @@ def export_unity_lines(
 
     with open(filepath, 'w') as fp:
         class_name = os.path.basename(filepath)[:-3]
-        fp.write('class %s extends %s {\n' % (class_name, base_class))
+        fp.write('using UnityEngine;\n\n')
+        fp.write('public class %s : %s {\n' % (class_name, base_class))
 
         min_x, min_y, min_z = floats_to_strings((-min_x, min_y, min_z), precision)
         max_x, max_y, max_z = floats_to_strings((-max_x, max_y, max_z), precision)
 
-        fp.write('    function GetMinPoint () : Vector3 {\n')
-        fp.write('        return Vector3 (%s, %s, %s);\n' % (min_x, min_y, min_z))
-        fp.write('    }\n')
+        fp.write('  public override Vector3 GetMinPoint()\n')
+        fp.write('  {\n')
+        fp.write('    return new Vector3(%sF, %sF, %sF);\n' % (min_x, min_y, min_z))
+        fp.write('  }\n\n')
 
-        fp.write('    function GetMaxPoint () : Vector3 {\n')
-        fp.write('        return Vector3 (%s, %s, %s);\n' % (max_x, max_y, max_z))
-        fp.write('    }\n')
+        fp.write('  public override Vector3 GetMaxPoint()\n')
+        fp.write('  {\n')
+        fp.write('    return new Vector3(%sF, %sF, %sF);\n' % (max_x, max_y, max_z))
+        fp.write('  }\n\n')
 
-        fp.write('    function OnDrawLines () {\n')
-        fp.write('        GL.Begin (GL.LINES);\n')
+        fp.write('  public override void OnDrawLines()\n')
+        fp.write('  {\n')
+        fp.write('    GL.Begin(GL.LINES);\n')
 
         color = None
         last_vertex = None
@@ -187,18 +191,18 @@ def export_unity_lines(
                     if vertex.color != color:
                         color = vertex.color
                         r, g, b, a = floats_to_strings(color, precision)
-                        fp.write('            GL.Color (Color (%s, %s, %s, %s));\n' % (r, g, b, a))
+                        fp.write('      GL.Color(new Color(%sF, %sF, %sF, %sF));\n' % (r, g, b, a))
                     if export_map and last_vertex != vertex:
                         u = int(vertex.index % map_size) / map_size + bias
                         v = int(vertex.index / map_size) / map_size + bias
                         u, v = floats_to_strings((u, v), precision)
-                        fp.write('            GL.TexCoord2 (%s, %s);\n' % (u, v))
+                        fp.write('      GL.TexCoord2(%sF, %sF);\n' % (u, v))
                         last_vertex = vertex
                     x, y, z = floats_to_strings((-vertex.co.x, vertex.co.y, vertex.co.z), precision)
-                    fp.write('            GL.Vertex3 (%s, %s, %s);\n' % (x, y, z))
+                    fp.write('      GL.Vertex3(%sF, %sF, %sF);\n' % (x, y, z))
 
-        fp.write('        GL.End ();\n')
-        fp.write('    }\n')
+        fp.write('    GL.End();\n')
+        fp.write('  }\n')
         fp.write('}\n')
 
 class UnityLineExporter(bpy.types.Operator):
@@ -259,16 +263,16 @@ class UnityLineExporter(bpy.types.Operator):
 
     def invoke(self, context, event):
         if not self.filepath:
-            self.filepath = bpy.path.ensure_ext(bpy.data.filepath, ".js")
+            self.filepath = bpy.path.ensure_ext(bpy.data.filepath, ".cs")
         wm = context.window_manager
         wm.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
 def menu_import(self, context):
-    self.layout.operator(UnityLineExporter.bl_idname, text="Unity Lines (.js)")
+    self.layout.operator(UnityLineExporter.bl_idname, text="Unity Lines (.cs)")
 
 def menu_export(self, context):
-    self.layout.operator(UnityLineExporter.bl_idname, text="Unity Lines (.js)")
+    self.layout.operator(UnityLineExporter.bl_idname, text="Unity Lines (.cs)")
 
 def register():
     bpy.utils.register_module(__name__)
