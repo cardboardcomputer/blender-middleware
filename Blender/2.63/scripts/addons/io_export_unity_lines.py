@@ -235,7 +235,7 @@ class UnityLineExporter(bpy.types.Operator):
     export_map = bpy.props.BoolProperty(
         name='Export vertex data map',
         description='Export vertex data map',
-        default=True)
+        default=False)
     map_size = bpy.props.IntProperty(
         name='Vertex data map size',
         description='Vertex data map size',
