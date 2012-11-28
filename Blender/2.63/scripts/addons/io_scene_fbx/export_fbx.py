@@ -232,8 +232,19 @@ def save_single(operator, scene, filepath="",
         use_default_take=True,
         # krz start
         use_vertex_color_alpha_workaround=False,
+        use_export_scene=False,
         # krz end
     ):
+
+    # krz start
+    if use_export_scene and 'Export' in bpy.data.scenes:
+        scene = bpy.data.scenes['Export']
+        bpy.context.screen.scene = scene
+        for screen in bpy.data.screens:
+            screen.scene = scene
+        context_objects = scene.objects
+        scene.update()
+    # krz end
 
     import bpy_extras.io_utils
 
@@ -2994,6 +3005,7 @@ def defaults_unity3d():
                 use_default_take=True,
                 # krz start
                 use_vertex_color_alpha_workaround=True,
+                use_export_scene=True,
                 # krz end
                 )
 
