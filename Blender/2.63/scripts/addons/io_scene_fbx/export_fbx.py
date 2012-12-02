@@ -242,7 +242,10 @@ def save_single(operator, scene, filepath="",
         bpy.context.screen.scene = scene
         for screen in bpy.data.screens:
             screen.scene = scene
-        context_objects = scene.objects
+        context_objects = []
+        for obj in scene.objects:
+            if 'exclude' not in obj:
+                context_objects.append(obj)
         scene.update()
     # krz end
 
