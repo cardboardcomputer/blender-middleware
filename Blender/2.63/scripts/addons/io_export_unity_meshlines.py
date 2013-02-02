@@ -191,8 +191,9 @@ def export_unity_meshlines(
 
         indices = []
         for line in lines:
-            indices.append(' '.join([str(v.index) for v in line.vertices]))
-        fp.write('\t'.join(map(str, indices)))
+            for i in range(len(line.vertices) - 1):
+                indices.extend([line.vertices[i].index, line.vertices[i + 1].index])
+        fp.write(' '.join(map(str, indices)))
 
 class UnityMeshlineExporter(bpy.types.Operator):
     bl_idname = 'export_mesh.unity_meshlines'
