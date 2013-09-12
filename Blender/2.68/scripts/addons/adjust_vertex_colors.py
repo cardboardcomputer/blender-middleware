@@ -10,14 +10,17 @@ bl_info = {
     'category': 'Mesh'
 }
 
-def adjust_vertex_colors(obj, h, s, v):
+def adjust_vertex_colors(obj, h, s, v, multiply_value=False):
     colors = obj.data.vertex_colors.active.data
     for p in obj.data.polygons:
         if p.select:
             for i in p.loop_indices:
                 colors[i].color.h += h
                 colors[i].color.s += s
-                colors[i].color.v += v
+                if multiply_value:
+                    colors[i].color.v *= (v * 0.5 + 0.5) * 2
+                else:
+                    colors[i].color.v += v
 
 class AdjustVertexColors(bpy.types.Operator):
     bl_idname = 'mesh.adjust_vertex_colors'
@@ -27,6 +30,7 @@ class AdjustVertexColors(bpy.types.Operator):
     h = bpy.props.FloatProperty(name='Hue', min=-1, max=1, step=1)
     s = bpy.props.FloatProperty(name='Saturation', min=-1, max=1, step=1)
     v = bpy.props.FloatProperty(name='Value', min=-1, max=1, step=1)
+    multiply_value = bpy.props.BoolProperty(name='Multiply Value', default=False)
 
     @classmethod
     def poll(cls, context):
@@ -34,7 +38,7 @@ class AdjustVertexColors(bpy.types.Operator):
         return (obj and obj.type == 'MESH')
 
     def execute(self, context):
-        adjust_vertex_colors(context.active_object, self.h, self.s, self.v)
+        adjust_vertex_colors(context.active_object, self.h, self.s, self.v, self.multiply_value)
         return {'FINISHED'}
 
 def menu_func(self, context):
