@@ -76,7 +76,7 @@ def light_vertex_colors_mesh(obj, use_normals=True, use_ref_colors=''):
     for light in lights:
         center = light.location
         radius = light.data.distance
-        lcolor = light.data.color
+        lcolor = light.data.color * light.data.energy
 
         for poly in obj.data.polygons:
             if poly.select:
@@ -84,14 +84,14 @@ def light_vertex_colors_mesh(obj, use_normals=True, use_ref_colors=''):
 
                 for idx in poly.vertices:
                     position = obj.data.vertices[idx].co
-                    position_abs = position * obj.matrix_world
+                    position_abs = obj.matrix_world * position
                     if use_normals:
                         light_dir = (position_abs - center).normalized()
                         normal = obj.data.vertices[idx].normal
                         n_dot_l = 1 - normal.dot(light_dir)
                     else:
                         n_dot_l = 1
-                    distance = magnitude(position - center)
+                    distance = magnitude(position_abs - center)
                     atten = 1 - min(distance / radius, 1)
                     color = lcolor.copy()
                     color.v *= atten * n_dot_l
@@ -122,13 +122,13 @@ def light_vertex_colors_lines(obj, line_color_index=0, line_ref_color_index=0):
     for light in lights:
         center = light.location
         radius = light.data.distance
-        lcolor = light.data.color
+        lcolor = light.data.color * light.data.energy
 
         for vertex in obj.data.vertices:
             if vertex.select:
                 position = vertex.co
-                position_abs = position * obj.matrix_world
-                distance = magnitude(position - center)
+                position_abs = obj.matrix_world * position
+                distance = magnitude(position_abs - center)
                 atten = 1 - min(distance / radius, 1)
                 color = lcolor.copy()
                 color.v *= atten
