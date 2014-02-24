@@ -157,9 +157,11 @@ class LinearGradient(bpy.types.Operator):
         return (obj and obj.type == 'MESH' and len(context.selected_objects) == 2)
 
     def execute(self, context):
+        aux_objects = list(context.selected_objects)
+        aux_objects.remove(context.active_object)
         linear_gradient(
             context.active_object,
-            context.selected_objects[-2],
+            aux_objects[0],
             self.color_a,
             self.alpha_a,
             self.color_b,
