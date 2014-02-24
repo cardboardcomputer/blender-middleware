@@ -4,12 +4,12 @@ import struct
 import mathutils as m
 
 bl_info = {
-    'name': 'Linear Gradient',
+    'name': 'Vertex Color Gradient',
     'author': 'Tamas Kemenczy',
     'version': (0, 1),
     'blender': (2, 6, 8),
-    'location': 'View3D > Specials > Linear Gradient',
-    'description': 'Apply linear gradients onto vertex colors',
+    'location': 'View3D > Specials > Vertex Color Gradient',
+    'description': 'Apply gradients onto vertex colors',
     'category': 'Mesh'
 }
 
@@ -37,13 +37,14 @@ def hex_to_color(val):
     else:
         return m.Color((t[0] / 255.0, t[1] / 255.0, t[2] / 255.0))
 
-def linear_gradient(
+def vertex_color_gradient(
     obj,
     ref,
     color_a,
     alpha_a,
     color_b,
     alpha_b,
+    blend_type,
     blend_method,
     use_predefined_colors=False,
     use_ref_colors=''):
@@ -74,13 +75,23 @@ def linear_gradient(
 
         attens = []
 
-        for idx in poly.vertices:
-            vert = obj.data.vertices[idx].co
-            vert = obj.matrix_world * vert
-            delta = vert - p1
-            distance = delta.dot(direction.normalized())
-            atten = max(min(distance / direction.length, 1), 0)
-            attens.append(atten)
+        if blend_type == 'LINEAR':
+            for idx in poly.vertices:
+                vert = obj.data.vertices[idx].co
+                vert = obj.matrix_world * vert
+                delta = vert - p1
+                distance = delta.dot(direction.normalized())
+                atten = max(min(distance / direction.length, 1), 0)
+                attens.append(atten)
+
+        if blend_type == 'RADIAL':
+            for idx in poly.vertices:
+                vert = obj.data.vertices[idx].co
+                vert = obj.matrix_world * vert
+                delta = vert - p1
+                distance = magnitude(delta)
+                atten = max(min(distance / direction.length, 1), 0)
+                attens.append(atten)
 
         for idx, ptr in enumerate(poly.loop_indices):
             atten = attens[idx]
@@ -121,10 +132,17 @@ def linear_gradient(
 
             dest_colors[ptr].color = color
 
-class LinearGradient(bpy.types.Operator):
-    bl_idname = 'mesh.linear_gradient'
-    bl_label = 'Linear Gradient'
+class VertexColorGradient(bpy.types.Operator):
+    bl_idname = 'mesh.vertex_color_gradient'
+    bl_label = 'Vertex Color Gradient'
     bl_options = {'REGISTER', 'UNDO'}
+
+    blend_type = bpy.props.EnumProperty(
+        items=(
+            ('LINEAR', 'Linear', 'Linear'),
+            ('RADIAL', 'Radial', 'Radial'),
+            ),
+        name='Type', default='LINEAR')
 
     blend_method = bpy.props.EnumProperty(
         items=(
@@ -159,20 +177,21 @@ class LinearGradient(bpy.types.Operator):
     def execute(self, context):
         aux_objects = list(context.selected_objects)
         aux_objects.remove(context.active_object)
-        linear_gradient(
+        vertex_color_gradient(
             context.active_object,
             aux_objects[0],
             self.color_a,
             self.alpha_a,
             self.color_b,
             self.alpha_b,
+            self.blend_type,
             self.blend_method,
             use_predefined_colors=self.use_predefined_colors,
             use_ref_colors=self.use_ref_colors)
         return {'FINISHED'}
 
 def menu_func(self, context):
-    self.layout.operator(LinearGradient.bl_idname, text='Linear Gradient')
+    self.layout.operator(VertexColorGradient.bl_idname, text='Vertex Color Gradient')
 
 def register():
     bpy.utils.register_module(__name__)
