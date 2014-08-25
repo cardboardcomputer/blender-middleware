@@ -47,6 +47,8 @@ def get_or_create_groups(obj):
 
 def set_loose_vertex_normals(mesh_obj, gradient_obj):
     normal = gradient_obj.matrix_world * m.Vector((0, 0, 1))
+    normal -= gradient_obj.location
+    normal += mesh_obj.location
     mesh_obj_matrix_inverse = mesh_obj.matrix_world.copy()
     mesh_obj_matrix_inverse.invert()
     mesh_obj_matrix_inverse.transpose()
