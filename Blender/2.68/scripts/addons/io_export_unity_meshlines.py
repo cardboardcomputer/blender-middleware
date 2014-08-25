@@ -25,10 +25,11 @@ class Color(object):
         return iter((self.r, self.g, self.b, self.a))
 
 class Vertex(object):
-    def __init__(self, index, co, color):
+    def __init__(self, index, co, color, normal):
         self.index = index
         self.co = co
         self.color = color
+        self.normal = normal
 
 class Edge(object):
     def __init__(self, a, b):
@@ -114,6 +115,34 @@ def get_loose_vertex_color(obj, vertex, index):
         a = alpha.weight(vertex.index)
         return Color(r, g, b, a)
 
+def get_loose_vertex_normal(obj, vertex):
+    x_name = 'normal_x'
+    y_name = 'normal_y'
+    z_name = 'normal_z'
+
+    if x_name in obj.vertex_groups:
+        x = obj.vertex_groups[x_name]
+    else:
+        return
+    if y_name in obj.vertex_groups:
+        y = obj.vertex_groups[y_name]
+    else:
+        return
+    if z_name in obj.vertex_groups:
+        z = obj.vertex_groups[z_name]
+    else:
+        return
+
+    groups = [g.group for g in vertex.groups.values()]
+    if (x.index in groups and
+        y.index in groups and
+        z.index in groups):
+
+        return (
+            x.weight(vertex.index) * 2 - 1,
+            y.weight(vertex.index) * 2 - 1,
+            z.weight(vertex.index) * 2 - 1)
+
 def export_unity_meshlines(
     obj,
     filepath,
@@ -129,9 +158,11 @@ def export_unity_meshlines(
     edges = []
     lines = []
 
-    (min_x, min_y, min_z) = (max_x, max_y, max_z) = obj.data.vertices[0].co
+    mesh = obj.to_mesh(scene=bpy.context.scene, apply_modifiers=True, settings='PREVIEW')
 
-    for i, v in enumerate(obj.data.vertices):
+    (min_x, min_y, min_z) = (max_x, max_y, max_z) = mesh.vertices[0].co
+
+    for i, v in enumerate(mesh.vertices):
         color = get_loose_vertex_color(obj, v, color_index)
         if color is None:
             color = Color(1, 1, 1, 1)
@@ -147,9 +178,12 @@ def export_unity_meshlines(
             min_z = v.co.z
         if v.co.z > max_z:
             max_z = v.co.z
-        vertices.append(Vertex(i, v.co, color))
+        normal = get_loose_vertex_normal(obj, v)
+        if normal is None:
+            normal = (0, 0, 0)
+        vertices.append(Vertex(i, v.co, color, normal))
 
-    for edge in obj.data.edges:
+    for edge in mesh.edges:
         a = vertices[edge.vertices[0]]
         b = vertices[edge.vertices[1]]
         edges.append(Edge(a, b))
@@ -194,6 +228,13 @@ def export_unity_meshlines(
             for i in range(len(line.vertices) - 1):
                 indices.extend([line.vertices[i].index, line.vertices[i + 1].index])
         fp.write(' '.join(map(str, indices)))
+        fp.write('\n')
+
+        for i, vertex in enumerate(vertices):
+            x, y, z = floats_to_strings((-vertex.normal[0], vertex.normal[1], vertex.normal[2]), precision)
+            fp.write('%s %s %s' % (x, y, z))
+            if i < len(vertices) - 1:
+                fp.write(' ')
 
 class UnityMeshlineExporter(bpy.types.Operator):
     bl_idname = 'export_mesh.unity_meshlines'
