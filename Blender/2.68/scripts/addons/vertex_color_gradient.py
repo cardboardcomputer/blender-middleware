@@ -56,6 +56,10 @@ def vertex_color_gradient(
     dest_colors = base_colors = obj.data.vertex_colors.active.data
 
     if use_predefined_colors:
+        if 'blend_type' in ref:
+            blend_type = ref['blend_type'].upper()
+        if 'blend_method' in ref:
+            blend_method = ref['blend_method'].upper()
         if 'color_a' in ref:
             color_a = hex_to_color(ref['color_a'])
         if 'alpha_a' in ref:
@@ -66,8 +70,8 @@ def vertex_color_gradient(
             alpha_b = ref['alpha_b']
 
     base_colors_name = obj.data.get(use_ref_colors, '') or obj.data.get('base_vertex_colors', '')
-    if base_colors_name in obj.data:
-        base_colors = obj.data.vertex_colors[obj.data['base_vertex_colors']]
+    if base_colors_name in obj.data.vertex_colors:
+        base_colors = obj.data.vertex_colors[base_colors_name].data
 
     for poly in obj.data.polygons:
         if not poly.select:
@@ -137,6 +141,8 @@ class VertexColorGradient(bpy.types.Operator):
     bl_label = 'Vertex Color Gradient'
     bl_options = {'REGISTER', 'UNDO'}
 
+    use_predefined_colors = bpy.props.BoolProperty(name='Use Predefined', default=False)
+
     blend_type = bpy.props.EnumProperty(
         items=(
             ('LINEAR', 'Linear', 'Linear'),
@@ -166,7 +172,6 @@ class VertexColorGradient(bpy.types.Operator):
     alpha_a = bpy.props.FloatProperty(name="Start Alpha", min=0, max=1, step=0.1, default=1)
     alpha_b = bpy.props.FloatProperty(name="End Alpha", min=0, max=1, step=0.1, default=1)
 
-    use_predefined_colors = bpy.props.BoolProperty(name='Use Predefined Colors', default=False)
     use_ref_colors = bpy.props.StringProperty(name='Use Reference Colors', default='')
 
     @classmethod
