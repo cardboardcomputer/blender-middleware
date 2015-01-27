@@ -1,14 +1,15 @@
 import os
 import bpy
+import krz
 
 bl_info = {
-    'name': 'Unity Lines (.lines)',
-    'author': 'Tamas Kemenczy',
+    'name': 'Export Unity Lines (.lines)',
+    'author': 'Cardboard Computer',
     'version': (0, 1),
-    'blender': (2, 6, 3),
+    'blender': (2, 6, 8),
     'location': 'File > Import-Export > Unity Lines (.lines)',
     'description': 'Export loose edges of a mesh for Unity',
-    'category': 'Import-Export',
+    'category': 'Cardboard',
 }
 
 class Color(object):
@@ -80,92 +81,34 @@ def floats_to_strings(floats, precision=6):
     ret = map(lambda s: '0' if s == '-0' else s, ret)
     return ret
 
-def get_loose_vertex_color(obj, vertex, index):
-    red_name = 'red_%i' % index
-    green_name = 'green_%i' % index
-    blue_name = 'blue_%i' % index
-    alpha_name = 'alpha_%i' % index
-
-    if red_name in obj.vertex_groups:
-        red = obj.vertex_groups[red_name]
-    else:
-        return
-    if green_name in obj.vertex_groups:
-        green = obj.vertex_groups[green_name]
-    else:
-        return
-    if blue_name in obj.vertex_groups:
-        blue = obj.vertex_groups[blue_name]
-    else:
-        return
-    if alpha_name in obj.vertex_groups:
-        alpha = obj.vertex_groups[alpha_name]
-    else:
-        return
-
-    groups = [g.group for g in vertex.groups.values()]
-    if (red.index in groups and
-        green.index in groups and
-        blue.index in groups and
-        alpha.index in groups):
-
-        r = red.weight(vertex.index)
-        g = green.weight(vertex.index)
-        b = blue.weight(vertex.index)
-        a = alpha.weight(vertex.index)
-        return Color(r, g, b, a)
-
-def get_loose_vertex_normal(obj, vertex):
-    x_name = 'normal_x'
-    y_name = 'normal_y'
-    z_name = 'normal_z'
-
-    if x_name in obj.vertex_groups:
-        x = obj.vertex_groups[x_name]
-    else:
-        return
-    if y_name in obj.vertex_groups:
-        y = obj.vertex_groups[y_name]
-    else:
-        return
-    if z_name in obj.vertex_groups:
-        z = obj.vertex_groups[z_name]
-    else:
-        return
-
-    groups = [g.group for g in vertex.groups.values()]
-    if (x.index in groups and
-        y.index in groups and
-        z.index in groups):
-
-        return (
-            x.weight(vertex.index) * 2 - 1,
-            y.weight(vertex.index) * 2 - 1,
-            z.weight(vertex.index) * 2 - 1)
-
-def export_unity_meshlines(
+def export_unity_lines(
     obj,
     filepath,
-    precision,
-    apply_modifiers,
-    export_colors,
-    export_map,
-    map_size,
-    color_index):
+    precision=6,
+    color_layer=''):
 
+    export_colormap = krz.colors.Manager(obj).get_export_colormap()
+    if export_colormap:
+        map_size = export_colormap.get_size()
+    else:
+        map_size = 1
     bias = 1. / map_size * 0.5
+
     vertices = []
     edges = []
     lines = []
 
+    if not color_layer:
+        color_layer = krz.colors.Manager(obj).get_export_layer().name
+
+    krz.legacy.upgrade_line_attributes(obj)
     mesh = obj.to_mesh(scene=bpy.context.scene, apply_modifiers=True, settings='PREVIEW')
+    colors = krz.colors.layer(obj, color_layer)
+    normals = krz.lines.normals(obj)
 
     (min_x, min_y, min_z) = (max_x, max_y, max_z) = mesh.vertices[0].co
 
     for i, v in enumerate(mesh.vertices):
-        color = get_loose_vertex_color(obj, v, color_index)
-        if color is None:
-            color = Color(1, 1, 1, 1)
         if v.co.x < min_x:
             min_x = v.co.x
         if v.co.x > max_x:
@@ -178,9 +121,13 @@ def export_unity_meshlines(
             min_z = v.co.z
         if v.co.z > max_z:
             max_z = v.co.z
-        normal = get_loose_vertex_normal(obj, v)
-        if normal is None:
-            normal = (0, 0, 0)
+
+        cd = colors.samples[v.index]
+        color = Color(cd.color.r, cd.color.g, cd.color.b, cd.alpha)
+
+        nd = normals.get(v.index)
+        normal = (nd['X'], nd['Y'], nd['Z'])
+
         vertices.append(Vertex(i, v.co, color, normal))
 
     for edge in mesh.edges:
@@ -210,8 +157,7 @@ def export_unity_meshlines(
                 fp.write(' ')
         fp.write('\n')
 
-        if export_map:
-            bias = 1. / map_size * 0.5
+        if export_colormap:
             for i, vertex in enumerate(vertices):
                 u = int(vertex.index % map_size) / map_size + bias
                 v = int(vertex.index / map_size) / map_size + bias
@@ -236,8 +182,8 @@ def export_unity_meshlines(
             if i < len(vertices) - 1:
                 fp.write(' ')
 
-class UnityMeshlineExporter(bpy.types.Operator):
-    bl_idname = 'export_mesh.unity_meshlines'
+class UnityLineExporter(bpy.types.Operator):
+    bl_idname = 'cc.export_unity_lines'
     bl_label = 'Export Unity Lines'
 
     filepath = bpy.props.StringProperty(
@@ -251,24 +197,8 @@ class UnityMeshlineExporter(bpy.types.Operator):
         name="Float Precision",
         description="Float precision used for GL commands",
         default=6)
-    apply_modifiers = bpy.props.BoolProperty(
-        name="Apply Modifiers",
-        description="Use transformed mesh data from each object",
-        default=True,)
-    export_colors = bpy.props.BoolProperty(
-        name='Export vertex colors',
-        description='Export vertex colors',
-        default=True)
-    export_map = bpy.props.BoolProperty(
-        name='Export vertex data map',
-        description='Export vertex data map',
-        default=False)
-    map_size = bpy.props.IntProperty(
-        name='Vertex data map size',
-        description='Vertex data map size',
-        default=1024)
-    color_index = bpy.props.IntProperty(
-        name='Color Index', default=0)
+    color_layer = bpy.props.StringProperty(
+        name='Color Layer', default='')
 
     @classmethod
     def poll(cls, context):
@@ -276,29 +206,40 @@ class UnityMeshlineExporter(bpy.types.Operator):
         return obj and obj.type == 'MESH'
 
     def execute(self, context):
-        export_unity_meshlines(
+        export_unity_lines(
             context.active_object,
             self.filepath,
             self.precision,
-            self.apply_modifiers,
-            self.export_colors,
-            self.export_map,
-            self.map_size,
-            self.color_index)
+            self.color_layer)
         return {'FINISHED'}
 
     def invoke(self, context, event):
         if not self.filepath:
             self.filepath = bpy.path.ensure_ext(bpy.data.filepath, ".lines")
+        export_layer = krz.colors.Manager(context.active_object).get_export_layer()
+        if export_layer:
+            self.color_layer = export_layer.name
+
+        path = os.path.dirname(self.filepath)
+        blendname = os.path.splitext(os.path.basename(bpy.data.filepath))[0]
+        objname = context.active_object.name
+        if objname.endswith('.Lines'):
+            objname = objname[:-6]
+        elif objname.endswith('Lines'):
+            objname = objname[:-5]
+        name = '%s%s' % (blendname, objname)
+        filename = '%s.lines' % name
+        self.filepath = os.path.join(path, filename)
+
         wm = context.window_manager
         wm.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
 def menu_import(self, context):
-    self.layout.operator(UnityMeshlineExporter.bl_idname, text="Unity Lines (.lines)")
+    self.layout.operator(UnityLineExporter.bl_idname, text="Unity Lines (.lines)")
 
 def menu_export(self, context):
-    self.layout.operator(UnityMeshlineExporter.bl_idname, text="Unity Lines (.lines)")
+    self.layout.operator(UnityLineExporter.bl_idname, text="Unity Lines (.lines)")
 
 def register():
     bpy.utils.register_module(__name__)

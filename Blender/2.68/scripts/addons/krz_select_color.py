@@ -1,14 +1,15 @@
 import bpy
+import krz
 from mathutils import Color
 
 bl_info = {
     'name': 'Select By Color',
-    'author': 'Tamas Kemenczy',
+    'author': 'Cardboard Computer',
     'version': (0, 1),
-    'blender': (2, 6, 1),
+    'blender': (2, 6, 8),
     'location': 'View3D > Specials > Select By Color',
     'description': 'Select all faces with the same vertex color of the selected face',
-    'category': 'Mesh'
+    'category': 'Cardboard'
 }
 
 def select_by_color(obj, threshold=0.01):
@@ -54,7 +55,7 @@ def select_by_color(obj, threshold=0.01):
     bpy.ops.object.editmode_toggle()
 
 class SelectByColor(bpy.types.Operator):
-    bl_idname = 'mesh.select_by_color'
+    bl_idname = 'cc.select_by_color'
     bl_label = 'Select By Color'
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -63,7 +64,8 @@ class SelectByColor(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         obj = context.active_object
-        return (obj and obj.type == 'MESH')
+        return (obj and obj.type == 'MESH'
+                and not krz.lines.is_line(obj))
 
     def execute(self, context):
         select_by_color(context.active_object, self.threshold)

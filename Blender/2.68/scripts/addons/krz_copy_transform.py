@@ -2,12 +2,12 @@ import bpy
 
 bl_info = {
     'name': 'Copy Transform',
-    'author': 'Tamas Kemenczy',
+    'author': 'Cardboard Computer',
     'version': (0, 1),
-    'blender': (2, 6, 1),
+    'blender': (2, 6, 8),
     'location': 'View3D > Specials > Copy Transform',
     'description': 'Copy a transform from one object to another',
-    'category': 'Object'
+    'category': 'Cardboard'
 }
 
 def copy_transform(i, o):
@@ -18,7 +18,7 @@ def copy_transform(i, o):
         obj.matrix_world = world.copy()
 
 class CopyTransform(bpy.types.Operator):
-    bl_idname = 'object.copy_transform'
+    bl_idname = 'cc.copy_transform'
     bl_label = 'Copy Transform'
     bl_options = {'REGISTER', 'UNDO'}
 

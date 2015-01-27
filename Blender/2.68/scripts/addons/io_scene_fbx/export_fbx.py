@@ -237,8 +237,13 @@ def save_single(operator, scene, filepath="",
     ):
 
     # krz start
-    if use_export_scene and 'Export' in bpy.data.scenes:
-        scene = bpy.data.scenes['Export']
+    export_scene = None
+    if 'Export' in bpy.data.scenes:
+        export_scene = bpy.data.scenes['Export']
+    if '_Export' in bpy.data.scenes:
+        export_scene = bpy.data.scenes['_Export']
+    if use_export_scene and export_scene:
+        scene = export_scene
         bpy.context.screen.scene = scene
         for screen in bpy.data.screens:
             screen.scene = scene
@@ -1558,10 +1563,24 @@ def save_single(operator, scene, filepath="",
             collayers = me.tessface_vertex_colors
 
             # krz start
+            collayers = list(collayers)
+            for layer in collayers:
+                if layer.active_render:
+                    collayers.remove(layer)
+                    collayers.insert(0, layer)
             if use_vertex_color_alpha_workaround:
+                collayer_main = None
                 collayer_alpha = None
+                if len(collayers):
+                    collayer_main = collayers[0]
+                    collayer_main_alpha = '%s.Alpha' % collayer_main.name
                 for collayer in collayers:
+                    if collayer.name == collayer_main_alpha:
+                        collayer_alpha = collayer
+                        break
                     if collayer.name == '_Alpha':
+                        collayer_alpha = collayer
+                    if collayer.name == 'Alpha':
                         collayer_alpha = collayer
             # krz end
 
