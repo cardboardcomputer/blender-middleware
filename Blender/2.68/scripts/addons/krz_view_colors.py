@@ -44,6 +44,8 @@ def get_shared_color_layers(objects):
         if obj.type == 'MESH':
             layers = krz.colors.Manager(obj).list_layers()
             setlist.append(set(layers))
+    if not setlist:
+        return []
     common = set.intersection(*setlist)
     layers = list(common)
     layers.sort()
@@ -55,6 +57,21 @@ def shared_color_layer_items(scene, context):
     for name in layers:
         enum.append((name, name, name))
     return enum
+
+class ViewColorsMenu(bpy.types.Menu):
+    bl_label = "Vertex Colors"
+    bl_idname = "CC_MT_view_colors"
+
+    @classmethod
+    def poll(cls, context):
+        layers = get_shared_color_layers(context.selected_objects)
+        return len(layers)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_enum('cc.view_colors', 'color_layer')
+        layout.operator_context = 'INVOKE_DEFAULT'
+        layout.operator('ui.eyedropper')
 
 class ViewColors(bpy.types.Operator):
     bl_idname = 'cc.view_colors'
@@ -83,13 +100,13 @@ def menu_func(self, context):
 
 def register():
     bpy.utils.register_module(__name__)
-    bpy.types.VIEW3D_MT_object_specials.append(menu_func)
-    bpy.types.VIEW3D_MT_edit_mesh_specials.append(menu_func)
+    # bpy.types.VIEW3D_MT_object_specials.append(menu_func)
+    # bpy.types.VIEW3D_MT_edit_mesh_specials.append(menu_func)
 
 def unregister():
     bpy.utils.unregister_module(__name__)
-    bpy.types.VIEW3D_MT_object_specials.remove(menu_func)
-    bpy.types.VIEW3D_MT_edit_mesh_specials.remove(menu_func)
+    # bpy.types.VIEW3D_MT_object_specials.remove(menu_func)
+    # bpy.types.VIEW3D_MT_edit_mesh_specials.remove(menu_func)
 
 if __name__ == "__main__":
     register()

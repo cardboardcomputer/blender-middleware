@@ -9,12 +9,12 @@ import struct
 import subprocess
 import mathutils as m
 
-from krz_export_lines import (
+from krz.export import (
     Color,
     Vertex,
     Edge,
     Line,
-    floats_to_strings
+    floats_to_strings,
 )
 
 bl_info = {

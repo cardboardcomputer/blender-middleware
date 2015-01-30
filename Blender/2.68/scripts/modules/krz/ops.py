@@ -13,16 +13,15 @@ def editmode(func):
     """
     def wrapped(*args, **kwargs):
         toggled = False
-        if bpy.context.mode != 'OBJECT':
+        if bpy.context.mode.startswith('EDIT_'):
             bpy.ops.object.editmode_toggle()
             toggled = True
         ret = func(*args, **kwargs)
         if toggled:
             bpy.ops.object.editmode_toggle()
-
         # again for mysterious update bug
-        bpy.ops.object.editmode_toggle()
-        bpy.ops.object.editmode_toggle()
-
+        if toggled:
+            bpy.ops.object.editmode_toggle()
+            bpy.ops.object.editmode_toggle()
         return ret
     return wrapped

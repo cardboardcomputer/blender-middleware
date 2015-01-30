@@ -2,7 +2,7 @@ import os
 import bpy
 import krz
 
-from krz_export_lines import (
+from krz.export import (
     Color,
     Vertex,
     Edge,
