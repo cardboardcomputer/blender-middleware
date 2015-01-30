@@ -39,6 +39,9 @@ def colormap(obj, name=None, base=None, **kw):
     else:
         return Manager(obj, base=base).get_or_add_colormap(name, **kw)
 
+def color_to_hex(rgb):
+    return '%02x%02x%02x' % (rgb[0] * 255, rgb[1] * 255, rgb[2] * 255)
+
 def hex_to_color(val):
     try:
         val = str(val).lower()
@@ -869,7 +872,7 @@ class Sampler:
 
         bm = bmesh.new()
         bm.from_mesh(self.mesh)
-        bmesh.ops.triangulate(bm, faces=bm.faces)
+        bmesh.ops.triangulate(bm, faces=bm.faces, use_beauty=True)
         bm.to_mesh(self.mesh)
         bm.free()
 

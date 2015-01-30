@@ -40,13 +40,14 @@ def default_color(obj, select='POLYGON'):
         return None, None
 
 @krz.ops.editmode
-def set_colors(obj, color, alpha, select='POLYGON'):
+def set_colors(obj, color, alpha=None, select='POLYGON'):
     colors = krz.colors.layer(obj)
 
     for sample in colors.itersamples():
         if sample.is_selected(select.lower()):
             sample.color = color
-            sample.alpha = alpha
+            if alpha is not None:
+                sample.alpha = alpha
 
 class SetColors(bpy.types.Operator):
     bl_idname = 'cc.set_colors'
@@ -72,9 +73,17 @@ class SetColors(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         obj = context.active_object
-        return (obj and obj.type == 'MESH')
+        return obj and obj.type == 'MESH'
 
     def invoke(self, context, event):
+        obj = context.object
+        if obj.type == 'MESH':
+            vertex, edge, face = context.tool_settings.mesh_select_mode
+            select = 'VERTEX'
+            if face and not vertex:
+                select = 'POLYGON'
+        self.select = select
+
         color, alpha = default_color(context.active_object, self.select)
         if color is not None and alpha is not None:
             self.color = color
