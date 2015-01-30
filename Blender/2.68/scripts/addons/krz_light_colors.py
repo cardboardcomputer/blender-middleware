@@ -12,14 +12,10 @@ bl_info = {
     'category': 'Cardboard'
 }
 
-DEFAULT_ENERGY = 1.0
-DEFAULT_COLOR = mathutils.Color((1, 1, 1))
-
 @krz.ops.editmode
 def light_colors(
     obj,
-    use_normals=True,
-    light_prefix='Light',
+    use_normals=False,
     color_layer='',
     select='POLYGON'):
 
@@ -27,8 +23,7 @@ def light_colors(
 
     lights = []
     for l in bpy.context.scene.objects:
-        if (l.type == 'EMPTY' and
-            l.name.startswith(light_prefix) and
+        if (l.type == 'LAMP' and
             not l.hide_render):
             lights.append(l)
 
@@ -36,20 +31,15 @@ def light_colors(
     temp = krz.colors.new(obj, '_Temp')
     base = krz.colors.layer(obj, color_layer)
 
-    for sample in temp.itersamples():
-        sample.color *= 0
+    for i, s in enumerate(temp.itersamples()):
+        if s.is_selected(select):
+            s.color *= 0
 
     for light in lights:
 
         center = light.matrix_world * mathutils.Vector((0, 0, 0))
-        radius = (light.scale.x + light.scale.y + light.scale.z) / 3
-        if 'color' in light:
-            lcolor = krz.colors.hex_to_color(light['color'])
-        else:
-            lcolor = DEFAULT_COLOR.copy()
-        lcolor *= light.get('energy', DEFAULT_ENERGY)
-
-        print(center, radius, lcolor)
+        radius = light.data.distance
+        lcolor = light.data.color * light.data.energy
 
         for i, s in enumerate(temp.itersamples()):
             if not s.is_selected(select):
@@ -77,9 +67,8 @@ def light_colors(
             s.color.b += color.b * rcolor.b
 
     for i, s in enumerate(final.itersamples()):
-        if not sample.is_selected(select):
-            continue
-        s.color = temp.samples[i].color
+        if s.is_selected(select):
+            s.color = temp.samples[i].color
 
     temp.destroy()
 
@@ -91,8 +80,7 @@ class LightColors(bpy.types.Operator):
     select = bpy.props.EnumProperty(
         items=krz.ops.ENUM_SELECT,
         name='Select', default='POLYGON')
-    use_normals = bpy.props.BoolProperty(name='Use Normals', default=True)
-    light_prefix = bpy.props.StringProperty(name='Light Prefix', default='Light')
+    use_normals = bpy.props.BoolProperty(name='Use Normals', default=False)
     color_layer = bpy.props.StringProperty(name='Color Layer', default='')
 
     @classmethod
@@ -107,7 +95,6 @@ class LightColors(bpy.types.Operator):
         light_colors(
             context.active_object,
             use_normals=self.use_normals,
-            light_prefix=self.light_prefix,
             color_layer=self.color_layer,
             select=self.select)
 
