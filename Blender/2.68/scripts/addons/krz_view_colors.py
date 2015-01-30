@@ -14,20 +14,43 @@ bl_info = {
 @krz.ops.editmode
 def view_colors(objects, color_layer):
     for obj in objects:
-        layer = krz.colors.Manager(obj).get_layer(color_layer)
-        if layer:
-            layer.activate()
+        if obj.type == 'MESH':
+            layer = krz.colors.Manager(obj).get_layer(color_layer)
+            if layer:
+                layer.activate()
 
-def shared_color_layer_items(scene, context):
+def get_default_color_layer(objects):
+    freq = {}
+    for obj in objects:
+        if obj.type == 'MESH':
+            layer = krz.colors.Manager(obj).get_active_layer(False)
+            if not layer:
+                continue
+            if layer.name not in freq:
+                freq[layer.name] = 0
+            freq[layer.name] += 1
+
+    freq_items = list(freq.items())
+    freq_items.sort(key=lambda c: -c[1])
+
+    if freq_items:
+        return freq_items[0][0]
+    else:
+        return ''
+
+def get_shared_color_layers(objects):
     setlist = []
-    for obj in context.selected_objects:
+    for obj in objects:
         if obj.type == 'MESH':
             layers = krz.colors.Manager(obj).list_layers()
             setlist.append(set(layers))
     common = set.intersection(*setlist)
     layers = list(common)
     layers.sort()
+    return layers
 
+def shared_color_layer_items(scene, context):
+    layers = get_shared_color_layers(context.selected_objects)
     enum = []
     for name in layers:
         enum.append((name, name, name))
@@ -46,6 +69,7 @@ class ViewColors(bpy.types.Operator):
         return 'MESH' in [o.type for o in context.selected_objects]
 
     def invoke(self, context, event):
+        self.color_layer = get_default_color_layer(context.selected_objects)
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
 

@@ -2,22 +2,22 @@ import bpy
 import krz
 
 bl_info = {
-    'name': 'Blend Colors',
+    'name': 'Process Colors',
     'author': 'Cardboard Computer',
     'version': (0, 1),
     'blender': (2, 6, 8),
-    'location': 'View3D > Specials > Blend Colors',
-    'description': 'Apply blends on lines/polygon colors',
+    'location': 'View3D > Specials > Process Colors',
+    'description': 'Apply color operatos on lines/polygon colors',
     'category': 'Cardboard'
 }
 
 @krz.ops.editmode
-def blend_colors(obj):
-    krz.colors.Manager(obj).exec_blend_ops()
+def process_colors(obj):
+    krz.colors.Manager(obj).exec_color_ops()
 
-class BlendColors(bpy.types.Operator):
-    bl_idname = 'cc.blend_colors'
-    bl_label = 'Blend Colors'
+class ProcessColors(bpy.types.Operator):
+    bl_idname = 'cc.process_colors'
+    bl_label = 'Process Colors'
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -26,11 +26,11 @@ class BlendColors(bpy.types.Operator):
         return obj and obj.type == 'MESH'
 
     def execute(self, context):
-        blend_colors(context.active_object)
+        process_colors(context.active_object)
         return {'FINISHED'}
 
 def menu_func(self, context):
-    self.layout.operator(BlendColors.bl_idname, text='Blend Colors')
+    self.layout.operator(ProcessColors.bl_idname, text='Process Colors')
 
 def register():
     bpy.utils.register_module(__name__)

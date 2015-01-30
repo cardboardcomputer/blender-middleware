@@ -21,24 +21,18 @@ def gradient_colors(
     alpha_b,
     blend_type,
     blend_method,
-    override=False,
     select='POLYGON'):
 
     colors = krz.colors.layer(obj)
 
-    if not override:
-        if 'blend_type' in ref:
-            blend_type = ref['blend_type'].upper()
-        if 'blend_method' in ref:
-            blend_method = ref['blend_method'].upper()
-        if 'color_a' in ref:
-            color_a = hex_to_color(ref['color_a'])
-        if 'alpha_a' in ref:
-            alpha_a = ref['alpha_a']
-        if 'color_b' in ref:
-            color_b = hex_to_color(ref['color_b'])
-        if 'alpha_b' in ref:
-            alpha_b = ref['alpha_b']
+    ref['Gradient'] = {}
+    d = ref['Gradient']
+    d['blend_type'] = blend_type
+    d['blend_method'] = blend_method
+    d['color_a'] = list(color_a)
+    d['color_b'] = list(color_b)
+    d['alpha_a'] = alpha_a
+    d['alpha_b'] = alpha_b
 
     m = mathutils
     p1 = ref.location
@@ -95,8 +89,6 @@ class GradientColors(bpy.types.Operator):
     bl_label = 'Gradient Colors'
     bl_options = {'REGISTER', 'UNDO'}
 
-    override = bpy.props.BoolProperty(name='Override', default=False)
-
     select = bpy.props.EnumProperty(
         items=krz.ops.ENUM_SELECT,
         name='Select', default='POLYGON')
@@ -119,12 +111,29 @@ class GradientColors(bpy.types.Operator):
     color_a = bpy.props.FloatVectorProperty(
         name="Start Color", subtype='COLOR_GAMMA',
         min=0, max=1, step=1,)
+    alpha_a = bpy.props.FloatProperty(
+        name="Start Alpha", min=0, max=1, step=0.1, default=1)
+
     color_b = bpy.props.FloatVectorProperty(
         name="End Color", subtype='COLOR_GAMMA',
         min=0, max=1, step=1, default=(1, 1, 1),)
+    alpha_b = bpy.props.FloatProperty(
+        name="End Alpha", min=0, max=1, step=0.1, default=1)
 
-    alpha_a = bpy.props.FloatProperty(name="Start Alpha", min=0, max=1, step=0.1, default=1)
-    alpha_b = bpy.props.FloatProperty(name="End Alpha", min=0, max=1, step=0.1, default=1)
+    def __init__(self):
+        context = bpy.context
+        aux_objects = list(context.selected_objects)
+        aux_objects.remove(context.active_object)
+        ref = aux_objects[0]
+
+        if 'Gradient' in ref:
+            d = ref['Gradient']
+            self.blend_type = d['blend_type']
+            self.blend_method = d['blend_method']
+            self.color_a = mathutils.Color(d['color_a'])
+            self.color_b = mathutils.Color(d['color_b'])
+            self.alpha_a = d['alpha_a']
+            self.alpha_b = d['alpha_b']
 
     @classmethod
     def poll(cls, context):
@@ -144,7 +153,6 @@ class GradientColors(bpy.types.Operator):
             self.alpha_b,
             self.blend_type,
             self.blend_method,
-            override=self.override,
             select=self.select)
 
         return {'FINISHED'}

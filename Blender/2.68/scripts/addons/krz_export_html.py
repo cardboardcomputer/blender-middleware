@@ -48,6 +48,8 @@ def export_html(context, name, fp, antialias=False, scale=1.0, include_threejs=F
     elif 'Export' in bpy.data.scenes:
         scene = bpy.data.scenes['Export']
         selected_objects = list(scene.objects)
+    else:
+        scene = context.scene
 
     # disable color management (gamma correction)
 
@@ -181,7 +183,7 @@ def export_html(context, name, fp, antialias=False, scale=1.0, include_threejs=F
     fp.write('(function(){')
 
     indirect = []
-    objects = selected_objects
+    objects = context.selected_objects
 
     for obj in objects:
         t = obj

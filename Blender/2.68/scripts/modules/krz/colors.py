@@ -162,13 +162,13 @@ class Manager:
         if layer:
             layer.destroy()
 
-    def get_active_layer(self):
+    def get_active_layer(self, autoadd=True):
         layer = None
         if self.is_line():
             layer = self.get_active_layer_line()
         else:
             layer = self.get_active_layer_poly()
-        if not layer:
+        if not layer and autoadd:
             layer = self.get_or_add_layer()
             layer.activate()
         return layer
@@ -315,15 +315,15 @@ class Manager:
             yield samples
             [s.save() for s in samples]
 
-    def exec_blend_ops(self):
+    def exec_color_ops(self):
         names = []
         for key in self.obj.data.keys():
-            if key.startswith('Blend'):
+            if key.startswith('Color.'):
                 names.append(key)
         names.sort()
         layers = self.list_layers()
         for name in names:
-            ColorBlendOp(self.obj, name, layers).execute()
+            ColorOp(self.obj, name, layers).execute()
 
 class LineColorLayer:
     def __init__(self, obj, name):
@@ -581,7 +581,7 @@ class ColorLayerSample:
             a = self.alpha
             self.layer.alpha.data[self.poly_index].color = mathutils.Color((a, a, a))
 
-class ColorBlendOp:
+class ColorOp:
     def rgb(*args):
         if not args:
             return Color()
