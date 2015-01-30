@@ -362,6 +362,7 @@ class LineColorLayer:
             self.g.add([i], sample.color.g, **kw)
             self.b.add([i], sample.color.b, **kw)
             self.a.add([i], sample.alpha, **kw)
+        krz.ui.flag(self.data)
 
     def exists(self):
         n = self.name
@@ -426,7 +427,9 @@ class LineColorLayer:
             self.r = self.g = self.b = self.a = None
 
     def activate(self):
-        self.obj.vertex_groups.active_index = self.r.index
+        obj = self.obj
+        obj.vertex_groups.active_index = self.r.index
+        colormeta(obj)['active_line_color'] = self.name
 
     def itersamples(self):
         if not self._samples:
@@ -576,6 +579,7 @@ class ColorLayerSample:
         layer.g.add([i], self.color.g, **kw)
         layer.b.add([i], self.color.b, **kw)
         layer.a.add([i], self.alpha, **kw)
+        krz.ui.flag(self.obj.data)
 
     def _save_poly(self):
         colors = self.layer.colors.data

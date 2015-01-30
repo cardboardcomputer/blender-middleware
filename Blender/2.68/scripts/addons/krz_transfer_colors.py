@@ -12,7 +12,7 @@ bl_info = {
 }
 
 @krz.ops.editmode
-def transfer_colors(obj, ref, select='POLYGON'):
+def transfer_colors(obj, ref, select='ALL'):
     with krz.colors.Sampler(ref) as sampler:
         colors = krz.colors.layer(obj)
 
@@ -37,7 +37,7 @@ class TransferColors(bpy.types.Operator):
 
     select = bpy.props.EnumProperty(
         items=krz.ops.ENUM_SELECT,
-        name='Select', default='POLYGON')
+        name='Select', default='ALL')
 
     @classmethod
     def poll(cls, context):
