@@ -70,7 +70,6 @@ class ViewColorsMenu(bpy.types.Menu):
     def draw(self, context):
         layout = self.layout
         layout.operator_enum('cc.view_colors', 'color_layer')
-        layout.operator_context = 'INVOKE_DEFAULT'
 
 class ViewColors(bpy.types.Operator):
     bl_idname = 'cc.view_colors'
