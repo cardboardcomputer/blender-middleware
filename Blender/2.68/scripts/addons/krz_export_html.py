@@ -183,7 +183,7 @@ def export_html(context, name, fp, antialias=False, scale=1.0, include_threejs=F
     fp.write('(function(){')
 
     indirect = []
-    objects = context.selected_objects
+    objects = selected_objects
 
     for obj in objects:
         t = obj
@@ -194,12 +194,12 @@ def export_html(context, name, fp, antialias=False, scale=1.0, include_threejs=F
 
     for obj in indirect:
         fp.write('var o=new T.Object3D();')
-        write_transform(fp, obj)
+        write_transform(fp, scene, obj)
 
     for obj in objects:
         if obj.type != 'MESH':
             fp.write('var o=new T.Object3D();')
-            write_transform(fp, obj)
+            write_transform(fp, scene, obj)
             continue
 
         mesh = obj.to_mesh(scene=scene, apply_modifiers=True, settings='PREVIEW', calc_tessface=True)
@@ -208,14 +208,14 @@ def export_html(context, name, fp, antialias=False, scale=1.0, include_threejs=F
             mesh[k] = v
 
         if (len(mesh.polygons) == 0):
-            write_lines(fp, obj, mesh)
+            write_lines(fp, scene, obj, mesh)
         else:
-            write_triangles(fp, obj, mesh)
+            write_triangles(fp, scene, obj, mesh)
 
     for obj in indirect:
-        write_hierarchy(fp, obj)
+        write_hierarchy(fp, scene, obj)
     for obj in objects:
-        write_hierarchy(fp, obj)
+        write_hierarchy(fp, scene, obj)
 
     fp.write('})();');
 
@@ -301,7 +301,7 @@ def shader_constructor(name, include='', alpha=False, additive=False):
         'fragmentShader:document.getElementById("fragment-%(name)s").textContent'
         '})') % {'name': name, 'extra': extra, 'include': include}
 
-def write_transform(fp, obj):
+def write_transform(fp, scene, obj):
     fp.write('objects[\'%s\']=o;' % obj.name)
     fp.write('o.position.set(%s);' % ','.join(floats_to_strings(obj.location)))
     if obj.rotation_mode == 'QUATERNION':
@@ -314,13 +314,13 @@ def write_transform(fp, obj):
     fp.write('o.up.set(0,0,1);')
     fp.write('o.scale.set(%s);' % ','.join(floats_to_strings(obj.scale)))
 
-def write_hierarchy(fp, obj):
+def write_hierarchy(fp, scene, obj):
     if obj.parent:
         fp.write('objects[\'%s\'].add(objects[\'%s\']);' % (obj.parent.name, obj.name))
     else:
         fp.write('scene.add(objects[\'%s\']);' % obj.name)
 
-def write_triangles(fp, obj, mesh):
+def write_triangles(fp, scene, obj, mesh):
     mesh_triangulate(mesh)
 
     fp.write('var g=new T.BufferGeometry();')
@@ -392,14 +392,20 @@ def write_triangles(fp, obj, mesh):
         shader_kwargs['additive'] = True
 
     fp.write('var o=new T.Mesh(g,%s);' % shader_constructor(shader_name, **shader_kwargs))
-    write_transform(fp, obj)
+    write_transform(fp, scene, obj)
 
-def write_lines(fp, obj, mesh):
+def write_lines(fp, scene, obj, mesh):
     vertices = []
     edges = []
     lines = []
 
     fp.write('var g=new T.BufferGeometry();')
+
+    # hawt swawp
+
+    orig_mesh = obj.data
+    obj.data = mesh
+    scene.update()
 
     # shader kwargs
 
@@ -466,7 +472,11 @@ def write_lines(fp, obj, mesh):
         shader_kwargs['additive'] = True
 
     fp.write('var o=new T.Line(g,%s,T.LinePieces);' % shader_constructor(shader_name, **shader_kwargs))
-    write_transform(fp, obj)
+    write_transform(fp, scene, obj)
+
+    # hawt swawp2
+    obj.data = orig_mesh
+    scene.update()
 
 def get_minified_js(path):
     temp = path + '.min'
