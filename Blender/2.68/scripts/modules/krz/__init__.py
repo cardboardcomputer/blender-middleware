@@ -1,4 +1,4 @@
-from krz.helpers import *
+import krz.utils
 import krz.ui
 import krz.ops
 import krz.lines

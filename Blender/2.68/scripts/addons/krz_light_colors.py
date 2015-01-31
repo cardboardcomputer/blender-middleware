@@ -54,7 +54,7 @@ def light_colors(
             else:
                 n_dot_l = 1
 
-            distance = krz.magnitude(vert - center)
+            distance = krz.utils.magnitude(vert - center)
             atten = 1 - min(distance / radius, 1)
 
             color = lcolor.copy()

@@ -50,24 +50,20 @@ def gradient_colors(
             distance = delta.dot(direction.normalized())
             atten = max(min(distance / direction.length, 1), 0)
         if blend_type == 'RADIAL':
-            distance = krz.magnitude(delta)
+            distance = krz.utils.magnitude(delta)
             atten = max(min(distance / direction.length, 1), 0)
 
         color = m.Color((0, 0, 0))
         color_ab = m.Color((0, 0, 0))
-        color_ab.r = krz.lerp(color_a.r, color_b.r, atten)
-        color_ab.g = krz.lerp(color_a.g, color_b.g, atten)
-        color_ab.b = krz.lerp(color_a.b, color_b.b, atten)
-        alpha_ab = krz.lerp(alpha_a, alpha_b, atten)
+        color_ab = krz.utils.lerp(color_a, color_b, atten)
+        alpha_ab = krz.utils.lerp(alpha_a, alpha_b, atten)
 
         if blend_method == 'REPLACE':
             s.color = color_ab
             s.alpha = alpha_ab
 
         if blend_method == 'MIX':
-            s.color.r = krz.lerp(s.color.r, color_ab.r, alpha_ab)
-            s.color.g = krz.lerp(s.color.g, color_ab.g, alpha_ab)
-            s.color.b = krz.lerp(s.color.b, color_ab.b, alpha_ab)
+            s.color = krz.utils.lerp(s.color, color_ab, alpha_ab)
 
         if blend_method == 'MULTIPLY':
             s.color.r *= color_ab.r;

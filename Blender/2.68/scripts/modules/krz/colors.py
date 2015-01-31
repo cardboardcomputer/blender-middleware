@@ -659,7 +659,7 @@ class ColorOp:
         return c
 
     env = {
-        'lerp': krz.lerp,
+        'lerp': krz.utils.lerp,
         'rgb': rgb,
         'hsv': hsv,
     }
@@ -678,7 +678,7 @@ class ColorOp:
         needed = []
         params = []
         for i, key in enumerate(layers):
-            var = krz.normalize_varname(key, lower=True)
+            var = krz.utils.normalize_varname(key, lower=True)
             macro = '[%s]' % key
             if macro in op_source:
                 params.append(var)

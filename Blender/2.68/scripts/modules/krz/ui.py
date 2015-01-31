@@ -152,34 +152,26 @@ class LineMeshCache:
 
         if layer is not None:
             name = colormeta(obj)['active_line_color']
-    
-            orig_mesh = obj.data
-            mesh = obj.data = obj.to_mesh(
-                scene=scene,
-                apply_modifiers=True,
-                settings='PREVIEW')
-            scene.update()
 
-            layer = Manager(obj).get_layer(name)
-            samples = layer.samples
-            verts = mesh.vertices
+            with krz.utils.modified_mesh(obj, scene) as mesh:
 
-            glNewList(self.list, GL_COMPILE)
-            glBegin(GL_LINES)
-            for edge in mesh.edges:
-                x = verts[edge.vertices[0]]
-                y = verts[edge.vertices[1]]
-                x_color = samples[x.index].color
-                y_color = samples[y.index].color
-                glColor3f(*x_color)
-                glVertex3f(*(x.co))
-                glColor3f(*y_color)
-                glVertex3f(*(y.co))
-            glEnd()
-            glEndList()
+                layer = Manager(obj).get_layer(name)
+                samples = layer.samples
+                verts = mesh.vertices
 
-            obj.data = orig_mesh
-            scene.update()
+                glNewList(self.list, GL_COMPILE)
+                glBegin(GL_LINES)
+                for edge in mesh.edges:
+                    x = verts[edge.vertices[0]]
+                    y = verts[edge.vertices[1]]
+                    x_color = samples[x.index].color
+                    y_color = samples[y.index].color
+                    glColor3f(*x_color)
+                    glVertex3f(*(x.co))
+                    glColor3f(*y_color)
+                    glVertex3f(*(y.co))
+                glEnd()
+                glEndList()
 
         self.update = False
 
