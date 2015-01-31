@@ -2,7 +2,6 @@ import bpy
 import krz
 import mathutils
 from bpy_extras import view3d_utils
-import krz_set_colors
 
 bl_info = {
     'name': 'Sample Color',
@@ -83,6 +82,16 @@ def sample_color(context, event, ray_max=1000.0):
                 return  sampler.raycast(origin, target)
     return mathutils.Color((0, 0, 0))
 
+@krz.ops.editmode
+def set_colors(obj, color, alpha=None, select='POLYGON'):
+    colors = krz.colors.layer(obj)
+
+    for sample in colors.itersamples():
+        if sample.is_selected(select.lower()):
+            sample.color = color
+            if alpha is not None:
+                sample.alpha = alpha
+
 class SampleColor(bpy.types.Operator):
     bl_idname = 'cc.sample_color'
     bl_label = 'Sample Color'
@@ -121,7 +130,7 @@ class SampleColor(bpy.types.Operator):
                 select = 'VERTEX'
                 if face and not vertex:
                     select = 'POLYGON'
-                krz_set_colors.set_colors(obj, self.color, None, select=select)
+                set_colors(obj, self.color, None, select=select)
                 return {'FINISHED'}
     
         elif context.mode == 'PAINT_VERTEX':

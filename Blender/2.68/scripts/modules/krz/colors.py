@@ -129,6 +129,7 @@ class Manager:
                         '%s.B' % name in keys and
                         '%s.A' % name in keys):
                         layers.append(name)
+                        layers.append('%s.Alpha' % name)
             return layers
         else:
             return list(self.obj.data.vertex_colors.keys())
@@ -187,15 +188,20 @@ class Manager:
                 n.endswith('.G') or
                 n.endswith('.B') or
                 n.endswith('.A')):
-                name = n[:-2]
+                if n.endswith('.A'):
+                    name = '%slpha' % n
+                else:
+                    name = n[:-2]
                 layer = LineColorLayer(self.obj, name)
                 if layer.exists():
                     meta['active_line_color'] = name
                 else:
                     layer = None
             elif 'active_line_color' in meta:
-                name = meta['active_line_color']
-                if '%s.R' % name in v:
+                n = name = meta['active_line_color']
+                if n.endswith('.Alpha'):
+                    n = n[:-6]
+                if '%s.R' % n in v:
                     layer = LineColorLayer(self.obj, name)
 
         if layer is None:
@@ -330,6 +336,11 @@ class Manager:
 
 class LineColorLayer:
     def __init__(self, obj, name):
+        self.alpha = False
+        if name.endswith('.Alpha'):
+            self.alpha = True
+            name = name[:-6]
+
         self.obj = obj
         self.name = name
         self.data = obj.data
@@ -343,25 +354,43 @@ class LineColorLayer:
 
     def _generate_samples(self):
         obj = self.obj
-        for vert in self.data.vertices:
-            color = Color((
-               self.r.weight(vert.index),
-               self.g.weight(vert.index),
-               self.b.weight(vert.index)))
-            alpha = self.a.weight(vert.index)
-            yield ColorLayerSample(obj, self, None, 0, vert, color, alpha)
+        if not self.alpha:
+            for vert in self.data.vertices:
+                try:
+                    color = Color((
+                       self.r.weight(vert.index),
+                       self.g.weight(vert.index),
+                       self.b.weight(vert.index)))
+                    alpha = self.a.weight(vert.index)
+                except RuntimeError:
+                    color = Color((1, 1, 1))
+                    alpha = 1
+                yield ColorLayerSample(obj, self, None, 0, vert, color, alpha)
+        else:
+            for vert in self.data.vertices:
+                try:
+                    alpha = self.a.weight(vert.index)
+                except RuntimeError:
+                    alpha = 1
+                color = Color((alpha, alpha, alpha))
+                yield ColorLayerSample(obj, self, None, 0, vert, color, alpha)
 
     def _get_samples(self):
         self._samples = list(self._generate_samples())
 
     def _save_samples(self):
         kw = {'type': 'REPLACE'}
-        for sample in self._samples:
-            i = sample.vertex.index
-            self.r.add([i], sample.color.r, **kw)
-            self.g.add([i], sample.color.g, **kw)
-            self.b.add([i], sample.color.b, **kw)
-            self.a.add([i], sample.alpha, **kw)
+        if not self.alpha:
+            for sample in self._samples:
+                i = sample.vertex.index
+                self.r.add([i], sample.color.r, **kw)
+                self.g.add([i], sample.color.g, **kw)
+                self.b.add([i], sample.color.b, **kw)
+                self.a.add([i], sample.alpha, **kw)
+        else:
+            for sample in self._samples:
+                i = sample.vertex.index
+                self.a.add([i], sample.color.v, **kw)
         krz.ui.flag(self.data)
 
     def exists(self):
@@ -428,8 +457,13 @@ class LineColorLayer:
 
     def activate(self):
         obj = self.obj
-        obj.vertex_groups.active_index = self.r.index
-        colormeta(obj)['active_line_color'] = self.name
+        if self.alpha:
+            name = '%s.Alpha' % self.name
+            obj.vertex_groups.active_index = self.a.index
+        else:
+            name = self.name
+            obj.vertex_groups.active_index = self.r.index
+        colormeta(obj)['active_line_color'] = name
 
     def itersamples(self):
         if not self._samples:
@@ -575,10 +609,13 @@ class ColorLayerSample:
         layer = self.layer
         kw = {'type': 'REPLACE'}
         i = self.vertex.index
-        layer.r.add([i], self.color.r, **kw)
-        layer.g.add([i], self.color.g, **kw)
-        layer.b.add([i], self.color.b, **kw)
-        layer.a.add([i], self.alpha, **kw)
+        if not layer.alpha:
+            layer.r.add([i], self.color.r, **kw)
+            layer.g.add([i], self.color.g, **kw)
+            layer.b.add([i], self.color.b, **kw)
+            layer.a.add([i], self.alpha, **kw)
+        else:
+            layer.a.add([i], self.color.v, **kw)
         krz.ui.flag(self.obj.data)
 
     def _save_poly(self):

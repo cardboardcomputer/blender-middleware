@@ -25,6 +25,7 @@ class TransferColors(bpy.types.Operator):
         return True
 
     def execute(self, context):
+        legacy_upgrade()
         return {'FINISHED'}
 
 def register():

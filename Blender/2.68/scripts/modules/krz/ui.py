@@ -60,7 +60,7 @@ class LineRenderer:
                 obj.select and not
                 obj == context.edit_object):
 
-                cache = self.obj_cache.get(obj)
+                cache = self.obj_cache.get(obj.name)
                 if cache is None:
                     cache = LineObjCache(self, obj)
                     self.obj_cache[obj.name] = cache
@@ -116,7 +116,7 @@ class LineObjCache:
         obj = self.obj
         renderer = self.renderer
 
-        mesh = renderer.mesh_cache.get(obj.data)
+        mesh = renderer.mesh_cache.get(obj.data.name)
         if mesh is None:
             mesh = LineMeshCache(obj.data)
             renderer.mesh_cache[obj.data.name] = mesh
@@ -140,33 +140,32 @@ class LineMeshCache:
     def cache(self, obj):
         mesh = self.mesh
         layer = krz.colors.Manager(obj).get_active_layer(False)
+
         if layer:
             samples = layer.samples
-        verts = mesh.vertices
+            verts = mesh.vertices
 
-        glNewList(self.list, GL_COMPILE)
-        glBegin(GL_LINES)
-        for edge in mesh.edges:
-            x = verts[edge.vertices[0]]
-            y = verts[edge.vertices[1]]
-            if layer:
+            glNewList(self.list, GL_COMPILE)
+            glBegin(GL_LINES)
+            for edge in mesh.edges:
+                x = verts[edge.vertices[0]]
+                y = verts[edge.vertices[1]]
                 x_color = samples[x.index].color
                 y_color = samples[y.index].color
-            else:
-                x_color = y_color = (1, 1, 1)
-            glColor3f(*x_color)
-            glVertex3f(*(x.co))
-            glColor3f(*y_color)
-            glVertex3f(*(y.co))
-        glEnd()
-        glEndList()
+                glColor3f(*x_color)
+                glVertex3f(*(x.co))
+                glColor3f(*y_color)
+                glVertex3f(*(y.co))
+            glEnd()
+            glEndList()
 
         self.update = False
 
     def draw(self, obj):
         if self.update:
             self.cache(obj)
-        glCallList(self.list)
+        if self.list != 0:
+            glCallList(self.list)
 
 def install_line_renderer():
     global line_renderer
