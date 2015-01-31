@@ -134,6 +134,21 @@ class Manager:
         else:
             return list(self.obj.data.vertex_colors.keys())
 
+    def exists(self, name):
+        if self.is_line():
+            n = name
+            if n.endswith('.Alpha'):
+                n = n[:-6]
+            v = self.obj.vertex_groups
+
+            return (
+                ('%s.R' % n) in v and
+                ('%s.G' % n) in v and
+                ('%s.B' % n) in v and
+                ('%s.A' % n) in v)
+        else:
+            return name in self.obj.data.vertex_colors
+
     def add_layer(self, name, **kw):
         if self.is_line():
             layer = LineColorLayer(self.obj, name)

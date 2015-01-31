@@ -41,7 +41,11 @@ def export_unity_lines(
         color_layer = krz.colors.Manager(obj).get_export_layer().name
 
     krz.legacy.upgrade_line_attributes(obj)
-    mesh = obj.to_mesh(scene=bpy.context.scene, apply_modifiers=True, settings='PREVIEW')
+
+    orig_mesh = obj.data
+    mesh = obj.data = obj.to_mesh(scene=bpy.context.scene, apply_modifiers=True, settings='PREVIEW')
+    bpy.context.scene.update()
+
     colors = krz.colors.layer(obj, color_layer)
     normals = krz.lines.normals(obj)
 
@@ -120,6 +124,9 @@ def export_unity_lines(
             fp.write('%s %s %s' % (x, y, z))
             if i < len(vertices) - 1:
                 fp.write(' ')
+
+    obj.data = orig_mesh
+    bpy.context.scene.update()
 
 class UnityLineExporter(bpy.types.Operator):
     bl_idname = 'cc.export_unity_lines'

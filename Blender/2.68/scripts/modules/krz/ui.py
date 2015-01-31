@@ -3,6 +3,7 @@ import krz
 import atexit
 import mathutils
 from bgl import *
+from krz.colors import colormeta, Manager
 
 line_renderer = None
 
@@ -141,10 +142,20 @@ class LineMeshCache:
             self.list = 0
 
     def cache(self, renderer, obj):
-        layer = krz.colors.Manager(obj).get_active_layer(False)
+        scene = bpy.context.scene
+        layer = Manager(obj).get_active_layer(False)
 
-        if layer:
-            mesh = obj.data
+        if layer is not None:
+            name = colormeta(obj)['active_line_color']
+    
+            orig_mesh = obj.data
+            mesh = obj.data = obj.to_mesh(
+                scene=scene,
+                apply_modifiers=True,
+                settings='PREVIEW')
+            scene.update()
+
+            layer = Manager(obj).get_layer(name)
             samples = layer.samples
             verts = mesh.vertices
 
@@ -161,6 +172,9 @@ class LineMeshCache:
                 glVertex3f(*(y.co))
             glEnd()
             glEndList()
+
+            obj.data = orig_mesh
+            scene.update()
 
         self.update = False
 
