@@ -30,11 +30,11 @@ class LineRenderer:
             bpy.app.handlers.scene_update_post.remove(self.update)
 
     def flag(self, obj):
-        cache = self.obj_cache.get(obj.name)
+        cache = self.obj_cache.get(hash(obj))
         if cache is not None:
             cache.update = True
         else:
-            cache = self.mesh_cache.get(obj.name)
+            cache = self.mesh_cache.get(hash(obj))
             if cache is not None:
                 cache.update = True
 
@@ -60,11 +60,11 @@ class LineRenderer:
                 obj.select and not
                 obj == context.edit_object):
 
-                cache = self.obj_cache.get(obj.name)
+                cache = self.obj_cache.get(hash(obj))
                 if cache is None:
-                    cache = LineObjCache(self, obj)
-                    self.obj_cache[obj.name] = cache
-                cache.draw()
+                    cache = LineObjCache()
+                    self.obj_cache[hash(obj)] = cache
+                cache.draw(self, obj)
 
         glPopAttrib()
 
@@ -81,22 +81,20 @@ class LineRenderer:
                 self.flag(obj.data)
 
     def cleanup(self):
-        real = set(bpy.data.objects.keys())
+        real = set(hash(o) for o in bpy.data.objects)
         cache = set(self.obj_cache.keys())
         stale = cache.difference(real)
         for k in stale:
             del self.obj_cache[k]
 
-        real = set(bpy.data.meshes.keys())
+        real = set(hash(o) for o in bpy.data.meshes)
         cache = set(self.mesh_cache.keys())
         stale = cache.difference(real)
         for k in stale:
             del self.mesh_cache[k]
 
 class LineObjCache:
-    def __init__(self, renderer, obj):
-        self.renderer = renderer
-        self.obj = obj
+    def __init__(self):
         self.update = True
         self.m = Buffer(GL_FLOAT, 16)
 
@@ -104,33 +102,29 @@ class LineObjCache:
         if hasattr(self, 'm'):
             del self.m
 
-    def cache(self):
-        matrix = self.obj.matrix_world.transposed()
+    def cache(self, renderer, obj):
+        matrix = obj.matrix_world.transposed()
         self.m[:] = sum((list(v) for v in matrix), [])
         self.update = False
 
-    def draw(self):
+    def draw(self, renderer, obj):
         if self.update:
-            self.cache()
+            self.cache(renderer, obj)
 
-        obj = self.obj
         data = obj.data
-        renderer = self.renderer
-    
         if data:
-            mesh = renderer.mesh_cache.get(obj.data.name)
+            mesh = renderer.mesh_cache.get(hash(obj.data))
             if mesh is None:
-                mesh = LineMeshCache(obj.data)
-                renderer.mesh_cache[obj.data.name] = mesh
+                mesh = LineMeshCache()
+                renderer.mesh_cache[hash(obj.data)] = mesh
 
             glPushMatrix()
             glMultMatrixf(self.m)
-            mesh.draw(obj)
+            mesh.draw(renderer, obj)
             glPopMatrix()
 
 class LineMeshCache:
-    def __init__(self, mesh):
-        self.mesh = mesh
+    def __init__(self):
         self.update = True
         self.list = glGenLists(1)
 
@@ -139,11 +133,11 @@ class LineMeshCache:
             glDeleteLists(self.list, 1)
             self.list = 0
 
-    def cache(self, obj):
-        mesh = self.mesh
+    def cache(self, renderer, obj):
         layer = krz.colors.Manager(obj).get_active_layer(False)
 
         if layer:
+            mesh = obj.data
             samples = layer.samples
             verts = mesh.vertices
 
@@ -163,9 +157,9 @@ class LineMeshCache:
 
         self.update = False
 
-    def draw(self, obj):
+    def draw(self, renderer, obj):
         if self.update:
-            self.cache(obj)
+            self.cache(renderer, obj)
         if self.list != 0:
             glCallList(self.list)
 
