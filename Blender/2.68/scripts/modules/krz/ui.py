@@ -1,5 +1,6 @@
 import bpy
 import krz
+import atexit
 import mathutils
 from bgl import *
 
@@ -15,6 +16,12 @@ class LineRenderer:
         self.mesh_cache = {}
         self.draw_handler = None
         self.last_mode = None
+
+    def clear(self):
+        for cache in self.obj_cache.values():
+            cache.__del__()
+        for cache in self.mesh_cache.values():
+            cache.__del__()
 
     def attach(self):
         self.draw_handler = bpy.types.SpaceView3D.draw_handler_add(
@@ -191,6 +198,12 @@ def ui_heading(self, context):
 def setup_line_renderer(scene):
     install_line_renderer()
 
+def clear_line_renderer():
+    global line_renderer
+    if line_renderer is not None:
+        line_renderer.clear()
+
 bpy.types.VIEW3D_MT_object_specials.append(ui_heading)
 bpy.types.VIEW3D_MT_edit_mesh_specials.append(ui_heading)
 bpy.app.handlers.load_post.append(setup_line_renderer)
+atexit.register(clear_line_renderer)
