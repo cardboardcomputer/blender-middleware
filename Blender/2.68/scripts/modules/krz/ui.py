@@ -65,7 +65,7 @@ class LineRenderer:
             if (obj.type == 'MESH' and
                 obj.data.edges and not
                 obj.data.polygons and not
-                obj.select and not
+                # obj.select and not
                 obj == context.edit_object):
 
                 cache = self.obj_cache.get(hash(obj))
@@ -125,6 +125,11 @@ class LineObjCache:
             if mesh is None:
                 mesh = LineMeshCache()
                 renderer.mesh_cache[hash(obj.data)] = mesh
+
+            if obj.select:
+                glLineWidth(2)
+                glLineStipple(1, 0xAAAA)
+                glEnable(GL_LINE_STIPPLE)
 
             glPushMatrix()
             glMultMatrixf(self.m)

@@ -48,7 +48,9 @@ class TransferColors(bpy.types.Operator):
             ref = ref[0]
         else:
             ref = None
-        return obj and obj.type == 'MESH' and ref and ref.type == 'MESH'
+        return (
+            (obj and obj.type == 'MESH') and
+            (ref and ref.type == 'MESH' and ref.data.polygons))
 
     def execute(self, context):
         aux_objects = list(context.selected_objects)
