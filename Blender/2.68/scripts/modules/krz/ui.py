@@ -114,17 +114,19 @@ class LineObjCache:
             self.cache()
 
         obj = self.obj
+        data = obj.data
         renderer = self.renderer
+    
+        if data:
+            mesh = renderer.mesh_cache.get(obj.data.name)
+            if mesh is None:
+                mesh = LineMeshCache(obj.data)
+                renderer.mesh_cache[obj.data.name] = mesh
 
-        mesh = renderer.mesh_cache.get(obj.data.name)
-        if mesh is None:
-            mesh = LineMeshCache(obj.data)
-            renderer.mesh_cache[obj.data.name] = mesh
-
-        glPushMatrix()
-        glMultMatrixf(self.m)
-        mesh.draw(obj)
-        glPopMatrix()
+            glPushMatrix()
+            glMultMatrixf(self.m)
+            mesh.draw(obj)
+            glPopMatrix()
 
 class LineMeshCache:
     def __init__(self, mesh):

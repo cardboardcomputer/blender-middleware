@@ -884,9 +884,7 @@ class LineColormap(Colormap):
 class Sampler:
     def __init__(self, obj, layer=None):
         self.obj = obj
-
         data = self.obj.data.vertex_colors
-
         if obj.type != 'MESH':
             raise ColorError('object is not a mesh')
         if layer is None:
@@ -896,6 +894,7 @@ class Sampler:
         elif layer not in data:
             raise ColorError('invalid color layer')
         self.layer = layer
+        self.modifier_settings = []
 
     def __enter__(self):
         self.install_triangulated()
@@ -905,11 +904,17 @@ class Sampler:
         self.install_original()
 
     def install_triangulated(self):
-        self.mesh_original = self.obj.data
-        self.mesh = self.obj.to_mesh(
+        obj = self.obj
+        self.mesh_original = obj.data
+        self.mesh = obj.to_mesh(
             scene=bpy.context.scene,
             apply_modifiers=True,
             settings='PREVIEW')
+
+        settings = self.modifier_settings
+        for m in obj.modifiers:
+            settings.append(m.show_viewport)
+            m.show_viewport = False
 
         bm = bmesh.new()
         bm.from_mesh(self.mesh)
@@ -917,14 +922,18 @@ class Sampler:
         bm.to_mesh(self.mesh)
         bm.free()
 
-        self.obj.data = self.mesh
+        obj.data = self.mesh
         bpy.context.scene.update()
         self.layer = self.mesh.vertex_colors[self.layer]
 
     def install_original(self):
-        self.obj.data = self.mesh_original
+        obj = self.obj
+        obj.data = self.mesh_original
         bpy.context.scene.update()
         bpy.data.meshes.remove(self.mesh)
+        settings = self.modifier_settings
+        for i, m in enumerate(obj.modifiers):
+            m.show_viewport = settings[i]
 
     def closest(self, point, layer=None):
         return self.sample(layer=layer, *self.obj.closest_point_on_mesh(point))
