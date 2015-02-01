@@ -1,8 +1,8 @@
 import bpy
+import bgl
 import krz
 import atexit
 import mathutils
-from bgl import *
 from krz.colors import colormeta, Manager
 
 line_renderer = None
@@ -40,11 +40,11 @@ class LineRenderer:
     def flag(self, obj):
         cache = self.obj_cache.get(hash(obj))
         if cache is not None:
-            cache.update = True
+            cache.flag()
         else:
             cache = self.mesh_cache.get(hash(obj))
             if cache is not None:
-                cache.update = True
+                cache.flag()
 
     def draw(self):
         context = bpy.context
@@ -58,8 +58,8 @@ class LineRenderer:
         if view.viewport_shade != 'TEXTURED':
             return
 
-        glPushAttrib(GL_CLIENT_ALL_ATTRIB_BITS)
-        glShadeModel(GL_SMOOTH)
+        bgl.glPushAttrib(bgl.GL_CLIENT_ALL_ATTRIB_BITS)
+        bgl.glShadeModel(bgl.GL_SMOOTH)
 
         for obj in context.visible_objects:
             if (obj.type == 'MESH' and
@@ -74,7 +74,7 @@ class LineRenderer:
                     self.obj_cache[hash(obj)] = cache
                 cache.draw(self, obj)
 
-        glPopAttrib()
+        bgl.glPopAttrib()
 
     def update(self, scene):
         obj = scene.objects.active
@@ -104,11 +104,14 @@ class LineRenderer:
 class LineObjCache:
     def __init__(self):
         self.update = True
-        self.m = Buffer(GL_FLOAT, 16)
+        self.m = bgl.Buffer(bgl.GL_FLOAT, 16)
 
     def __del__(self):
         if hasattr(self, 'm'):
             del self.m
+
+    def flag(self):
+        self.update = True
 
     def cache(self, renderer, obj):
         matrix = obj.matrix_world.transposed()
@@ -127,24 +130,32 @@ class LineObjCache:
                 renderer.mesh_cache[hash(obj.data)] = mesh
 
             if obj.select:
-                glLineWidth(2)
-                glLineStipple(1, 0xAAAA)
-                glEnable(GL_LINE_STIPPLE)
+                bgl.glLineWidth(2)
+                bgl.glLineStipple(1, 0xAAAA)
+                bgl.glEnable(bgl.GL_LINE_STIPPLE)
 
-            glPushMatrix()
-            glMultMatrixf(self.m)
+            bgl.glPushMatrix()
+            bgl.glMultMatrixf(self.m)
+
             mesh.draw(renderer, obj)
-            glPopMatrix()
+
+            bgl.glPopMatrix()
 
 class LineMeshCache:
     def __init__(self):
         self.update = True
-        self.list = glGenLists(1)
+        self.ignore_next_update = False
+        self.list = bgl.glGenLists(1)
 
     def __del__(self):
         if self.list != 0:
-            glDeleteLists(self.list, 1)
+            bgl.glDeleteLists(self.list, 1)
             self.list = 0
+
+    def flag(self):
+        if not self.ignore_next_update:
+            self.update = True
+        self.ignore_next_update = False
 
     def cache(self, renderer, obj):
         scene = bpy.context.scene
@@ -159,27 +170,31 @@ class LineMeshCache:
                 samples = layer.samples
                 verts = mesh.vertices
 
-                glNewList(self.list, GL_COMPILE)
-                glBegin(GL_LINES)
+                bgl.glNewList(self.list, bgl.GL_COMPILE)
+                bgl.glBegin(bgl.GL_LINES)
+
                 for edge in mesh.edges:
                     x = verts[edge.vertices[0]]
                     y = verts[edge.vertices[1]]
                     x_color = samples[x.index].color
                     y_color = samples[y.index].color
-                    glColor3f(*x_color)
-                    glVertex3f(*(x.co))
-                    glColor3f(*y_color)
-                    glVertex3f(*(y.co))
-                glEnd()
-                glEndList()
 
+                    bgl.glColor3f(*x_color)
+                    bgl.glVertex3f(*(x.co))
+                    bgl.glColor3f(*y_color)
+                    bgl.glVertex3f(*(y.co))
+
+                bgl.glEnd()
+                bgl.glEndList()
+
+            self.ignore_next_update = True
         self.update = False
 
     def draw(self, renderer, obj):
         if self.update:
             self.cache(renderer, obj)
         if self.list != 0:
-            glCallList(self.list)
+            bgl.glCallList(self.list)
 
 def install_line_renderer():
     global line_renderer

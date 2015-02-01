@@ -12,26 +12,28 @@ bl_info = {
     'category': 'Cardboard'
 }
 
-def set_export(obj, color_layer, color_map):
-    m = krz.colors.Manager(obj)
-    m.set_export_layer(color_layer)
-    m.set_export_colormap(color_map)
+@krz.ops.editmode
+def set_export(objects, layer, colormap):
+    for obj in objects:
+        if obj.type == 'MESH':
+            m = krz.colors.Manager(obj)
+            if layer:
+                m.set_export_layer(layer)
+            if colormap:
+                m.set_export_colormap(colormap)
 
-def obj_color_items(scene, context):
-    obj = context.active_object
+def shared_colormap_items(scene, context):
+    colormaps = krz.colors.find_shared_colormaps(context.selected_objects)
     enum = []
-    for o in krz.colors.Manager(obj).list_layers():
-        if not o.endswith('.Alpha'):
-            enum.append((o, o, o))
+    for name in colormaps:
+        enum.append((name, name, name))
     return enum
 
-def obj_colormap_items(scene, context):
-    obj = context.active_object
+def shared_layer_items(scene, context):
+    layers = krz.colors.find_shared_layers(context.selected_objects)
     enum = []
-    m = krz.colors.Manager(obj)
-    keys = m.meta.get('colormaps', {}).keys()
-    for o in keys:
-        enum.append((o, o, o))
+    for name in layers:
+        enum.append((name, name, name))
     return enum
 
 class SetExport(bpy.types.Operator):
@@ -39,11 +41,11 @@ class SetExport(bpy.types.Operator):
     bl_label = 'Set Export'
     bl_options = {'REGISTER', 'UNDO'}
 
-    color_layer = bpy.props.EnumProperty(
-        items=obj_color_items, name='Color Layer')
+    layer = bpy.props.EnumProperty(
+        items=shared_layer_items, name='Color Layer')
 
-    color_map = bpy.props.EnumProperty(
-        items=obj_colormap_items, name='Color Map')
+    colormap = bpy.props.EnumProperty(
+        items=shared_colormap_items, name='Color Map')
 
     @classmethod
     def poll(cls, context):
@@ -51,21 +53,26 @@ class SetExport(bpy.types.Operator):
         return (obj and obj.type == 'MESH')
 
     def invoke(self, context, event):
-        m = krz.colors.Manager(context.active_object)
+        shared_layers = krz.colors.find_shared_layers(
+            context.selected_objects)
+        default_layer = krz.colors.find_default_layer(
+            context.selected_objects, for_export=True)
 
-        export_layer = m.get_export_layer()
-        if export_layer:
-            self.color_layer = export_layer.name
+        shared_colormaps = krz.colors.find_shared_colormaps(
+            context.selected_objects)
+        default_colormap = krz.colors.find_default_colormap(
+            context.selected_objects, for_export=True)
 
-        export_map = m.get_export_colormap()
-        if export_map:
-            self.color_map = export_map.name
+        if default_layer and default_layer in shared_layers:
+            self.layer = default_layer
+        if default_colormap and default_colormap in shared_colormaps:
+            self.colormap = default_colormap
 
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
 
     def execute(self, context):
-        set_export(context.active_object, self.color_layer, self.color_map)
+        set_export(context.selected_objects, self.layer, self.colormap)
         return {'FINISHED'}
 
 def menu_func(self, context):

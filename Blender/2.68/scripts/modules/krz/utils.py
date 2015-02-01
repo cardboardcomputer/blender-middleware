@@ -1,4 +1,5 @@
 import bpy
+import bmesh
 import math
 
 def clamp(v, a, b):
@@ -45,13 +46,27 @@ class Swap:
 swap = Swap
 
 class ModifiedMesh:
-    def __init__(self, obj, scene=None, apply_modifiers=True, settings='PREVIEW'):
+    def __init__(
+        self, obj, scene=None,
+        triangulate=False,
+        apply_modifiers=True,
+        settings='PREVIEW'):
+
         self.obj = obj
         self.scene = scene
+        self.triangulate = triangulate
         self.apply_modifiers = apply_modifiers
         self.settings = settings
+        self.orig_mesh = self.mod_mesh = None
+        self.modifier_settings = []
 
     def __enter__(self):
+        return self.install()
+
+    def __exit__(self, type_, value, tb):
+        self.uninstall()
+
+    def install(self):
         obj = self.obj
         scene = self.scene or bpy.context.scene
 
@@ -59,13 +74,33 @@ class ModifiedMesh:
         self.mod_mesh = obj.data = obj.to_mesh(
             scene=scene, apply_modifiers=self.apply_modifiers,
             settings=self.settings)
+
+        if self.apply_modifiers:
+            settings = self.modifier_settings
+            for m in obj.modifiers:
+                settings.append(m.show_viewport)
+                m.show_viewport = False
+
+        if self.triangulate:
+            bm = bmesh.new()
+            bm.from_mesh(self.mod_mesh)
+            bmesh.ops.triangulate(bm, faces=bm.faces, use_beauty=True)
+            bm.to_mesh(self.mod_mesh)
+            bm.free()
+
         scene.update()
 
         return obj.data
 
-    def __exit__(self, type_, value, tb):
-        self.obj.data = self.orig_mesh
+    def uninstall(self):
+        obj = self.obj
+        obj.data = self.orig_mesh
         scene = self.scene or bpy.context.scene
         scene.update()
+
+        if self.apply_modifiers:
+            settings = self.modifier_settings
+            for i, m in enumerate(obj.modifiers):
+                m.show_viewport = settings[i]
 
 modified_mesh = ModifiedMesh

@@ -60,6 +60,84 @@ def hex_to_color(val):
     else:
         return mathutils.Color((t[0] / 255.0, t[1] / 255.0, t[2] / 255.0))
 
+def find_default_layer(objects, for_export=False):
+    freq = {}
+
+    for obj in objects:
+        if obj.type == 'MESH':
+            if for_export:
+                layer = Manager(obj).get_export_layer()
+            else:
+                layer = Manager(obj).get_active_layer(False)
+            if not layer:
+                continue
+            if layer.name not in freq:
+                freq[layer.name] = 0
+            freq[layer.name] += 1
+
+    freq_items = list(freq.items())
+    freq_items.sort(key=lambda c: -c[1])
+
+    if freq_items:
+        return freq_items[0][0]
+    else:
+        return None
+
+def find_shared_layers(objects):
+    setlist = []
+
+    for obj in objects:
+        if obj.type == 'MESH':
+            layers = Manager(obj).list_layers()
+            setlist.append(set(layers))
+    if not setlist:
+        return []
+
+    common = set.intersection(*setlist)
+    layers = list(common)
+    layers.sort()
+
+    return layers
+
+def find_default_colormap(objects, for_export=False):
+    freq = {}
+
+    for obj in objects:
+        if obj.type == 'MESH':
+            if for_export:
+                layer = Manager(obj).get_export_colormap()
+            else:
+                layer = Manager(obj).get_active_colormap(False)
+            if not layer:
+                continue
+            if layer.name not in freq:
+                freq[layer.name] = 0
+            freq[layer.name] += 1
+
+    freq_items = list(freq.items())
+    freq_items.sort(key=lambda c: -c[1])
+
+    if freq_items:
+        return freq_items[0][0]
+    else:
+        return None
+
+def find_shared_colormaps(objects):
+    setlist = []
+
+    for obj in objects:
+        if obj.type == 'MESH':
+            layers = Manager(obj).list_colormaps()
+            setlist.append(set(layers))
+    if not setlist:
+        return []
+
+    common = set.intersection(*setlist)
+    layers = list(common)
+    layers.sort()
+
+    return layers
+
 class Color(mathutils.Color):
     def __mul__(self, o):
         if hasattr(o, '__len__'):
@@ -133,6 +211,9 @@ class Manager:
             return layers
         else:
             return list(self.obj.data.vertex_colors.keys())
+
+    def list_colormaps(self):
+        return list(self.meta.get('colormaps', {}).keys())
 
     def exists(self, name):
         if self.is_line():
@@ -309,7 +390,7 @@ class Manager:
         if colormap:
             colormap.destroy()
 
-    def get_active_colormap(self):
+    def get_active_colormap(self, autoadd=True):
         colormap = None
         v = self.obj.data.uv_textures
         if v.active:
@@ -317,7 +398,7 @@ class Manager:
                 colormap = LineColormap(self.obj, v.active.name)
             else:
                 colormap = PolyColormap(self.obj, v.active.name)
-        if not colormap:
+        if not colormap and autoadd:
             colormap = self.get_or_add_colormap()
             colormap.activate()
         return colormap
@@ -357,7 +438,7 @@ class LineColorLayer:
             name = name[:-6]
 
         self.obj = obj
-        self.name = name
+        self._name = name
         self.data = obj.data
         self._samples = []
 
@@ -366,6 +447,13 @@ class LineColorLayer:
             self.g = obj.vertex_groups['%s.G' % name]
             self.b = obj.vertex_groups['%s.B' % name]
             self.a = obj.vertex_groups['%s.A' % name]
+
+    @property
+    def name(self):
+        if self.alpha:
+            return '%s.Alpha' % self._name
+        else:
+            return self._name
 
     def _generate_samples(self):
         obj = self.obj
@@ -388,7 +476,7 @@ class LineColorLayer:
                 except RuntimeError:
                     alpha = 1
                 color = Color((alpha, alpha, alpha))
-                yield ColorLayerSample(obj, self, None, 0, vert, color, alpha)
+                yield ColorLayerSample(obj, self, None, 0, vert, color, 1)
 
     def _get_samples(self):
         self._samples = list(self._generate_samples())
@@ -409,7 +497,7 @@ class LineColorLayer:
         krz.ui.flag(self.data)
 
     def exists(self):
-        n = self.name
+        n = self._name
         v = self.obj.vertex_groups
 
         return (
@@ -422,7 +510,7 @@ class LineColorLayer:
         if self.exists():
             return
 
-        n = self.name
+        n = self._name
         v = self.obj.vertex_groups
 
         active = v.active_index
@@ -459,7 +547,7 @@ class LineColorLayer:
         v.active_index = active
 
     def destroy(self):
-        n = self.name
+        n = self._name
         v = self.obj.vertex_groups
 
         if self.exists():
@@ -473,10 +561,10 @@ class LineColorLayer:
     def activate(self):
         obj = self.obj
         if self.alpha:
-            name = '%s.Alpha' % self.name
+            name = '%s.Alpha' % self._name
             obj.vertex_groups.active_index = self.a.index
         else:
-            name = self.name
+            name = self._name
             obj.vertex_groups.active_index = self.r.index
         colormeta(obj)['active_line_color'] = name
 

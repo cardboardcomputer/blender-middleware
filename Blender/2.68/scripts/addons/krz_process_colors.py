@@ -12,8 +12,10 @@ bl_info = {
 }
 
 @krz.ops.editmode
-def process_colors(obj):
-    krz.colors.Manager(obj).exec_color_ops()
+def process_colors(objects):
+    for obj in objects:
+        if obj.type == 'MESH':
+            krz.colors.Manager(obj).exec_color_ops()
 
 class ProcessColors(bpy.types.Operator):
     bl_idname = 'cc.process_colors'
@@ -23,10 +25,10 @@ class ProcessColors(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         obj = context.active_object
-        return obj and obj.type == 'MESH'
+        return 'MESH' in (obj.type for obj in context.selected_objects)
 
     def execute(self, context):
-        process_colors(context.active_object)
+        process_colors(context.selected_objects)
         return {'FINISHED'}
 
 def menu_func(self, context):
