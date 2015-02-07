@@ -26,6 +26,8 @@ def export_unity_lines(
     precision=6,
     color_layer=''):
 
+    krz.legacy.upgrade_line_attributes(obj)
+
     export_colormap = krz.colors.Manager(obj).get_export_colormap()
     if export_colormap:
         map_size = export_colormap.get_size()
@@ -38,14 +40,17 @@ def export_unity_lines(
     lines = []
 
     if not color_layer:
-        color_layer = krz.colors.Manager(obj).get_export_layer().name
-
-    krz.legacy.upgrade_line_attributes(obj)
+        export_layer = krz.colors.Manager(obj).get_export_layer()
+        if export_layer:
+            color_layer = export_layer.name
+    export_colors = krz.colors.Manager(obj).get_layer(color_layer) is not None
 
     with krz.utils.modified_mesh(obj) as mesh:
 
-        colors = krz.colors.layer(obj, color_layer)
+        if export_colors:
+            colors = krz.colors.layer(obj, color_layer)
         normals = krz.lines.normals(obj)
+        export_normals = normals.exists()
 
         (min_x, min_y, min_z) = (max_x, max_y, max_z) = mesh.vertices[0].co
 
@@ -63,11 +68,17 @@ def export_unity_lines(
             if v.co.z > max_z:
                 max_z = v.co.z
 
-            cd = colors.samples[v.index]
-            color = Color(cd.color.r, cd.color.g, cd.color.b, cd.alpha)
+            if export_colors:
+                cd = colors.samples[v.index]
+                color = Color(cd.color.r, cd.color.g, cd.color.b, cd.alpha)
+            else:
+                color = Color(1, 1, 1, 1)
 
-            nd = normals.get(v.index)
-            normal = (nd['X'], nd['Y'], nd['Z'])
+            if export_normals:
+                nd = normals.get(v.index)
+                normal = (nd['X'], nd['Y'], nd['Z'])
+            else:
+                normal = (0, 0, 1)
 
             vertices.append(Vertex(i, v.co, color, normal))
 
