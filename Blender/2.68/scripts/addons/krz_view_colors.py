@@ -12,10 +12,10 @@ bl_info = {
 }
 
 @krz.ops.editmode
-def view_colors(objects, layer):
+def view_colors(objects, layer_name):
     for obj in objects:
         if obj.type == 'MESH':
-            layer = krz.colors.Manager(obj).get_layer(layer)
+            layer = krz.colors.Manager(obj).get_layer(layer_name)
             if layer:
                 layer.activate()
 
