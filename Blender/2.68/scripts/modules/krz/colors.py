@@ -9,7 +9,7 @@ class ColorError(Exception): pass
 
 BASENAME = 'Col'
 METADATA_PROP = 'ColorMeta'
-COLORMAP_MINSIZE = 32
+COLORMAP_MINSIZE = 16
 
 def colormeta(obj):
     data = obj.data
@@ -854,7 +854,7 @@ class Colormap:
         return self.props['size']
 
     def set_size(self, size):
-        self.props['size'] = krz.nearest_pow_2(size)
+        self.props['size'] = krz.utils.nearest_pow_2(size)
 
     def get_layers(self):
         layers = self.props['layers']
@@ -872,18 +872,28 @@ class Colormap:
 
         total = frag_count * layer_count
         approx = int(math.sqrt(total))
-        size = krz.nearest_pow_2(approx)
+        size = krz.utils.nearest_pow_2(approx)
 
         index = layer_count - 1
         offset = int(math.ceil(frag_count / size) * size * index)
         last = offset + frag_count
 
         if last > (size * size):
-            size = krz.nearest_pow_2(size + 1)
+            size = krz.utils.nearest_pow_2(size + 1)
 
         return max(size, COLORMAP_MINSIZE)
 
+    def resize(self):
+        layers = self.get_layers()
+        self.set_size(self.fit_size(
+            len(self.data.uv_layers[self.name].data),
+            len(layers)))
+
+    def get_stride(self):
+        self.resize()
+
     def generate_image(self):
+        self.resize()
         name = '%s.%s' % (self.obj.name, self.name)
         if name in bpy.data.images:
             image = bpy.data.images[name]
@@ -918,8 +928,19 @@ class PolyColormap(Colormap):
             len(self.data.uv_layers[self.name].data),
             len(layers)))
 
+    def get_stride(self):
+        super(PolyColormap, self).get_stride()
+        size = self.get_size()
+        vcolors = self.data.vertex_colors
+        if not vcolors.active:
+            return 0
+        else:
+            return int(math.ceil(len(vcolors.active.data) / size))
+
     def generate_image(self):
         image = super(PolyColormap, self).generate_image()
+
+        self.update_uv_coords()
 
         vcolors = self.data.vertex_colors
         size = self.get_size()
@@ -953,34 +974,45 @@ class PolyColormap(Colormap):
         return image
 
 class LineColormap(Colormap):
+    def resize(self):
+        with krz.utils.modified_mesh(self.obj) as mesh:
+            super(LineColormap, self).resize()
+
     def set_layers(self, layers):
         super(LineColormap, self).set_layers(layers)
-        self.set_size(self.fit_size(
-            len(self.data.vertices),
-            len(layers)))
+        with krz.utils.modified_mesh(self.obj) as mesh:
+            self.set_size(self.fit_size(
+                len(mesh.vertices),
+                len(layers)))
+
+    def get_stride(self):
+        super(LineColormap, self).get_stride()
+        size = self.get_size()
+        return int(math.ceil(len(self.data.vertices) / size))
 
     def generate_image(self):
         image = super(LineColormap, self).generate_image()
 
-        size = self.get_size()
-        layers = self.get_layers()
-        pixels = image.pixels
-        stride = int(image.depth / 8)
+        with krz.utils.modified_mesh(self.obj) as mesh:
+            size = self.get_size()
+            layers = self.get_layers()
+            pixels = image.pixels
+            stride = int(image.depth / 8)
 
-        for index, layer in enumerate(layers):
-            colors = Manager(self.obj).get_layer(layer)
-            if not colors:
-                continue
+            for index, layer in enumerate(layers):
+                colors = Manager(self.obj).get_layer(layer)
+                if not colors:
+                    continue
 
-            offset = int(math.ceil(
-                len(colors.samples) / size) * size * stride * index)
+                offset = int(math.ceil(
+                    len(colors.samples) / size) * size * stride * index)
 
-            for i, s in enumerate(colors.samples):
-                p = offset + i * stride
-                image.pixels[p + 0] = s.color.r
-                image.pixels[p + 1] = s.color.g
-                image.pixels[p + 2] = s.color.b
-                image.pixels[p + 3] = s.alpha
+                for i, s in enumerate(colors.samples):
+                    p = offset + i * stride
+                    image.pixels[p + 0] = s.color.r
+                    image.pixels[p + 1] = s.color.g
+                    image.pixels[p + 2] = s.color.b
+                    image.pixels[p + 3] = s.alpha
 
         return image
 

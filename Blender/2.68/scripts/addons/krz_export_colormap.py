@@ -17,12 +17,24 @@ def export_colormap(obj, filepath, colormap=''):
         colormap = krz.colors.Manager(obj).get_export_colormap()
         if colormap:
             colormap = colormap.name
+
     colormap = krz.colors.colormap(obj, colormap)
+
     image = colormap.generate_image()
     image.filepath_raw = filepath
     image.save()
     image.user_clear()
+    size = image.size[0]
     bpy.data.images.remove(image)
+
+    with open(filepath, 'a') as fp:
+        fp.write('\x1a')
+        fp.write('COLORMAP\0')
+        fp.write('%i' % size)
+        fp.write('\0')
+        fp.write('%i' % colormap.get_stride())
+        fp.write('\0')
+        fp.write('\0'.join(colormap.get_layers()))
 
 class ColormapExporter(bpy.types.Operator):
     bl_idname = 'cc.export_colormap'
