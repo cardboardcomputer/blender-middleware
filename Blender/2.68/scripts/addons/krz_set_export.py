@@ -13,25 +13,31 @@ bl_info = {
 }
 
 @krz.ops.editmode
-def set_export(objects, layer, colormap):
+def set_export(objects, layer, aux, colormap):
     for obj in objects:
         if obj.type == 'MESH':
             m = krz.colors.Manager(obj)
             if layer:
                 m.set_export_layer(layer)
+            if aux:
+                if aux == '__NONE__':
+                    aux = None
+                m.set_aux_layer(aux)
             if colormap:
+                if colormap == '__NONE__':
+                    colormap = None
                 m.set_export_colormap(colormap)
 
 def shared_colormap_items(scene, context):
     colormaps = krz.colors.find_shared_colormaps(context.selected_objects)
-    enum = []
+    enum = [('__NONE__', '', '')]
     for name in colormaps:
         enum.append((name, name, name))
     return enum
 
 def shared_layer_items(scene, context):
     layers = krz.colors.find_shared_layers(context.selected_objects)
-    enum = []
+    enum = [('__NONE__', '', '')]
     for name in layers:
         enum.append((name, name, name))
     return enum
@@ -42,7 +48,10 @@ class SetExport(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     layer = bpy.props.EnumProperty(
-        items=shared_layer_items, name='Color Layer')
+        items=shared_layer_items, name='Main Color Layer')
+
+    aux = bpy.props.EnumProperty(
+        items=shared_layer_items, name='Aux Color Layer')
 
     colormap = bpy.props.EnumProperty(
         items=shared_colormap_items, name='Color Map')
@@ -57,6 +66,8 @@ class SetExport(bpy.types.Operator):
             context.selected_objects)
         default_layer = krz.colors.find_default_layer(
             context.selected_objects, for_export=True)
+        default_aux = krz.colors.find_default_layer(
+            context.selected_objects, for_aux=True)
 
         shared_colormaps = krz.colors.find_shared_colormaps(
             context.selected_objects)
@@ -65,6 +76,8 @@ class SetExport(bpy.types.Operator):
 
         if default_layer and default_layer in shared_layers:
             self.layer = default_layer
+        if default_aux and default_aux in shared_layers:
+            self.aux = default_aux
         if default_colormap and default_colormap in shared_colormaps:
             self.colormap = default_colormap
 
@@ -72,7 +85,7 @@ class SetExport(bpy.types.Operator):
         return wm.invoke_props_dialog(self)
 
     def execute(self, context):
-        set_export(context.selected_objects, self.layer, self.colormap)
+        set_export(context.selected_objects, self.layer, self.aux, self.colormap)
         return {'FINISHED'}
 
 def menu_func(self, context):

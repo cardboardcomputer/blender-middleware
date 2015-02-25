@@ -45,6 +45,8 @@ def export_unity_lines(
             color_layer = export_layer.name
     export_colors = krz.colors.Manager(obj).get_layer(color_layer) is not None
 
+    aux_layer = krz.colors.Manager(obj).get_aux_layer()
+
     with krz.utils.modified_mesh(obj) as mesh:
 
         if export_colors:
@@ -73,6 +75,11 @@ def export_unity_lines(
                 color = Color(cd.color.r, cd.color.g, cd.color.b, cd.alpha)
             else:
                 color = Color(1, 1, 1, 1)
+            if aux_layer:
+                cd = aux_layer.samples[v.index]
+                aux_color = Color(cd.color.r, cd.color.g, cd.color.b, cd.alpha)
+            else:
+                aux_color = None
 
             if export_normals:
                 nd = normals.get(v.index)
@@ -80,7 +87,7 @@ def export_unity_lines(
             else:
                 normal = (0, 0, 1)
 
-            vertices.append(Vertex(i, v.co, color, normal))
+            vertices.append(Vertex(i, v.co, color, normal, aux_color=aux_color))
 
         for edge in mesh.edges:
             a = vertices[edge.vertices[0]]
@@ -133,6 +140,14 @@ def export_unity_lines(
                 fp.write('%s %s %s' % (x, y, z))
                 if i < len(vertices) - 1:
                     fp.write(' ')
+
+            if aux_layer:
+                fp.write('\n')
+                for i, vertex in enumerate(vertices):
+                    r, g, b, a = floats_to_strings((vertex.aux_color.r, vertex.aux_color.g, vertex.aux_color.b, vertex.aux_color.a), precision)
+                    fp.write('%s %s %s %s' % (r, g, b, a))
+                    if i < len(vertices) - 1:
+                        fp.write(' ')
 
 class UnityLineExporter(bpy.types.Operator):
     bl_idname = 'cc.export_unity_lines'

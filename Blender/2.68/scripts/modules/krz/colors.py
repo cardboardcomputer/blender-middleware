@@ -60,15 +60,51 @@ def hex_to_color(val):
     else:
         return mathutils.Color((t[0] / 255.0, t[1] / 255.0, t[2] / 255.0))
 
-def find_default_layer(objects, for_export=False):
+def rgba_to_uv(rgba, precision=4096):
+    p = precision - 1
+    r, g, b, a = rgba
+
+    r = math.floor(r * p)
+    g = math.floor(g * p)
+    b = math.floor(b * p)
+    a = math.floor(a * p)
+
+    u = (r * precision) + g
+    v = (b * precision) + a
+
+    return u, v
+
+def uv_to_rgba(uv, precision=4096):
+    p = precision - 1
+    u, v = uv
+
+    r = math.floor(u / precision) / p
+    g = (u % precision) / p
+    b = math.floor(v / precision) / p
+    a = (v % precision) / p
+
+    return r, g, b, a
+
+def bake_to_uvmap(obj, layer, uvmap):
+    layer = Manager(obj).get_layer(layer)
+    uvmap = obj.data.uv_layers[obj.data.uv_textures.keys().index(uvmap)]
+
+    for i, s in enumerate(layer.itersamples()):
+        uv = rgba_to_uv((s.color.r, s.color.g, s.color.b, s.alpha))
+        uvmap.data[i].uv = uv
+
+def find_default_layer(objects, for_export=False, for_aux=False):
     freq = {}
 
     for obj in objects:
         if obj.type == 'MESH':
-            if for_export:
-                layer = Manager(obj).get_export_layer()
+            if for_aux:
+                layer = Manager(obj).get_aux_layer()
             else:
-                layer = Manager(obj).get_active_layer(False)
+                if for_export:
+                    layer = Manager(obj).get_export_layer()
+                else:
+                    layer = Manager(obj).get_active_layer(False)
             if not layer:
                 continue
             if layer.name not in freq:
@@ -339,6 +375,44 @@ class Manager:
             if name in self.obj.data.vertex_colors:
                 self.obj.data.vertex_colors[name].active_render = True
 
+    def get_aux_layer(self):
+        meta = self.meta
+        if self.is_line():
+            if 'aux_line_color' in meta:
+                layer = LineColorLayer(self.obj, meta['aux_line_color'])
+                if layer.exists():
+                    return layer
+        else:
+            if 'aux_poly_color' in meta:
+                layer = PolyColorLayer(self.obj, meta['aux_poly_color'])
+                if layer.exists():
+                    return layer
+
+    def set_aux_layer(self, name):
+        meta = self.meta
+        if self.is_line():
+            if name is None:
+                if 'aux_line_color' in meta:
+                    del meta['aux_line_color']
+            else:
+                layer = LineColorLayer(self.obj, name)
+                if layer.exists():
+                    meta['aux_line_color'] = name
+        else:
+            if name is None:
+                if 'aux_line_color' in meta:
+                    del meta['aux_poly_color']
+            else:
+                if name in self.obj.data.vertex_colors:
+                    meta['aux_poly_color'] = name
+                    if name not in self.obj.data.uv_textures:
+                        uvtex = self.obj.data.uv_textures.new()
+                        uvtex.name = name
+                        index = self.obj.data.uv_textures.keys().index(name)
+                        uvmap = self.obj.data.uv_layers[index]
+                        uvmap.name = name
+                        bake_to_uvmap(self.obj, name, name)
+
     def get_export_colormap(self):
         for uvmap in self.obj.data.uv_textures:
             if uvmap.active_render:
@@ -350,9 +424,10 @@ class Manager:
                     return colormap
 
     def set_export_colormap(self, name):
-        colormap = self.get_colormap(name)
-        if colormap:
-            colormap.uvmap.active_render = True
+        if name is not None:
+            colormap = self.get_colormap(name)
+            if colormap:
+                colormap.uvmap.active_render = True
 
     def add_colormap(self, name, **kw):
         if 'colormaps' not in self.meta:

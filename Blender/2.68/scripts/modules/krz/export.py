@@ -12,11 +12,12 @@ class Color:
         return iter((self.r, self.g, self.b, self.a))
 
 class Vertex:
-    def __init__(self, index, co, color, normal):
+    def __init__(self, index, co, color, normal, aux_color=None):
         self.index = index
         self.co = co
         self.color = color
         self.normal = normal
+        self.aux_color = aux_color
 
 class Edge:
     def __init__(self, a, b):

@@ -20,6 +20,9 @@ def export_colormap(obj, filepath, colormap=''):
 
     colormap = krz.colors.colormap(obj, colormap)
 
+    name, ext = os.path.splitext(filepath)
+    filepath = '%s%s%s' % (name, colormap.name, ext)
+
     image = colormap.generate_image()
     image.filepath_raw = filepath
     image.save()
