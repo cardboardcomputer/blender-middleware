@@ -677,6 +677,9 @@ class PolyColorLayer:
         else:
             alpha = None
 
+        if not len(colors):
+            return
+
         for poly in data.polygons:
             for idx, ptr in enumerate(poly.loop_indices):
                 vert = data.vertices[poly.vertices[idx]]

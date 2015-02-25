@@ -14,6 +14,15 @@ bl_info = {
 
 @krz.ops.editmode
 def light_colors(
+    objects,
+    use_normals=False,
+    color_layer='',
+    select='POLYGON'):
+    for obj in objects:
+        if obj.type == 'MESH':
+            light_colors_obj(obj, use_normals, color_layer, select)
+
+def light_colors_obj(
     obj,
     use_normals=False,
     color_layer='',
@@ -30,6 +39,11 @@ def light_colors(
     final = krz.colors.layer(obj)
     temp = krz.colors.new(obj, '_Temp')
     base = krz.colors.layer(obj, color_layer)
+
+    if final.name == base.name:
+        for i, s in enumerate(base.itersamples()):
+            if s.is_selected(select):
+                s.color = mathutils.Color((1, 1, 1))
 
     for i, s in enumerate(temp.itersamples()):
         if s.is_selected(select):
@@ -89,11 +103,8 @@ class LightColors(bpy.types.Operator):
         return obj and obj.type == 'MESH'
 
     def execute(self, context):
-        aux_objects = list(context.selected_objects)
-        aux_objects.remove(context.active_object)
-
         light_colors(
-            context.active_object,
+            context.selected_objects,
             use_normals=self.use_normals,
             color_layer=self.color_layer,
             select=self.select)
