@@ -78,16 +78,14 @@ class LineRenderer:
         bgl.glPopAttrib()
 
     def update(self, scene):
-        obj = scene.objects.active
-
-        if (obj and
-            obj.type == 'MESH' and
-            obj.data.edges and not
-            obj.data.polygons):
-            if obj.is_updated:
-                self.flag(obj)
-            if obj.is_updated_data:
-                self.flag(obj.data)
+        for obj in bpy.context.selected_objects:
+            if (obj.type == 'MESH' and
+                obj.data.edges and not
+                obj.data.polygons):
+                if obj.is_updated:
+                    self.flag(obj)
+                if obj.is_updated_data:
+                    self.flag(obj.data)
 
     def cleanup(self):
         real = set(hash(o) for o in bpy.data.objects)
