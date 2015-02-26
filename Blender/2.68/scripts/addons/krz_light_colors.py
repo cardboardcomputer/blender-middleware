@@ -31,7 +31,7 @@ def light_colors_obj(
     select = select.lower()
 
     lights = []
-    for l in bpy.context.scene.objects:
+    for l in krz.utils.traverse(bpy.context.scene.objects):
         if (l.type == 'LAMP' and
             not l.hide_render):
             lights.append(l)
