@@ -78,7 +78,10 @@ class LineRenderer:
         bgl.glPopAttrib()
 
     def update(self, scene):
-        for obj in bpy.context.selected_objects:
+        objects = set(krz.utils.traverse(
+          bpy.context.selected_objects, children=True))
+
+        for obj in objects:
             if (obj.type == 'MESH' and
                 obj.data.edges and not
                 obj.data.polygons):

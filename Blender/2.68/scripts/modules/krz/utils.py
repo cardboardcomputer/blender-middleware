@@ -14,15 +14,22 @@ def magnitude(v):
 def nearest_pow_2(v):
     return 1 << (v - 1).bit_length()
 
-def traverse(objects):
+def traverse(objects, children=False):
     def expand(obj):
+        collected = []
+
+        if children:
+            for o in obj.children:
+                collected += expand(o)
+
         if obj.dupli_group:
-            children = []
             for o in obj.dupli_group.objects:
-                children += expand(o)
-            return children
+                collected += expand(o)
         else:
-            return [obj]
+            collected += [obj]
+
+        return collected
+
     for obj in objects:
         for o in expand(obj):
             yield o

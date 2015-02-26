@@ -28,6 +28,7 @@ def light_colors_obj(
     color_layer='',
     select='POLYGON'):
 
+    light_all = False
     select = select.lower()
 
     lights = []
@@ -41,12 +42,12 @@ def light_colors_obj(
     base = krz.colors.layer(obj, color_layer)
 
     if final.name == base.name:
+        light_all = True
         for i, s in enumerate(base.itersamples()):
-            if s.is_selected(select):
-                s.color = mathutils.Color((1, 1, 1))
+            s.color = mathutils.Color((1, 1, 1))
 
     for i, s in enumerate(temp.itersamples()):
-        if s.is_selected(select):
+        if light_all or s.is_selected(select):
             s.color *= 0
 
     for light in lights:
@@ -56,7 +57,7 @@ def light_colors_obj(
         lcolor = light.data.color * light.data.energy
 
         for i, s in enumerate(temp.itersamples()):
-            if not s.is_selected(select):
+            if not light_all and not s.is_selected(select):
                 continue
 
             vert = obj.matrix_world * s.vertex.co
@@ -81,7 +82,7 @@ def light_colors_obj(
             s.color.b += color.b * rcolor.b
 
     for i, s in enumerate(final.itersamples()):
-        if s.is_selected(select):
+        if light_all or s.is_selected(select):
             s.color = temp.samples[i].color
 
     temp.destroy()
