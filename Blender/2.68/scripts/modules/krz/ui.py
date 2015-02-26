@@ -3,6 +3,7 @@ import bgl
 import krz
 import atexit
 import mathutils
+import functools
 from krz.colors import colormeta, Manager
 
 line_renderer = None
@@ -37,14 +38,14 @@ class LineRenderer:
         if self.update in bpy.app.handlers.scene_update_post:
             bpy.app.handlers.scene_update_post.remove(self.update)
 
-    def flag(self, obj):
+    def flag(self, obj, force=False):
         cache = self.obj_cache.get(hash(obj))
         if cache is not None:
-            cache.flag()
+            cache.flag(force)
         else:
             cache = self.mesh_cache.get(hash(obj))
             if cache is not None:
-                cache.flag()
+                cache.flag(force)
 
     def draw(self):
         context = bpy.context
@@ -110,7 +111,7 @@ class LineObjCache:
         if hasattr(self, 'm'):
             del self.m
 
-    def flag(self):
+    def flag(self, force=False):
         self.update = True
 
     def cache(self, renderer, obj):
@@ -152,8 +153,8 @@ class LineMeshCache:
             bgl.glDeleteLists(self.list, 1)
             self.list = 0
 
-    def flag(self):
-        if not self.ignore_next_update:
+    def flag(self, force=False):
+        if not self.ignore_next_update or force:
             self.update = True
         self.ignore_next_update = False
 
@@ -204,7 +205,7 @@ def install_line_renderer():
 
     line_renderer = LineRenderer()
     line_renderer.attach()
-    flag = line_renderer.flag
+    flag = functools.partial(line_renderer.flag, force=True)
 
 def uninstall_line_renderer():
     global line_renderer

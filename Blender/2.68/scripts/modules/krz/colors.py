@@ -642,6 +642,7 @@ class LineColorLayer:
             name = self._name
             obj.vertex_groups.active_index = self.r.index
         colormeta(obj)['active_line_color'] = name
+        krz.ui.flag(obj.data)
 
     def itersamples(self):
         if not self._samples:
