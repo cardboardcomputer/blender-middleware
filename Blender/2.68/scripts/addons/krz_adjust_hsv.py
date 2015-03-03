@@ -41,6 +41,14 @@ class AdjustHsv(bpy.types.Operator):
         obj = context.active_object
         return (obj and obj.type == 'MESH')
 
+    def __init__(self):
+        context = bpy.context
+        if context.mode == 'EDIT_MESH':
+            vertex, edge, face = context.tool_settings.mesh_select_mode
+            self.select = 'VERTEX'
+            if face and not vertex:
+                self.select = 'POLYGON'
+
     def execute(self, context):
         adjust_hsv(context.active_object, self.h, self.s, self.v, self.multiply, self.select)
         return {'FINISHED'}

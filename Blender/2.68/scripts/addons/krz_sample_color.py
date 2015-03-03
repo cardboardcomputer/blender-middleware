@@ -35,15 +35,18 @@ def find(context, event, ray_max=1000.0):
         """Loop over (object, matrix) pairs (mesh only)"""
 
         for obj in context.visible_objects:
+            if obj.draw_type != 'TEXTURED':
+                continue
+
             if obj.type == 'MESH':
                 yield (obj, obj.matrix_world.copy())
 
-        if obj.dupli_type != 'NONE':
-            obj.dupli_list_create(scene)
-            for dob in obj.dupli_list:
-                obj_dupli = dob.object
-                if obj_dupli.type == 'MESH':
-                    yield (obj_dupli, dob.matrix.copy())
+            if obj.dupli_type != 'NONE':
+                obj.dupli_list_create(scene)
+                for dob in obj.dupli_list:
+                    obj_dupli = dob.object
+                    if obj_dupli.type == 'MESH':
+                        yield (obj_dupli, dob.matrix.copy())
 
             obj.dupli_list_clear()
 
@@ -132,7 +135,7 @@ class SampleColor(bpy.types.Operator):
                     select = 'POLYGON'
                 set_colors(obj, self.color, None, select=select)
                 return {'FINISHED'}
-    
+
         elif context.mode == 'PAINT_VERTEX':
             context.tool_settings.vertex_paint.brush.color = self.color
 
