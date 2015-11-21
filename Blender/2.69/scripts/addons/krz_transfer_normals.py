@@ -12,12 +12,23 @@ bl_info = {
 }
 
 @krz.ops.editmode
-def transfer_normals(obj, ref, select='VERTEX'):
+def transfer_normals(obj, ref, select='VERTEX', from_colors=False):
     normals = krz.lines.normals(obj)
-    for vert in obj.data.vertices:
-        if vert.select:
-            point, normal, face = ref.closest_point_on_mesh(vert.co)
-            normals.set(vert.index, normal.x, normal.y, normal.z)
+
+    if from_colors:
+        with krz.colors.Sampler(ref) as sampler:
+            colors = krz.colors.layer(obj)
+            for sample in colors.itersamples():
+                if sample.is_selected(select.lower()):
+                    point = sample.obj.matrix_world * sample.vertex.co
+                    color = sampler.closest(point)
+                    normals.set(sample.vertex.index, color.r * 2 - 1, color.g * 2 - 1, color.b * 2 - 1)
+
+    else:
+        for vert in obj.data.vertices:
+            if vert.select:
+                point, normal, face = ref.closest_point_on_mesh(vert.co)
+                normals.set(vert.index, normal.x, normal.y, normal.z)
 
 class TransferNormals(bpy.types.Operator):
     bl_idname = 'cc.transfer_normals'
@@ -27,6 +38,8 @@ class TransferNormals(bpy.types.Operator):
     select = bpy.props.EnumProperty(
         items=krz.ops.ENUM_SELECT,
         name='Select', default='VERTEX')
+    from_colors = bpy.props.BoolProperty(
+        name='From Colors', default=False)
 
     @classmethod
     def poll(cls, context):
@@ -46,7 +59,7 @@ class TransferNormals(bpy.types.Operator):
         obj = context.active_object
         ref = aux_objects[0]
 
-        transfer_normals(obj, ref, select=self.select)
+        transfer_normals(obj, ref, select=self.select, from_colors=self.from_colors)
 
         return {'FINISHED'}
 
