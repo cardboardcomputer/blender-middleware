@@ -1150,15 +1150,21 @@ class Sampler:
             m.show_viewport = settings[i]
 
     def closest(self, point, layer=None):
+        m = self.obj.matrix_world.inverted()
+        point = m * point
         return self.sample(layer=layer, *self.obj.closest_point_on_mesh(point))
 
     def raycast(self, start, end, layer=None):
+        m = self.obj.matrix_world.inverted()
+        start = m * start
+        end = m * end
         return self.sample(layer=layer, *self.obj.ray_cast(start, end))
 
     def sample(self, point, normal, face, layer=None):
         if face == -1:
             return mathutils.Color((0, 0, 0))
 
+        obj = self.obj
         mesh = self.mesh
         colors = self.layer.data
 
