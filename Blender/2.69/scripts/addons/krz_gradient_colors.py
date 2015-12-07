@@ -21,18 +21,20 @@ def gradient_colors(
     alpha_b,
     blend_type,
     blend_method,
-    select='POLYGON'):
+    select='POLYGON',
+    update_gradient=True):
 
     colors = krz.colors.layer(obj)
 
-    ref['Gradient'] = {}
-    d = ref['Gradient']
-    d['blend_type'] = blend_type
-    d['blend_method'] = blend_method
-    d['color_a'] = list(color_a)
-    d['color_b'] = list(color_b)
-    d['alpha_a'] = alpha_a
-    d['alpha_b'] = alpha_b
+    if update_gradient:
+        ref['Gradient'] = {}
+        d = ref['Gradient']
+        d['blend_type'] = blend_type
+        d['blend_method'] = blend_method
+        d['color_a'] = list(color_a)
+        d['color_b'] = list(color_b)
+        d['alpha_a'] = alpha_a
+        d['alpha_b'] = alpha_b
 
     m = mathutils
     p1 = ref.location
@@ -79,6 +81,18 @@ def gradient_colors(
             s.color.r -= color_ab.r;
             s.color.g -= color_ab.g;
             s.color.b -= color_ab.b;
+
+def gradient_to_kwargs(obj):
+    g = {}
+    if 'Gradient' in obj:
+        d = obj['Gradient']
+        g['blend_type'] = d['blend_type']
+        g['blend_method'] = d['blend_method']
+        g['color_a'] = mathutils.Color(d['color_a'])
+        g['color_b'] = mathutils.Color(d['color_b'])
+        g['alpha_a'] = d['alpha_a']
+        g['alpha_b'] = d['alpha_b']
+    return g
 
 class GradientColors(bpy.types.Operator):
     bl_idname = 'cc.gradient_colors'

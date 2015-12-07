@@ -15,7 +15,7 @@ bl_info = {
 def legacy_upgrade():
     krz.legacy.upgrade()
 
-class TransferColors(bpy.types.Operator):
+class LegacyUpgrade(bpy.types.Operator):
     bl_idname = 'cc.legacy_upgrade'
     bl_label = 'Upgrade Legacy KRZ Scenes'
     bl_options = {'REGISTER', 'UNDO'}
