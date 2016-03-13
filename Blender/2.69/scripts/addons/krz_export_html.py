@@ -29,6 +29,8 @@ bl_info = {
 
 THREEJS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r70/three.min.js'
 
+os.environ['PATH'] = ':'.join((os.environ['PATH'], '/usr/local/bin'))
+
 def lens_to_fov(lens):
     return 2 * math.atan(16 / lens) * (180 / math.pi)
 
