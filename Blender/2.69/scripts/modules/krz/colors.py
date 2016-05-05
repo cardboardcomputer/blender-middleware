@@ -195,6 +195,18 @@ class Color(mathutils.Color):
         else:
             return super(Color, self).__div__(o)
 
+    def __add__(self, o):
+        if hasattr(o, '__len__'):
+            return super(Color, self).__add__(o)
+        else:
+            return super(Color, self).__add__(Color(o, o, o))
+
+    def __sub__(self, o):
+        if hasattr(o, '__len__'):
+            return super(Color, self).__sub__(o)
+        else:
+            return super(Color, self).__sub__(Color(o, o, o))
+
 class Manager:
     def __init__(self, obj, base=None):
         self.obj = obj
