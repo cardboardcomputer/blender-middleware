@@ -1,7 +1,6 @@
 import bpy
 import krz
 import mathutils
-import krz_gradient_colors
 
 bl_info = {
     'name': 'Apply Gradients',
@@ -14,6 +13,8 @@ bl_info = {
 }
 
 def apply_gradients(objects, select='POLYGON'):
+    import krz_gradient_colors
+
     meshes = []
     gradients = []
 
