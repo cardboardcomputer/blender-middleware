@@ -1,0 +1,7 @@
+Unity/Blender-Middleware/Library
+*.csproj
+*.pidb
+*.sln
+Assembly*
+*.userprefs
+*__pycache__
