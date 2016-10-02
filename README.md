@@ -40,7 +40,7 @@ later versions of Blender after the viewport refactor.
 3. Copy the contents of `Blender/2.69` in the repo to your *user scripts folder*:
 
    - Mac: `/Users/<username>/Library/Application Support/Blender/2.69`
-   - Win: `\Users\<username>\AppData\Roaming\Blender Foundation\Blender\2.69`
+   - Win: `C:\Users\<username>\AppData\Roaming\Blender Foundation\Blender\2.69`
 
 4. We run a modified fbx exporter. To avoid duplicate module warnings
    and to make sure the right fbx exporter is being loaded, move the
@@ -56,7 +56,7 @@ later versions of Blender after the viewport refactor.
    or export process.
 
    - On Mac via Terminal.app: `/Applications/blender.app/Contents/MacOS/blender`
-   - On Win via cmd.exe: `c:\Program Files\Blender Foundation\Blender\blender.exe`
+   - On Win via cmd.exe: `C:\Program Files\Blender Foundation\Blender\blender.exe`
 
 6. Open the User Preference window (File->User Preferences), and under
    the Addons tab, select the Cardboard category that should now be
