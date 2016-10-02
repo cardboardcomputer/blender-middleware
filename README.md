@@ -62,7 +62,7 @@ later versions of Blender after the viewport refactor.
    be visible on the left. Enable all the addons under this category,
    and click 'Save User Settings'.
 
-   Open `Unity/Blender-Middleware/Assets/TestScene/Meshes/Test.blend`
+8. Open `Unity/Blender-Middleware/Assets/TestScene/Meshes/Test.blend`
    in Blender and save the scene. This should trigger the embedded
    `autoexport.py` script which should rewrite some line files and
    some colormap pngs. Files regenerated under
@@ -73,7 +73,7 @@ later versions of Blender after the viewport refactor.
    - `Textures/TestCubeCol.png`
    - `Textures/TestCubeLinesCol.png`
 
-8. Open the included Unity project in the repo with the latest version
+9. Open the included Unity project in the repo with the latest version
    of Unity. If everything was set up right then there should be no
    errors or warnings during initial import. Check the following in
    the included Test.unity scene:
@@ -92,3 +92,7 @@ later versions of Blender after the viewport refactor.
    - Right-click on `Textures/TestCubeCol.png` and select reimport, to
      make sure the colormap postprocessor runs without
      errors/warnings.
+
+## Updating
+
+Follow steps 3, 4, 6, 8, and 9.
