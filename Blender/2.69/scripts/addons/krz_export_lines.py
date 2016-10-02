@@ -45,13 +45,22 @@ def export_unity_lines(
             color_layer = export_layer.name
     export_colors = krz.colors.Manager(obj).get_layer(color_layer) is not None
 
+    aux_layer = krz.colors.Manager(obj).get_aux_layer()
+    if aux_layer:
+        have_aux_colors = True
+        aux_layer_name = aux_layer.name
+    else:
+        have_aux_colors = False
+
     with krz.utils.modified_mesh(obj) as mesh:
 
         if export_colors:
             colors = krz.colors.layer(obj, color_layer)
         normals = krz.lines.normals(obj)
         export_normals = normals.exists()
-        aux_layer = krz.colors.Manager(obj).get_aux_layer()
+
+        if have_aux_colors:
+            aux_layer = krz.colors.layer(obj, aux_layer_name)
 
         (min_x, min_y, min_z) = (max_x, max_y, max_z) = mesh.vertices[0].co
 
@@ -74,7 +83,7 @@ def export_unity_lines(
                 color = Color(cd.color.r, cd.color.g, cd.color.b, cd.alpha)
             else:
                 color = Color(1, 1, 1, 1)
-            if aux_layer:
+            if have_aux_colors:
                 cd = aux_layer.samples[v.index]
                 aux_color = Color(cd.color.r, cd.color.g, cd.color.b, cd.alpha)
             else:
