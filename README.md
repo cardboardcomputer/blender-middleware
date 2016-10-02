@@ -37,10 +37,10 @@ later versions of Blender after the viewport refactor.
 2. Run blender, and select File->Save Startup File. This will create a
    user scripts folder on you system for blender addons.
 
-3. Copy the contents of `Blender/2.69/` in the repo to your user scripts folder:
+3. Copy the contents of `Blender/2.69` in the repo to your user scripts folder:
 
-   - Mac: `/Users/<username>/Library/Application Support/Blender`
-   - Windows: `\Users\<username>\AppData\Roaming\Blender Foundation\Blender`
+   - Mac: `/Users/<username>/Library/Application Support/Blender/2.69`
+   - Windows: `\Users\<username>\AppData\Roaming\Blender Foundation\Blender\2.69`
 
 4. We run a modified fbx exporter. Move the `io_scene_fbx` from your
    user scripts folder, located under `2.69/scripts/addons`, to
