@@ -1,4 +1,6 @@
 Unity/Blender-Middleware/Library
+Unity/Blender-Middleware/Temp
+Unity/Blender-Middleware/Build
 *.csproj
 *.pidb
 *.sln

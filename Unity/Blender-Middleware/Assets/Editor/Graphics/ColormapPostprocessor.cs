@@ -1,4 +1,3 @@
-/*
 using UnityEngine;
 using UnityEditor;
 using System;
@@ -10,6 +9,9 @@ public class ColormapPostprocessor : AssetPostprocessor
   {
     TextureImporter importer = assetImporter as TextureImporter;
     string path = importer.assetPath;
+
+    if (Application.platform == RuntimePlatform.WindowsEditor) 
+        path = path.Replace("/", "\\");
 
     StreamReader reader = new StreamReader(path);
     string data = reader.ReadToEnd();
@@ -41,6 +43,7 @@ public class ColormapPostprocessor : AssetPostprocessor
               "Materials";
 
             DirectoryInfo dir = new DirectoryInfo(materialsPath);
+            if (!dir.Exists) dir = Directory.CreateDirectory(materialsPath);
             string[] dirContents = Directory.GetFiles(dir.FullName);
 
             foreach (string file in dirContents)
@@ -77,4 +80,3 @@ public class ColormapPostprocessor : AssetPostprocessor
       }
   }
 }
-*/
