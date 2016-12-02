@@ -27,7 +27,7 @@ public class ColormapPostprocessor : AssetPostprocessor
         if (tokens.Length > 0 && tokens[0] == "COLORMAP")
           {
             importer.filterMode = FilterMode.Point;
-            importer.textureFormat = TextureImporterFormat.AutomaticTruecolor;
+            importer.textureCompression = TextureImporterCompression.Uncompressed;
 
             UnityEngine.Object asset = AssetDatabase.LoadAssetAtPath(path, typeof(Texture2D));
             if (asset)
