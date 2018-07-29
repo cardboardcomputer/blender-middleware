@@ -126,8 +126,6 @@ class GradientTool(bpy.types.Operator):
     alpha_b = bpy.props.FloatProperty(
         name="End Alpha", min=0, max=1, step=0.1, default=1)
 
-    raycast = bpy.props.BoolProperty(name="Raycast", default=True)
-
     @classmethod
     def poll(cls, context):
         obj = context.active_object
@@ -172,8 +170,6 @@ class GradientTool(bpy.types.Operator):
         row = col.row()
         row.prop(self, 'color_b', '')
         row.prop(self, 'alpha_b', '')
-
-        layout.prop(self, 'raycast')
 
     def execute(self, context):
         gradient_colors(
@@ -224,7 +220,7 @@ class GradientTool(bpy.types.Operator):
             origin = endpoint + direction * region_3d.view_distance
             farpoint = origin - direction * 1000
 
-        if self.raycast:
+        if event.ctrl:
             result, obj, matrix, location, normal = context.scene.ray_cast(origin, farpoint)
             if result:
                 endpoint = location
