@@ -137,7 +137,6 @@ class GradientTool(bpy.types.Operator):
         self.mouse_a = (0, 0)
         self.mouse_b = (0, 0)
         self.mouse_now = (0, 0)
-        self.editmode_toggled = False
         self.started = False
         self.color_a = defaults['color_a']
         self.color_b = defaults['color_b']
@@ -180,26 +179,31 @@ class GradientTool(bpy.types.Operator):
             self.blend_type, self.blend_method,
             self.select)
 
+        theme = context.user_preferences.themes[0].view_3d
+        theme.face_select[3] = self.face_select
+        theme.editmesh_active[3] = self.editmesh_active
+        context.area.tag_redraw()
+
         defaults['color_a'] = self.color_a
         defaults['color_b'] = self.color_b
 
         return {'FINISHED'}
 
     def invoke(self, context, event):
-        self.show_wire = context.active_object.show_wire
+        theme = context.user_preferences.themes[0].view_3d
+        self.face_select = theme.face_select[3]
+        self.editmesh_active = theme.editmesh_active[3]
+        theme.face_select[3] = 0
+        theme.editmesh_active[3] = 0
+        context.area.tag_redraw()
+
         context.window_manager.modal_handler_add(self)
+
         return {'RUNNING_MODAL'}
 
     def modal(self, context, event):
         if self._draw_3d is None:
             self.add_viewport_handler(context)
-
-        if self.editmode_toggled:
-            context.active_object.show_wire = True
-
-        if bpy.context.mode.startswith('EDIT_'):
-            bpy.ops.object.editmode_toggle()
-            self.editmode_toggled = True
 
         context.area.tag_redraw()
         context.window.cursor_set('CROSSHAIR')
@@ -243,21 +247,24 @@ class GradientTool(bpy.types.Operator):
         if event.type == 'LEFTMOUSE' and event.value == 'RELEASE':
             self.point_b = endpoint
             self.mouse_b = mouse_pos
-            self.del_viewport_handler()
-            context.window.cursor_set('DEFAULT')
             self.execute(context)
-            context.active_object.show_wire = self.show_wire
-            if self.editmode_toggled:
-                bpy.ops.object.editmode_toggle()
-                context.area.tag_redraw()
+            self.modal_cleanup(context, event)
             return {'FINISHED'}
 
         if event.type == 'ESC':
-            context.window.cursor_set('DEFAULT')
-            self.del_viewport_handler()
+            self.modal_cleanup(context, event)
             return {'CANCELLED'}
 
         return {'RUNNING_MODAL'}
+
+    def modal_cleanup(self, context, event):
+        self.del_viewport_handler()
+        context.window.cursor_set('DEFAULT')
+
+        theme = context.user_preferences.themes[0].view_3d
+        theme.face_select[3] = self.face_select
+        theme.editmesh_active[3] = self.editmesh_active
+        context.area.tag_redraw()
 
     def draw_viewport_2d(self, context):
         bgl.glPushAttrib(
