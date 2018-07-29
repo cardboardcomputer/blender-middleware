@@ -3,6 +3,7 @@ import bgl
 import krz
 import mathutils
 from bpy_extras import view3d_utils
+from krz_sample_color import sample_color
 
 bl_info = {
     'name': 'Gradient Tool',
@@ -12,6 +13,14 @@ bl_info = {
     'location': 'View3D > Specials > Gradient Tool',
     'description': 'Apply gradients on lines/polygon colors',
     'category': 'Cardboard'
+}
+
+# this workaround is needed to retain changes to operator properties
+# while modal is running; changes to the properties only seeem to be
+# persisted when editing them in the operator panel.
+defaults = {
+    'color_a': mathutils.Color((0, 0, 0)),
+    'color_b': mathutils.Color((1, 1, 1)),
 }
 
 @krz.ops.editmode
@@ -127,9 +136,13 @@ class GradientTool(bpy.types.Operator):
     def __init__(self):
         self._draw_3d = None
         self._draw_2d = None
-        self._mouse_a = (0, 0)
-        self._mouse_b = (0, 0)
+        self.mouse_a = (0, 0)
+        self.mouse_b = (0, 0)
+        self.mouse_now = (0, 0)
         self.editmode_toggled = False
+        self.started = False
+        self.color_a = defaults['color_a']
+        self.color_b = defaults['color_b']
 
     def __del__(self):
         self.del_viewport_handler()
@@ -171,6 +184,9 @@ class GradientTool(bpy.types.Operator):
             self.blend_type, self.blend_method,
             self.select)
 
+        defaults['color_a'] = self.color_a
+        defaults['color_b'] = self.color_b
+
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -179,6 +195,9 @@ class GradientTool(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
     def modal(self, context, event):
+        if self._draw_3d is None:
+            self.add_viewport_handler(context)
+
         if self.editmode_toggled:
             context.active_object.show_wire = True
 
@@ -192,6 +211,8 @@ class GradientTool(bpy.types.Operator):
         region = bpy.context.region
         region_3d = bpy.context.space_data.region_3d
         mouse_pos = (event.mouse_region_x, event.mouse_region_y)
+
+        self.mouse_now = mouse_pos
 
         direction = view3d_utils.region_2d_to_vector_3d(region, region_3d, mouse_pos)
         endpoint = view3d_utils.region_2d_to_location_3d(region, region_3d, mouse_pos, region_3d.view_location)
@@ -209,14 +230,19 @@ class GradientTool(bpy.types.Operator):
                 endpoint = location
 
         if event.type == 'LEFTMOUSE' and event.value == 'PRESS':
+            self.started = True
             self.point_a = endpoint
             self.mouse_a = mouse_pos
-            self.add_viewport_handler(context)
+
+        if event.type == 'RIGHTMOUSE' and event.value == 'PRESS':
+            if event.shift:
+                self.color_b = sample_color(context, event)
+            else:
+                self.color_a = sample_color(context, event)
 
         if event.type == 'MOUSEMOVE':
             self.point_b = endpoint
             self.mouse_b = mouse_pos
-            pass
 
         if event.type == 'LEFTMOUSE' and event.value == 'RELEASE':
             self.point_b = endpoint
@@ -248,25 +274,51 @@ class GradientTool(bpy.types.Operator):
         bgl.glDepthFunc(bgl.GL_ALWAYS)
         bgl.glLineWidth(1)
 
-        ax, ay = self.mouse_a
-        bx, by = self.mouse_b
+        if self.started:
+            ax, ay = self.mouse_a
+            bx, by = self.mouse_b
 
-        bgl.glBegin(bgl.GL_LINES)
+            bgl.glBegin(bgl.GL_LINES)
 
-        bgl.glColor4f(0, 0, 0, 1)
-        bgl.glVertex2f(ax + 1, ay)
-        bgl.glVertex2f(bx + 1, by)
-        bgl.glVertex2f(ax - 1, ay)
-        bgl.glVertex2f(bx - 1, by)
-        bgl.glVertex2f(ax, ay + 1)
-        bgl.glVertex2f(bx, by + 1)
-        bgl.glVertex2f(ax, ay - 1)
-        bgl.glVertex2f(bx, by - 1)
+            bgl.glColor4f(0, 0, 0, 1)
+            bgl.glVertex2f(ax + 1, ay)
+            bgl.glVertex2f(bx + 1, by)
+            bgl.glVertex2f(ax - 1, ay)
+            bgl.glVertex2f(bx - 1, by)
+            bgl.glVertex2f(ax, ay + 1)
+            bgl.glVertex2f(bx, by + 1)
+            bgl.glVertex2f(ax, ay - 1)
+            bgl.glVertex2f(bx, by - 1)
 
-        bgl.glColor4f(1, 1, 1, 1)
-        bgl.glVertex2f(ax, ay)
-        bgl.glVertex2f(bx, by)
+            bgl.glColor4f(1, 1, 1, 1)
+            bgl.glVertex2f(ax, ay)
+            bgl.glVertex2f(bx, by)
 
+            bgl.glEnd()
+
+        mx, my = self.mouse_now
+        my -= 16
+
+        bgl.glBegin(bgl.GL_QUADS)
+        bgl.glColor3f(0, 0, 0)
+        bgl.glVertex2f(mx - 9, my - 8)
+        bgl.glVertex2f(mx, my + 1)
+        bgl.glVertex2f(mx + 9, my - 8)
+        bgl.glVertex2f(mx, my - 17)
+        bgl.glEnd()
+
+        bgl.glBegin(bgl.GL_TRIANGLES)
+        bgl.glColor3f(*self.color_a)
+        bgl.glVertex2f(mx - 8, my - 8)
+        bgl.glVertex2f(mx, my)
+        bgl.glVertex2f(mx, my - 16)
+        bgl.glEnd()
+
+        bgl.glBegin(bgl.GL_TRIANGLES)
+        bgl.glColor3f(*self.color_b)
+        bgl.glVertex2f(mx, my)
+        bgl.glVertex2f(mx + 8, my - 8)
+        bgl.glVertex2f(mx, my - 16)
         bgl.glEnd()
 
         bgl.glPopAttrib();
@@ -283,10 +335,10 @@ class GradientTool(bpy.types.Operator):
     def del_viewport_handler(self):
         if self._draw_3d:
             bpy.types.SpaceView3D.draw_handler_remove(self._draw_3d, 'WINDOW')
-            self._draw_3d = False
+            self._draw_3d = None
         if self._draw_2d:
             bpy.types.SpaceView3D.draw_handler_remove(self._draw_2d, 'WINDOW')
-            self._draw_2d = False
+            self._draw_2d = None
 
 def menu_func(self, context):
     self.layout.operator(GradientTool.bl_idname, text='Gradient Tool')
