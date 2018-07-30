@@ -4,7 +4,7 @@ bl_info = {
     'name': 'Copy Transform',
     'author': 'Cardboard Computer',
     'version': (0, 1),
-    'blender': (2, 6, 8),
+    'blender': (2, 6, 9),
     'location': 'View3D > Specials > Copy Transform',
     'description': 'Copy a transform from one object to another',
     'category': 'Cardboard'

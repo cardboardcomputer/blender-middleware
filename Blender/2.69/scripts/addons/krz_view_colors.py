@@ -5,7 +5,7 @@ bl_info = {
     'name': 'View Colors',
     'author': 'Cardboard Computer',
     'version': (0, 1),
-    'blender': (2, 6, 8),
+    'blender': (2, 6, 9),
     'location': 'View3D > Specials > View Colors',
     'description': 'Set the active color layer common to all selected objects',
     'category': 'Cardboard'

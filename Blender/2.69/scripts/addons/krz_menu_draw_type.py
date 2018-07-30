@@ -5,7 +5,7 @@ bl_info = {
     'name': 'Draw Type Menu',
     'author': 'Cardboard Computer',
     'version': (0, 1),
-    'blender': (2, 6, 8),
+    'blender': (2, 6, 9),
     'location': 'View3D > Specials > Set Draw Type',
     'description': 'Shortcut menu setting the maxiumum draw type',
     'category': 'Cardboard'

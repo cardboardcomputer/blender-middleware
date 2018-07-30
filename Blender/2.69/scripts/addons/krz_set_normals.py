@@ -6,7 +6,7 @@ bl_info = {
     'name': 'Set Normals',
     'author': 'Cardboard Computer',
     'version': (0, 1),
-    'blender': (2, 6, 8),
+    'blender': (2, 6, 9),
     'location': 'View3D > Specials > Set Normals',
     'description': 'Hand-set normals on lines',
     'category': 'Cardboard'

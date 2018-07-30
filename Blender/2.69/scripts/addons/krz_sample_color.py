@@ -7,7 +7,7 @@ bl_info = {
     'name': 'Sample Color',
     'author': 'Cardboard Computer',
     'version': (0, 1),
-    'blender': (2, 6, 8),
+    'blender': (2, 6, 9),
     'location': 'View3D > Specials > Sample Color',
     'description': 'Hand-sample color on lines and polygons',
     'category': 'Cardboard'

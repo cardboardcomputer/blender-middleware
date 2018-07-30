@@ -6,7 +6,7 @@ bl_info = {
     'name': 'Export Colormap (.png)',
     'author': 'Cardboard Computer',
     'version': (0, 1),
-    'blender': (2, 6, 8),
+    'blender': (2, 6, 9),
     'location': 'File > Import-Export > Colormap (.png)',
     'description': 'Export an object\'s vertex colormap',
     'category': 'Cardboard',
