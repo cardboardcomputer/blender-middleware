@@ -15,15 +15,6 @@ bl_info = {
     'category': 'Cardboard'
 }
 
-# this workaround is needed to retain changes to operator properties
-# while modal is running; changes to the properties only seeem to be
-# persisted when editing them in the operator panel.
-bpy.context.window_manager['krz_gradient_tool'] = {
-    'color_a': mathutils.Color((0, 0, 0)),
-    'color_b': mathutils.Color((1, 1, 1)),
-}
-defaults = bpy.context.window_manager['krz_gradient_tool']
-
 @krz.ops.editmode
 def gradient_colors(
     obj,
@@ -85,47 +76,100 @@ def gradient_colors(
             s.color.g -= color_ab.g;
             s.color.b -= color_ab.b;
 
+PROP_SELECT = bpy.props.EnumProperty(
+    items=krz.ops.ENUM_SELECT,
+    name='Select', default='POLYGON')
+
+PROP_BLEND_TYPE = bpy.props.EnumProperty(
+    items=(
+        ('LINEAR', 'Linear', 'Linear'),
+        ('RADIAL', 'Radial', 'Radial'),),
+    name='Type', default='LINEAR')
+
+PROP_BLEND_METHOD = bpy.props.EnumProperty(
+    items=(
+        ('SUBTRACT', 'Subtract', 'Subtract'),
+        ('ADD', 'Add', 'Add'),
+        ('MULTIPLY', 'Multiply', 'Multiply'),
+        ('MIX', 'Mix', 'Mix'),
+        ('REPLACE', 'Replace', 'Replace'),),
+    name='Method', default='REPLACE')
+
+PROP_COLOR_A = bpy.props.FloatVectorProperty(
+    name="Start Color", subtype='COLOR_GAMMA',
+    min=0, max=1, step=1,)
+
+PROP_ALPHA_A = bpy.props.FloatProperty(
+    name="Start Alpha", min=0, max=1, step=0.1, default=1)
+
+PROP_COLOR_B = bpy.props.FloatVectorProperty(
+    name="End Color", subtype='COLOR_GAMMA',
+    min=0, max=1, step=1, default=(1, 1, 1),)
+
+PROP_ALPHA_B = bpy.props.FloatProperty(
+    name="End Alpha", min=0, max=1, step=0.1, default=1)
+
+# monkeypatch Scene with persisted debris properties
+bpy.types.Scene.gradient_select = PROP_SELECT
+bpy.types.Scene.gradient_blend_type = PROP_BLEND_TYPE
+bpy.types.Scene.gradient_blend_method = PROP_BLEND_METHOD
+bpy.types.Scene.gradient_color_a = PROP_COLOR_A
+bpy.types.Scene.gradient_alpha_a = PROP_ALPHA_A
+bpy.types.Scene.gradient_color_b = PROP_COLOR_B
+bpy.types.Scene.gradient_alpha_b = PROP_ALPHA_B
+
+class GradientPanel(bpy.types.Panel):
+    bl_label = "Gradient Options"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
+
+    def draw(self, context):
+        layout = self.layout
+        data = context.scene
+
+        layout.label('Mask:')
+
+        layout.prop(data, 'gradient_select', '')
+
+        layout.label('Blending:')
+
+        col = layout.box()
+
+        col.prop(data, 'gradient_blend_type')
+        col.prop(data, 'gradient_blend_method')
+
+        layout.label('Start/Stop Colors:')
+
+        col = layout.box()
+
+        row = col.row()
+        row.prop(data, 'gradient_color_a', '')
+        row.prop(data, 'gradient_alpha_a', '')
+
+        row = col.row()
+        row.prop(data, 'gradient_color_b', '')
+        row.prop(data, 'gradient_alpha_b', '')
+
+bpy.utils.register_class(GradientPanel)
+
 class GradientTool(bpy.types.Operator):
     bl_idname = 'cc.gradient_tool'
     bl_label = 'Gradient Tool'
     bl_options = {'REGISTER', 'UNDO', 'PRESET'}
 
-    select = bpy.props.EnumProperty(
-        items=krz.ops.ENUM_SELECT,
-        name='Select', default='POLYGON')
-
-    blend_type = bpy.props.EnumProperty(
-        items=(
-            ('LINEAR', 'Linear', 'Linear'),
-            ('RADIAL', 'Radial', 'Radial'),),
-        name='Type', default='LINEAR')
-
-    blend_method = bpy.props.EnumProperty(
-        items=(
-            ('SUBTRACT', 'Subtract', 'Subtract'),
-            ('ADD', 'Add', 'Add'),
-            ('MULTIPLY', 'Multiply', 'Multiply'),
-            ('MIX', 'Mix', 'Mix'),
-            ('REPLACE', 'Replace', 'Replace'),),
-        name='Method', default='REPLACE')
+    select = PROP_SELECT
+    blend_type = PROP_BLEND_TYPE
+    blend_method = PROP_BLEND_METHOD
+    color_a = PROP_COLOR_A
+    alpha_a = PROP_ALPHA_A
+    color_b = PROP_COLOR_B
+    alpha_b = PROP_ALPHA_B
 
     point_a = bpy.props.FloatVectorProperty(
         name='Start Point', default=(0.0, 0.0, 0.0))
-
-    color_a = bpy.props.FloatVectorProperty(
-        name="Start Color", subtype='COLOR_GAMMA',
-        min=0, max=1, step=1,)
-    alpha_a = bpy.props.FloatProperty(
-        name="Start Alpha", min=0, max=1, step=0.1, default=1)
-
     point_b = bpy.props.FloatVectorProperty(
         name='End Point', default=(0.0, 0.0, 0.0))
 
-    color_b = bpy.props.FloatVectorProperty(
-        name="End Color", subtype='COLOR_GAMMA',
-        min=0, max=1, step=1, default=(1, 1, 1),)
-    alpha_b = bpy.props.FloatProperty(
-        name="End Alpha", min=0, max=1, step=0.1, default=1)
 
     @classmethod
     def poll(cls, context):
@@ -139,8 +183,6 @@ class GradientTool(bpy.types.Operator):
         self.mouse_b = (0, 0)
         self.mouse_now = (0, 0)
         self.started = False
-        self.color_a = defaults['color_a']
-        self.color_b = defaults['color_b']
 
     def __del__(self):
         self.del_viewport_handler()
@@ -185,12 +227,25 @@ class GradientTool(bpy.types.Operator):
         theme.editmesh_active[3] = self.editmesh_active
         context.area.tag_redraw()
 
-        defaults['color_a'] = self.color_a
-        defaults['color_b'] = self.color_b
+        context.scene.gradient_select = self.select
+        context.scene.gradient_blend_type = self.blend_type
+        context.scene.gradient_blend_method = self.blend_method
+        context.scene.gradient_color_a = self.color_a
+        context.scene.gradient_alpha_a = self.alpha_a
+        context.scene.gradient_color_b = self.color_b
+        context.scene.gradient_alpha_b = self.alpha_b
 
         return {'FINISHED'}
 
     def invoke(self, context, event):
+        self.select = context.scene.gradient_select
+        self.blend_type = context.scene.gradient_blend_type
+        self.blend_method = context.scene.gradient_blend_method
+        self.color_a = context.scene.gradient_color_a
+        self.alpha_a = context.scene.gradient_alpha_a
+        self.color_b = context.scene.gradient_color_b
+        self.alpha_b = context.scene.gradient_alpha_b
+
         theme = context.user_preferences.themes[0].view_3d
         self.face_select = theme.face_select[3]
         self.editmesh_active = theme.editmesh_active[3]
