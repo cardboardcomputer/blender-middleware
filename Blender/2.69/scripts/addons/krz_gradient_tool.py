@@ -18,10 +18,11 @@ bl_info = {
 # this workaround is needed to retain changes to operator properties
 # while modal is running; changes to the properties only seeem to be
 # persisted when editing them in the operator panel.
-defaults = {
+bpy.context.window_manager['krz_gradient_tool'] = {
     'color_a': mathutils.Color((0, 0, 0)),
     'color_b': mathutils.Color((1, 1, 1)),
 }
+defaults = bpy.context.window_manager['krz_gradient_tool']
 
 @krz.ops.editmode
 def gradient_colors(
@@ -233,6 +234,7 @@ class GradientTool(bpy.types.Operator):
             self.started = True
             self.point_a = endpoint
             self.mouse_a = mouse_pos
+            self.mouse_b = mouse_pos
 
         if event.type == 'RIGHTMOUSE' and event.value == 'PRESS':
             if event.shift:
@@ -247,7 +249,8 @@ class GradientTool(bpy.types.Operator):
         if event.type == 'LEFTMOUSE' and event.value == 'RELEASE':
             self.point_b = endpoint
             self.mouse_b = mouse_pos
-            self.execute(context)
+            if self.mouse_a != self.mouse_b:
+                self.execute(context)
             self.modal_cleanup(context, event)
             return {'FINISHED'}
 
