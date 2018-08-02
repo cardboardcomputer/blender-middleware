@@ -26,6 +26,7 @@ def gradient_colors(
     alpha_b,
     blend_type,
     blend_method,
+    bias, scale,
     select='POLYGON'):
 
     colors = krz.colors.layer(obj)
@@ -48,6 +49,8 @@ def gradient_colors(
         if blend_type == 'RADIAL':
             distance = krz.utils.magnitude(delta)
             atten = max(min(distance / direction.length, 1), 0)
+
+        atten = max(min((atten - bias) / scale, 1), 0)
 
         color = m.Color((0, 0, 0))
         color_ab = m.Color((0, 0, 0))
@@ -109,6 +112,12 @@ PROP_COLOR_B = bpy.props.FloatVectorProperty(
 PROP_ALPHA_B = bpy.props.FloatProperty(
     name="End Alpha", min=0, max=1, step=0.1, default=1)
 
+PROP_BIAS = bpy.props.FloatProperty(
+    name="Bias", min=0, max=1, step=0.1, default=0)
+
+PROP_SCALE = bpy.props.FloatProperty(
+    name="Scale", min=0, max=1, step=0.1, default=1)
+
 # monkeypatch Scene with persisted debris properties
 bpy.types.Scene.gradient_select = PROP_SELECT
 bpy.types.Scene.gradient_blend_type = PROP_BLEND_TYPE
@@ -117,6 +126,8 @@ bpy.types.Scene.gradient_color_a = PROP_COLOR_A
 bpy.types.Scene.gradient_alpha_a = PROP_ALPHA_A
 bpy.types.Scene.gradient_color_b = PROP_COLOR_B
 bpy.types.Scene.gradient_alpha_b = PROP_ALPHA_B
+bpy.types.Scene.gradient_bias = PROP_BIAS
+bpy.types.Scene.gradient_scale = PROP_SCALE
 
 class GradientPanel(bpy.types.Panel):
     bl_label = "Gradient Options"
@@ -137,6 +148,8 @@ class GradientPanel(bpy.types.Panel):
 
         col.prop(data, 'gradient_blend_type')
         col.prop(data, 'gradient_blend_method')
+        col.prop(data, 'gradient_bias')
+        col.prop(data, 'gradient_scale')
 
         layout.label('Start/Stop Colors:')
 
@@ -164,12 +177,13 @@ class GradientTool(bpy.types.Operator):
     alpha_a = PROP_ALPHA_A
     color_b = PROP_COLOR_B
     alpha_b = PROP_ALPHA_B
+    bias = PROP_BIAS
+    scale = PROP_SCALE
 
     point_a = bpy.props.FloatVectorProperty(
         name='Start Point', default=(0.0, 0.0, 0.0))
     point_b = bpy.props.FloatVectorProperty(
         name='End Point', default=(0.0, 0.0, 0.0))
-
 
     @classmethod
     def poll(cls, context):
@@ -200,6 +214,8 @@ class GradientTool(bpy.types.Operator):
 
         col.prop(self, 'blend_type')
         col.prop(self, 'blend_method')
+        col.prop(self, 'bias')
+        col.prop(self, 'scale')
 
         layout.label('Start/Stop Colors:')
 
@@ -220,6 +236,7 @@ class GradientTool(bpy.types.Operator):
             self.color_a, self.alpha_a,
             self.color_b, self.alpha_b,
             self.blend_type, self.blend_method,
+            self.bias, self.scale,
             self.select)
 
         theme = context.user_preferences.themes[0].view_3d
@@ -234,17 +251,23 @@ class GradientTool(bpy.types.Operator):
         context.scene.gradient_alpha_a = self.alpha_a
         context.scene.gradient_color_b = self.color_b
         context.scene.gradient_alpha_b = self.alpha_b
+        context.scene.gradient_bias = self.bias
+        context.scene.gradient_scale = self.scale
 
         return {'FINISHED'}
 
     def invoke(self, context, event):
-        self.select = context.scene.gradient_select
-        self.blend_type = context.scene.gradient_blend_type
-        self.blend_method = context.scene.gradient_blend_method
-        self.color_a = context.scene.gradient_color_a
-        self.alpha_a = context.scene.gradient_alpha_a
-        self.color_b = context.scene.gradient_color_b
-        self.alpha_b = context.scene.gradient_alpha_b
+        scene = context.scene
+
+        self.select = scene.gradient_select
+        self.blend_type = scene.gradient_blend_type
+        self.blend_method = scene.gradient_blend_method
+        self.color_a = scene.gradient_color_a
+        self.alpha_a = scene.gradient_alpha_a
+        self.color_b = scene.gradient_color_b
+        self.alpha_b = scene.gradient_alpha_b
+        self.bias = scene.gradient_bias
+        self.scale = scene.gradient_scale
 
         theme = context.user_preferences.themes[0].view_3d
         self.face_select = theme.face_select[3]
@@ -309,7 +332,7 @@ class GradientTool(bpy.types.Operator):
             self.modal_cleanup(context, event)
             return {'FINISHED'}
 
-        if event.type == 'ESC':
+        if event.type == 'ESC' or event.type == 'RIGHTMOUSE':
             self.modal_cleanup(context, event)
             return {'CANCELLED'}
 
