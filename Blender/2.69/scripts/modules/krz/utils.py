@@ -1,11 +1,25 @@
 import bpy
 import bmesh
 import math
+import random
 
 def clamp(v, a, b):
     return min(max(v, a), b)
 
 def lerp(a, b, v):
+    return a * (1. - v) + b * v
+
+def cubic(a, b, c, d, v):
+    v_ = v * v
+    a_ = d - c - a + b
+    b_ = a - b - a_
+    c_ = c - a
+    d_ = b
+
+    return a_ * v * v_ + b_ * v_ + c_ * v + d_
+
+def cosine(a, b, v):
+    v = (1. - math.cos(v * math.pi)) / 2.
     return a * (1. - v) + b * v
 
 def magnitude(v):
@@ -124,3 +138,42 @@ class ModifiedMesh:
                 m.show_viewport = settings[i]
 
 modified_mesh = ModifiedMesh
+
+class Noise:
+    def __init__(self, size):
+        self.size = size
+        self.samples = []
+        for i in range(size):
+            self.samples.append(random.random())
+
+    def sample(self, x):
+        return self.samples[x % self.size]
+
+    def linear(self, x):
+        size = self.size
+        x0 = int(x * size)
+        x1 = x0 + 1
+        s0 = self.samples[x0 % size]
+        s1 = self.samples[x1 % size]
+        return lerp(s0, s1, x * size - x0)
+
+    def cosine(self, x):
+        size = self.size
+        x0 = int(x * size)
+        x1 = x0 + 1
+        s0 = self.samples[x0 % size]
+        s1 = self.samples[x1 % size]
+        return cosine(s0, s1, x * size - x0)
+
+    def cubic(self, x):
+        size = self.size
+        x1 = int(x * size)
+        x0 = x1 - 1
+        x2 = x1 + 1
+        x3 = x2 + 1
+        s0 = self.samples[x0 % size]
+        s1 = self.samples[x1 % size]
+        s2 = self.samples[x2 % size]
+        s3 = self.samples[x3 % size]
+        return cubic(s0, s1, s2, s3, x * size - x1)
+        
