@@ -3,7 +3,6 @@ import bgl
 import krz
 import mathutils
 from bpy_extras import view3d_utils
-from krz_sample_color import sample_color
 
 bl_info = {
     'name': 'Gradient Tool',
@@ -14,6 +13,16 @@ bl_info = {
     'description': 'Apply gradients on lines/polygon colors',
     'category': 'Cardboard'
 }
+
+@krz.ops.editmode
+def sample_color(context, event, ray_max=1000.0):
+    result = find(context, event, 10000)
+    if result is not None:
+        obj, origin, target = result
+        if obj.data.vertex_colors.active:
+            with krz.colors.Sampler(obj) as sampler:
+                return  sampler.raycast(origin, target)
+    return mathutils.Color((0, 0, 0))
 
 @krz.ops.editmode
 def gradient_colors(
