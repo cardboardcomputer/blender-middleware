@@ -44,8 +44,6 @@ def select_by_color(obj, threshold=0.01):
             b /= p.loop_total
             source = Color((r, g, b))
 
-            print(target, source)
-
             if (abs(source.r - target.r) < threshold and
                 abs(source.g - target.g) < threshold and
                 abs(source.b - target.b) < threshold):
