@@ -8,49 +8,56 @@ class Stream:
         self.enum = enum
         self.line = None
         self.newline = False
-        self.context = {}
-        if not context:
-            self.context = get_console_context()
-
-    def write(self, text):
+        self.context = context
         if not self.context:
             self.context = get_console_context()
 
-        if self.context:
-            self.console = getattr(
-                self.context, 'space_data',
-                self.context['space_data'])
-            self.scrollback = self.console.scrollback
-        else:
-            if self.enum == 'ERROR':
-                return sys.__stderr__.write(text)
+    def write(self, text):
+        try:
+            if not self.context:
+                self.context = get_console_context()
+
+            if self.context:
+                self.console = getattr(
+                    self.context, 'space_data',
+                    self.context['space_data'])
+                self.scrollback = self.console.scrollback
             else:
-                return sys.__stdout__.write(text)
-            
-        line = self.line
-        sb = self.scrollback
+                if self.enum == 'ERROR':
+                    return sys.__stderr__.write(text)
+                else:
+                    return sys.__stdout__.write(text)
 
-        text = str(text)
-        lines = text.replace('\r\n', '\n').split('\n')
+            line = self.line
+            sb = self.scrollback
 
-        if ((line and not
-            line == sb[len(sb) - 1]) or self.newline):
-            self.newline = False
-            self.line = line = None
+            if len(sb) == 0:
+                return
 
-        if line:
-            line.body += lines[0]
-            lines = lines[1:]
+            text = str(text)
+            lines = text.replace('\r\n', '\n').split('\n')
 
-        if lines and lines[len(lines) - 1] == '':
-            self.newline = True
-            lines = lines[:-1]
+            if ((line and not
+                line == sb[len(sb) - 1]) or self.newline):
+                self.newline = False
+                self.line = line = None
 
-        for l in lines:
-            bpy.ops.console.scrollback_append(
-                self.context, text=l, type=self.enum)
+            if line:
+                line.body += lines[0]
+                lines = lines[1:]
 
-        self.line = sb[len(sb) - 1]
+            if lines and lines[len(lines) - 1] == '':
+                self.newline = True
+                lines = lines[:-1]
+
+            for l in lines:
+                bpy.ops.console.scrollback_append(
+                    self.context, text=l, type=self.enum)
+
+            self.line = sb[len(sb) - 1]
+        except:
+            import traceback
+            traceback.print_exc(file=sys.__stderr__)
 
     # no-op interface
 
@@ -97,8 +104,23 @@ def get_console_context():
 
     return {}
 
-output = Stream('OUTPUT')
-input = Stream('INPUT')
-info = Stream('INFO')
-error = Stream('ERROR')
-write = output.write
+output = None
+input = None
+info = None
+error = None
+write = None
+
+def reset():
+    global output
+    global input
+    global info
+    global error
+    global write
+
+    output = Stream('OUTPUT')
+    input = Stream('INPUT')
+    info = Stream('INFO')
+    error = Stream('ERROR')
+    write = output.write
+
+reset()
