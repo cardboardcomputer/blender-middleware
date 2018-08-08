@@ -2,6 +2,25 @@ import os
 import sys
 import bpy
 
+output = None
+input = None
+info = None
+error = None
+write = None
+
+def reset():
+    global output
+    global input
+    global info
+    global error
+    global write
+
+    output = Stream('OUTPUT')
+    input = Stream('INPUT')
+    info = Stream('INFO')
+    error = Stream('ERROR')
+    write = output.write
+
 class Stream:
     def __init__(self, enum, context=None):
         self.text = ''
@@ -104,23 +123,77 @@ def get_console_context():
 
     return {}
 
-output = None
-input = None
-info = None
-error = None
-write = None
+def capture_streams():
+    sys.stdout = info
+    sys.stderr = error
 
-def reset():
-    global output
-    global input
-    global info
-    global error
-    global write
+def release_streams():
+    sys.stdout = sys.__stdout__
+    sys.stderr = sys.__stderr__
 
-    output = Stream('OUTPUT')
-    input = Stream('INPUT')
-    info = Stream('INFO')
-    error = Stream('ERROR')
-    write = output.write
+_console_draw_handle = None
+
+@bpy.app.handlers.persistent
+def install(*args, **kwargs):
+    global _console_draw_handle
+
+    wm = bpy.context.window_manager
+
+    if wm.capture_console_output:
+        reset()
+
+        context = get_console_context()
+
+        if context:
+            space = context['space_data']
+
+            if _console_draw_handle:
+                space.draw_handler_remove(_console_draw_handle, 'WINDOW')
+            _console_draw_handle = space.draw_handler_add(capture_streams, tuple(), 'WINDOW', 'POST_PIXEL')
+
+            capture_streams()
+
+def uninstall(*args, **kwargs):
+    global _console_draw_handle
+
+    context = get_console_context()
+
+    if context:
+        space = context['space_data']
+
+        if _console_draw_handle:
+            space.draw_handler_remove(_console_draw_handle, 'WINDOW')
+            _console_draw_handle = None
+
+    release_streams()
+
+def toggle_capture(self, context):
+    if self.capture_console_output:
+        install()
+    else:
+        uninstall()
+
+bpy.types.WindowManager.capture_console_output = bpy.props.BoolProperty(
+    name='Capture Standard Output', default=False, update=toggle_capture,
+    description='Route system output (stdout/stderr) to this console',)
+
+def console_header_draw(self, context):
+    layout = self.layout.row()
+
+    layout.template_header()
+
+    if context.area.show_menus:
+        layout.menu("CONSOLE_MT_console")
+
+    layout.operator("console.autocomplete", text="Autocomplete")
+    layout.prop(context.window_manager, 'capture_console_output')
+
+bpy.types.CONSOLE_HT_header.draw = console_header_draw
+
+def register():
+    pass
+
+def unregister():
+    pass
 
 reset()
