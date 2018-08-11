@@ -132,6 +132,13 @@ def export_unity_lines(
                     fp.write('%s %s' % (u, v))
                     if i < len(vertices) - 1:
                         fp.write(' ')
+            elif aux_layer:
+                for i, vertex in enumerate(vertices):
+                    rgba = vertex.aux_color.r, vertex.aux_color.g, vertex.aux_color.b, vertex.aux_color.a
+                    u, v = krz.colors.rgba_to_uv(rgba)
+                    fp.write('%s %s' % (u, v))
+                    if i < len(vertices) - 1:
+                        fp.write(' ')
             else:
                 fp.write(' '.join(['0'] * (len(vertices) * 2)))
             fp.write('\n')
