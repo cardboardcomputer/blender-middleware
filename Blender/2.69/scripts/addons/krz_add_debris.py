@@ -31,7 +31,7 @@ bpy.types.Scene.debris_group_name = PROP_GROUP_NAME
 bpy.types.Scene.debris_object_name = PROP_OBJECT_NAME
 
 class DebrisPanel(bpy.types.Panel):
-    bl_label = "Debris Options"
+    bl_label = "Debris"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
 
@@ -40,9 +40,9 @@ class DebrisPanel(bpy.types.Panel):
         scene = context.scene
 
         layout.prop(scene, 'debris_select', '')
-        layout.prop_search(scene, 'debris_group_name', bpy.data, 'groups', '')
 
-        col = layout.column()
+        col = layout.column(align=True)
+        col.prop_search(scene, 'debris_group_name', bpy.data, 'groups', '')
 
         if scene.debris_group_name:
             data = bpy.data.groups[scene.debris_group_name]
@@ -51,6 +51,8 @@ class DebrisPanel(bpy.types.Panel):
             col.enabled = False
 
         col.prop_search(scene, 'debris_object_name', data, 'objects', '')
+
+        layout.operator('cc.add_debris')
 
 bpy.utils.register_class(DebrisPanel)
 
