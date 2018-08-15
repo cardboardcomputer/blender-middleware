@@ -41,7 +41,9 @@ bpy.types.Text.get_selection_range = get_selection_range
 class TextEditorOperator(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
-        return type(context.space_data) == bpy.types.SpaceTextEditor
+        return (
+            type(context.space_data) == bpy.types.SpaceTextEditor and
+            context.space_data.text is not None)
 
 class Deselect(TextEditorOperator):
     bl_idname = 'text.deselect'
@@ -65,6 +67,29 @@ class DeleteLine(TextEditorOperator):
         space = context.space_data
         text = space.text
         delete_line(text)
+        return {'FINISHED'}
+
+class MoveIndent(TextEditorOperator):
+    bl_idname = 'text.move_indent'
+    bl_label = 'Move To Indent'
+
+    def execute(self, context):
+        space = context.space_data
+        text = space.text
+        start, end = text.get_selection_range()
+        char, line = end
+        body = text.lines[line].body
+        char = len(body) - len(body.lstrip())
+
+        if text.select_active:
+            T.move_select(type='LINE_BEGIN')
+            for i in range(char):
+                T.move_select(type='NEXT_CHARACTER')
+        else:
+            T.move(type='LINE_BEGIN')
+            for i in range(char):
+                T.move(type='NEXT_CHARACTER')
+
         return {'FINISHED'}
 
 MOVE_TYPE_ENUM =  (
@@ -177,10 +202,11 @@ class ConsoleDeleteForward(ConsoleOperator):
         start = readline.current_character
         readline.body = readline.body[:start]
         return {'FINISHED'}
-
+    
 def register():
     bpy.utils.register_class(Deselect)
     bpy.utils.register_class(DeleteLine)
+    bpy.utils.register_class(MoveIndent)
     bpy.utils.register_class(ToggleSelect)
     bpy.utils.register_class(MoveMaybeSelect)
     bpy.utils.register_class(CopyDeselect)
