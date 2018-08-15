@@ -186,6 +186,9 @@ def console_header_draw(self, context):
         layout.menu("CONSOLE_MT_console")
 
     layout.operator("console.autocomplete", text="Autocomplete")
+    op = layout.operator('console.clear', 'Clear')
+    op.scrollback = True
+    op.history = True
     layout.prop(context.window_manager, 'capture_console_output')
 
 bpy.types.CONSOLE_HT_header.draw = console_header_draw
