@@ -17,7 +17,7 @@ bl_info = {
 
 @krz.ops.editmode
 def sample_color(context, event, ray_max=1000.0):
-    result = find(context, event, 10000)
+    result = krz.utils.find(context, event, 10000)
     if result is not None:
         obj, origin, target = result
         if obj.data.vertex_colors.active:
@@ -431,15 +431,16 @@ class GradientTool(bpy.types.Operator):
             self.mouse_a = mouse_pos
             self.mouse_b = mouse_pos
 
+        if event.type == 'MOUSEMOVE':
+            self.point_b = endpoint
+            self.mouse_b = mouse_pos
+
         if event.type == 'RIGHTMOUSE' and event.value == 'PRESS':
             if event.shift:
                 self.color_b = sample_color(context, event)
             else:
                 self.color_a = sample_color(context, event)
-
-        if event.type == 'MOUSEMOVE':
-            self.point_b = endpoint
-            self.mouse_b = mouse_pos
+            return {'RUNNING_MODAL'}
 
         if event.type == 'LEFTMOUSE' and event.value == 'RELEASE':
             self.point_b = endpoint
@@ -449,11 +450,11 @@ class GradientTool(bpy.types.Operator):
             self.modal_cleanup(context, event)
             return {'FINISHED'}
 
-        if event.type == 'ESC' or event.type == 'RIGHTMOUSE':
+        if event.type == 'ESC':
             self.modal_cleanup(context, event)
             return {'CANCELLED'}
 
-        return {'RUNNING_MODAL'}
+        return {'PASS_THROUGH'}
 
     def modal_cleanup(self, context, event):
         self.del_viewport_handler()

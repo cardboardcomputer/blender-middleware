@@ -1,7 +1,6 @@
 import bpy
 import krz
 import mathutils
-from bpy_extras import view3d_utils
 
 bl_info = {
     'name': 'Sample Color',
@@ -13,71 +12,9 @@ bl_info = {
     'category': 'Cardboard'
 }
 
-def find(context, event, ray_max=1000.0):
-    scene = context.scene
-    region = context.region
-    rv3d = context.region_data
-    coord = event.mouse_region_x, event.mouse_region_y
-
-    view_vector = view3d_utils.region_2d_to_vector_3d(region, rv3d, coord)
-    ray_origin = view3d_utils.region_2d_to_origin_3d(region, rv3d, coord)
-
-    # https://developer.blender.org/rB61baf6e8135d11bc53cbfa45c75f910a99e57971
-    if rv3d.view_perspective == 'ORTHO':
-        view_vector = -view_vector
-        ray_origin = ray_origin - (view_vector * (ray_max / 2.0))
-    else:
-        view_vector = view_vector.normalized()
-
-    ray_target = ray_origin + (view_vector * ray_max)
-
-    def visible_objects_and_duplis():
-        """Loop over (object, matrix) pairs (mesh only)"""
-
-        for obj in context.visible_objects:
-            if obj.draw_type != 'TEXTURED':
-                continue
-
-            if obj.type == 'MESH':
-                yield (obj, obj.matrix_world.copy())
-
-            if obj.dupli_type != 'NONE':
-                obj.dupli_list_create(scene)
-                for dob in obj.dupli_list:
-                    obj_dupli = dob.object
-                    if obj_dupli.type == 'MESH':
-                        yield (obj_dupli, dob.matrix.copy())
-
-            obj.dupli_list_clear()
-
-    # cast rays and find the closest object
-    best_length_squared = ray_max * ray_max
-    best_obj = best_point = best_normal = best_face = None
-    best_ray_origin = best_ray_target = None
-
-    for obj, matrix in visible_objects_and_duplis():
-        if obj.type == 'MESH' and len(obj.data.polygons):
-            matrix_inv = obj.matrix_world.inverted()
-            ray_origin_obj = matrix_inv * ray_origin
-            ray_target_obj = matrix_inv * ray_target
-            hit, normal, face_index = obj.ray_cast(ray_origin_obj, ray_target_obj)
-            if face_index != -1:
-                length_squared = (hit - ray_origin).length_squared
-                if length_squared < best_length_squared:
-                    best_length_squared = length_squared
-                    best_obj = obj
-                    best_point = hit
-                    best_normal = normal
-                    best_face = face_index
-                    best_ray_origin = ray_origin_obj
-                    best_ray_target = ray_target_obj
-
-    if best_obj is not None:
-        return best_obj, best_ray_origin, best_ray_target
-
 @krz.ops.editmode
 def sample_color(context, event, ray_max=1000.0):
-    result = find(context, event, 10000)
+    result = krz.utils.find(context, event, 10000)
     if result is not None:
         obj, origin, target = result
         if obj.data.vertex_colors.active:
