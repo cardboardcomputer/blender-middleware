@@ -24,6 +24,9 @@ def cosine(a, b, v):
     v = (1. - math.cos(v * math.pi)) / 2.
     return a * (1. - v) + b * v
 
+def smooth(v):
+    return math.cos(v * math.pi + math.pi) / 2 + 0.5
+
 def magnitude(v):
     return math.sqrt(v.x ** 2 + v.y ** 2 + v.z ** 2)
 
