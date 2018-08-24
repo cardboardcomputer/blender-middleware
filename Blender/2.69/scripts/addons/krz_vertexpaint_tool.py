@@ -149,12 +149,14 @@ class VertexPaintPanel(bpy.types.Panel):
         layout.prop(vps, 'color', '')
 
         col = layout.column(align=True)
+        col.prop(vps, 'radius')
+        col.prop(vps, 'strength')
+
+        col = layout.column(align=True)
         col.prop(vps, 'blend', '')
         col.prop(vps, 'falloff', '')
 
         col = layout.column(align=True)
-        col.prop(vps, 'radius')
-        col.prop(vps, 'strength')
         col.prop(vps, 'bias')
         col.prop(vps, 'scale')
         row = col.row(align=True)
