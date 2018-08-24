@@ -21,6 +21,8 @@ bl_info = {
     'category': 'Cardboard'
 }
 
+TOOL_KMI = None
+
 class EditmodeContext:
     def __init__(self, mode_wanted):
         self.mode_wanted = mode_wanted
@@ -101,19 +103,52 @@ class VertexPaintSettings(bpy.types.PropertyGroup):
 
 bpy.utils.register_class(VertexPaintSettings)
  
-bpy.types.Scene.vertex_paint = bpy.props.PointerProperty(type=VertexPaintSettings)
+def vertex_paint_preset_selected(self, context):
+    s = context.scene
+    d = context.active_object.data
+
+    if d.vertex_paint_active_preset:
+        preset = d.vertex_paint_presets[d.vertex_paint_active_preset]
+        for prop in s.vertex_paint.keys():
+            setattr(s.vertex_paint, prop, getattr(preset, prop))
+
+bpy.types.Mesh.vertex_paint_settings = bpy.props.PointerProperty(type=VertexPaintSettings)
+
+bpy.types.Mesh.vertex_paint_presets = bpy.props.CollectionProperty(type=VertexPaintSettings)
+
+bpy.types.Mesh.vertex_paint_active_preset = bpy.props.StringProperty(
+    name='Preset', default='', update=vertex_paint_preset_selected)
 
 class VertexPaintPanel(bpy.types.Panel):
     bl_label = 'Vertex Paint'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
 
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        return context.mode == 'EDIT_MESH'
+
     def draw(self, context):
         layout = self.layout
-        vps = context.scene.vertex_paint
+        data = context.active_object.data
+        vps = data.vertex_paint_settings
+
+        c = layout.column(align=True)
+        r = c.row(align=True)
+        r.prop_search(data, 'vertex_paint_active_preset', data, 'vertex_paint_presets', '', icon='SETTINGS')
+        r.operator('cc.vertex_paint_preset_add', '', icon='ZOOMIN')
+        r.operator('cc.vertex_paint_preset_remove', '', icon='X')
+        if data.vertex_paint_active_preset:
+            r = c.row(align=True)
+            r.operator('cc.vertex_paint_preset_update', 'Update', icon='COPYDOWN')
+            r.operator('cc.vertex_paint_preset_revert', 'Revert', icon='PASTEDOWN')
+
+        layout.template_color_picker(vps, 'color', value_slider=True)
+
+        layout.prop(vps, 'color', '')
 
         col = layout.column(align=True)
-        col.prop(vps, 'color', '')
         col.prop(vps, 'blend', '')
         col.prop(vps, 'falloff', '')
 
@@ -137,13 +172,106 @@ class VertexPaintPanel(bpy.types.Panel):
             row = col.row(align=True)
             row.prop(vps, 'normal', expand=True)
 
-
 bpy.utils.register_class(VertexPaintPanel)
+
+class VertexPaintPresetAdd(bpy.types.Operator):
+    bl_idname = 'cc.vertex_paint_preset_add'
+    bl_label = 'Add Preset'
+    bl_options = {'UNDO'}
+
+    name = bpy.props.StringProperty(name='Name')
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        return context.mode == 'EDIT_MESH' and obj and obj.type == 'MESH'
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    def execute(self, context):
+        s = context.active_object.data
+        preset = s.vertex_paint_presets.add()
+        for prop in s.vertex_paint_settings.keys():
+            setattr(preset, prop, getattr(s.vertex_paint_settings, prop))
+        preset.name = self.name
+        s.vertex_paint_active_preset = preset.name
+        return {'FINISHED'}
+
+bpy.utils.register_class(VertexPaintPresetAdd)
+
+class VertexPaintPresetRemove(bpy.types.Operator):
+    bl_idname = 'cc.vertex_paint_preset_remove'
+    bl_label = 'Remove Preset'
+    bl_options = {'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        return context.mode == 'EDIT_MESH' and obj and obj.type == 'MESH'
+
+    def execute(self, context):
+        s = context.active_object.data
+        if s.vertex_paint_active_preset:
+            idx = s.vertex_paint_presets.find(s.vertex_paint_active_preset)
+            s.vertex_paint_presets.remove(idx)
+        s.vertex_paint_active_preset = ''
+        self.report({'INFO'}, 'Preset removed.')
+        return {'FINISHED'}
+
+bpy.utils.register_class(VertexPaintPresetRemove)
+
+class VertexPaintPresetUpdate(bpy.types.Operator):
+    bl_idname = 'cc.vertex_paint_preset_update'
+    bl_label = 'Update Preset'
+    bl_options = {'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        return context.mode == 'EDIT_MESH' and obj and obj.type == 'MESH'
+
+    def execute(self, context):
+        s = context.active_object.data
+        if not s.vertex_paint_active_preset:
+            self.report({'ERROR'}, 'No preset active.')
+            return {'CANCELLED'}
+        preset = s.vertex_paint_presets[s.vertex_paint_active_preset]
+        for prop in s.vertex_paint_settings.keys():
+            setattr(preset, prop, getattr(s.vertex_paint_settings, prop))
+        self.report({'INFO'}, 'Preset updated.')
+        return {'FINISHED'}
+
+bpy.utils.register_class(VertexPaintPresetUpdate)
+
+class VertexPaintPresetRevert(bpy.types.Operator):
+    bl_idname = 'cc.vertex_paint_preset_revert'
+    bl_label = 'Load Preset'
+    bl_options = {'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        return context.mode == 'EDIT_MESH' and obj and obj.type == 'MESH'
+
+    def execute(self, context):
+        s = context.active_object.data
+        if not s.vertex_paint_active_preset:
+            self.report({'ERROR'}, 'No preset active.')
+            return {'CANCELLED'}
+        preset = s.vertex_paint_presets[s.vertex_paint_active_preset]
+        for prop in s.vertex_paint_settings.keys():
+            setattr(s.vertex_paint_settings, prop, getattr(preset, prop))
+        self.report({'INFO'}, 'Reverted to preset.')
+        return {'FINISHED'}
+
+bpy.utils.register_class(VertexPaintPresetRevert)
 
 class VertexPaintTool(bpy.types.Operator):
     bl_idname = 'cc.vertex_paint_tool'
     bl_label = 'Vertex Paint Tool'
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {'REGISTER'}
 
     @classmethod
     def poll(cls, context):
@@ -187,6 +315,8 @@ class VertexPaintTool(bpy.types.Operator):
         return {'FINISHED'}
 
     def invoke(self, context, event):
+        global TOOL_KMI
+
         obj = context.active_object
 
         if not obj.data.vertex_colors.active:
@@ -200,6 +330,14 @@ class VertexPaintTool(bpy.types.Operator):
 
         context.window_manager.modal_handler_add(self)
 
+        if TOOL_KMI is None:
+            wm = context.window_manager
+            for kc in wm.keyconfigs:
+                for keymap in kc.keymaps:
+                    for kmi in keymap.keymap_items:
+                        if kmi.idname == 'cc.vertex_paint_tool':
+                            TOOL_KMI = kmi
+
         return {'RUNNING_MODAL'}
 
     def cleanup(self, context, event):
@@ -211,6 +349,16 @@ class VertexPaintTool(bpy.types.Operator):
         context.window.cursor_modal_restore()
         context.area.tag_redraw()
 
+    def toggled(self, context, event):
+        if TOOL_KMI:
+            if (TOOL_KMI.type == event.type and
+                TOOL_KMI.value == event.value and
+                TOOL_KMI.ctrl == event.ctrl and
+                TOOL_KMI.shift == event.shift and
+                TOOL_KMI.alt == event.alt):
+                return True
+        return False
+
     def modal(self, context, event):
         if not self._handers_installed:
             self.add_viewport_handlers(context)
@@ -218,13 +366,13 @@ class VertexPaintTool(bpy.types.Operator):
         context.window.cursor_modal_set('CROSSHAIR')
         context.area.tag_redraw()
 
-        if context.mode != 'EDIT_MESH':
+        if context.mode != 'EDIT_MESH' or self.toggled(context, event):
             self.cleanup(context, event)
             if self.touched:
                 return {'FINISHED'}
             else:
                 return {'CANCELLED'}
-
+            
         update_mesh = False
 
         if self.obj != context.active_object:
@@ -242,7 +390,7 @@ class VertexPaintTool(bpy.types.Operator):
         obj = self.obj
         mesh = self.mesh
         scene = context.scene
-        vps = scene.vertex_paint
+        vps = obj.data.vertex_paint_settings
         radius = float(vps.radius)
 
         region = context.region
@@ -471,7 +619,8 @@ class VertexPaintTool(bpy.types.Operator):
         return {'PASS_THROUGH'}
 
     def draw_viewport_2d(self, context):
-        vps = context.scene.vertex_paint
+        data = context.active_object.data
+        vps = data.vertex_paint_settings
 
         bgl.glPushAttrib(
             bgl.GL_DEPTH_BUFFER_BIT |
