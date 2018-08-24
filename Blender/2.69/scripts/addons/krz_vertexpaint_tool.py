@@ -516,7 +516,7 @@ class VertexPaintTool(bpy.types.Operator):
 
                 for vid in verts:
                     vert = mesh.verts[vid]
-                    p = vert.co * obj.matrix_world
+                    p = obj.matrix_world * vert.co
                     p = view3d_utils.location_3d_to_region_2d(region, region_3d, p)
                     dist = min(1, max(0, (p - mouse).magnitude / radius))
                     dist = max(min((dist - bias) / scale, 1), 0)
@@ -594,6 +594,8 @@ class VertexPaintTool(bpy.types.Operator):
                             a.r -= lerp(0, b.r, weight * strength * mask)
                             a.g -= lerp(0, b.g, weight * strength * mask)
                             a.b -= lerp(0, b.b, weight * strength * mask)
+
+                bmesh.update_edit_mesh(obj.data)
 
             return {'RUNNING_MODAL'}
 
