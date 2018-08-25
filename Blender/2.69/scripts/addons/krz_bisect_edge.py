@@ -50,6 +50,7 @@ class BisectEdge(bpy.types.Operator):
         context.tool_settings.mesh_select_mode = (False, True, False)
         bpy.ops.view3d.select_circle(x=mouse_x, y=mouse_y, radius=32, gesture_mode=3)
         edges = [edge for edge in mesh.edges if edge.select]
+        context.tool_settings.mesh_select_mode = mesh_select_mode
 
         bpy.ops.mesh.select_all(action='DESELECT')
 
