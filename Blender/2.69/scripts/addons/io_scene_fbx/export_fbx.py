@@ -1596,7 +1596,7 @@ def save_single(operator, scene, filepath="",
 
                 i = -1
                 ii = 0  # Count how many Colors we write
-                print(len(me_faces), len(collayer.data))
+                # print(len(me_faces), len(collayer.data))
                 for fi, cf in enumerate(collayer.data):
                     if len(me_faces[fi].vertices) == 4:
                         colors = cf.color1[:], cf.color2[:], cf.color3[:], cf.color4[:]
@@ -3048,8 +3048,8 @@ def save(operator, context,
          **kwargs
          ):
 
-    if bpy.ops.object.mode_set.poll():
-        bpy.ops.object.mode_set(mode='OBJECT')
+    # if bpy.ops.object.mode_set.poll():
+    #     bpy.ops.object.mode_set(mode='OBJECT')
 
     if batch_mode == 'OFF':
         kwargs_mod = kwargs.copy()
