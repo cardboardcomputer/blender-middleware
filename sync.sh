@@ -47,11 +47,12 @@ update()
     rsync -a --info=name *.py "$B/scripts/startup/"
 
     cd "$A/scripts/modules"
+    rsync -a --info=name --exclude=__pycache__ --exclude=*.pyc cc "$B/scripts/modules/"
     rsync -a --info=name --exclude=__pycache__ --exclude=*.pyc krz "$B/scripts/modules/"
     rsync -a --info=name plot.py "$B/scripts/modules/"
 
     cd "$A/scripts/addons"
-    echo "$B/scripts/addons/"
+    rsync -a --info=name cc_*.py "$B/scripts/addons/"
     rsync -a --info=name krz_*.py "$B/scripts/addons/"
 
     cd "$C/scripts/addons/io_scene_fbx"
