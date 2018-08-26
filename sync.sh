@@ -22,11 +22,6 @@ BLENDER_APP_PATH=$BLENDER_APP_BASEDIR/$SUBPATH
 BLENDER_USER_PATH=$BLENDER_USER_BASEDIR/$SUBPATH
 BLENDER_REPO_PATH=$BASEDIR/Blender/$VERSION
 
-sync()
-{
-    rsync -a --info=name "$1" "$2" --exclude=__pycache__ --exclude=*.pyc
-}
-
 update()
 {
     if [ "$1" = "repo" ]; then
@@ -44,19 +39,19 @@ update()
     fi
 
     cd "$A/config"
-    sync *.blend "$B/config/"
+    rsync -a --info=name *.blend "$B/config/"
 
     cd "$A/scripts/startup"
-    sync *.py "$B/scripts/startup/"
+    rsync -a --info=name *.py "$B/scripts/startup/"
 
     cd "$A/scripts/modules"
-    sync krz "$B/scripts/modules/"
-    sync plot.py "$B/scripts/modules/"
+    rsync -a --info=name --exclude=__pycache__ --exclude=*.pyc krz "$B/scripts/modules/"
+    rsync -a --info=name plot.py "$B/scripts/modules/"
 
     cd "$A/scripts/addons"
-    sync krz_*.py "$B/scripts/addons/"
+    rsync -a --info=name krz_*.py "$B/scripts/addons/"
 
     cd "$C/scripts/addons/io_scene_fbx"
-    sync export_fbx.py "$D/scripts/addons/io_scene_fbx/"
-    sync __init__.py "$D/scripts/addons/io_scene_fbx/"
+    rsync -a --info=name export_fbx.py "$D/scripts/addons/io_scene_fbx/"
+    rsync -a --info=name __init__.py "$D/scripts/addons/io_scene_fbx/"
 }
