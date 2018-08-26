@@ -1,8 +1,8 @@
 import os
 import bpy
-import krz
+import cc
 
-from krz.export import (
+from cc.export import (
     Color,
     Vertex,
     Edge,
@@ -24,9 +24,9 @@ def export_unity_lines(
     precision=6,
     color_layer=''):
 
-    krz.legacy.upgrade_line_attributes(obj)
+    cc.legacy.upgrade_line_attributes(obj)
 
-    export_colormap = krz.colors.Manager(obj).get_export_colormap()
+    export_colormap = cc.colors.Manager(obj).get_export_colormap()
     if export_colormap:
         map_size = export_colormap.get_size()
     else:
@@ -38,27 +38,27 @@ def export_unity_lines(
     lines = []
 
     if not color_layer:
-        export_layer = krz.colors.Manager(obj).get_export_layer()
+        export_layer = cc.colors.Manager(obj).get_export_layer()
         if export_layer:
             color_layer = export_layer.name
-    export_colors = krz.colors.Manager(obj).get_layer(color_layer) is not None
+    export_colors = cc.colors.Manager(obj).get_layer(color_layer) is not None
 
-    aux_layer = krz.colors.Manager(obj).get_aux_layer()
+    aux_layer = cc.colors.Manager(obj).get_aux_layer()
     if aux_layer:
         have_aux_colors = True
         aux_layer_name = aux_layer.name
     else:
         have_aux_colors = False
 
-    with krz.utils.modified_mesh(obj) as mesh:
+    with cc.utils.modified_mesh(obj) as mesh:
 
         if export_colors:
-            colors = krz.colors.layer(obj, color_layer)
-        normals = krz.lines.normals(obj)
+            colors = cc.colors.layer(obj, color_layer)
+        normals = cc.lines.normals(obj)
         export_normals = normals.exists()
 
         if have_aux_colors:
-            aux_layer = krz.colors.layer(obj, aux_layer_name)
+            aux_layer = cc.colors.layer(obj, aux_layer_name)
 
         (min_x, min_y, min_z) = (max_x, max_y, max_z) = mesh.vertices[0].co
 
@@ -133,7 +133,7 @@ def export_unity_lines(
             elif aux_layer:
                 for i, vertex in enumerate(vertices):
                     rgba = vertex.aux_color.r, vertex.aux_color.g, vertex.aux_color.b, vertex.aux_color.a
-                    u, v = krz.colors.rgba_to_uv(rgba)
+                    u, v = cc.colors.rgba_to_uv(rgba)
                     fp.write('%s %s' % (u, v))
                     if i < len(vertices) - 1:
                         fp.write(' ')
@@ -196,7 +196,7 @@ class UnityLineExporter(bpy.types.Operator):
     def invoke(self, context, event):
         if not self.filepath:
             self.filepath = bpy.path.ensure_ext(bpy.data.filepath, ".lines")
-        export_layer = krz.colors.Manager(context.active_object).get_export_layer()
+        export_layer = cc.colors.Manager(context.active_object).get_export_layer()
         if export_layer:
             self.color_layer = export_layer.name
 

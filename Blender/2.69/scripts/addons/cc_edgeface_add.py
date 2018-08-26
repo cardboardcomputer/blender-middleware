@@ -1,7 +1,7 @@
 import bpy
 import bmesh
 import mathutils as mu
-from krz.utils import lerp
+from cc.utils import lerp
 
 bl_info = {
     'name': 'Make Edge/Face',

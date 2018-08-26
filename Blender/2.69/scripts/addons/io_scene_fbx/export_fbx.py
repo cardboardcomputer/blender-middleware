@@ -28,9 +28,9 @@ import math  # math.pi
 import bpy
 from mathutils import Vector, Matrix
 
-# krz start
+# cc start
 from mathutils import Color
-# krz end
+# cc end
 
 
 # I guess FBX uses degrees instead of radians (Arystan).
@@ -230,13 +230,13 @@ def save_single(operator, scene, filepath="",
         use_mesh_edges=True,
         use_rotate_workaround=False,
         use_default_take=True,
-        # krz start
+        # cc start
         use_vertex_color_alpha_workaround=False,
         use_export_scene=False,
-        # krz end
+        # cc end
     ):
 
-    # krz start
+    # cc start
     export_scene = None
     if 'Export' in bpy.data.scenes:
         export_scene = bpy.data.scenes['Export']
@@ -252,7 +252,7 @@ def save_single(operator, scene, filepath="",
             if 'exclude' not in obj:
                 context_objects.append(obj)
         scene.update()
-    # krz end
+    # cc end
 
     import bpy_extras.io_utils
 
@@ -1562,7 +1562,7 @@ def save_single(operator, scene, filepath="",
         if len(me.tessface_vertex_colors):
             collayers = me.tessface_vertex_colors
 
-            # krz start
+            # cc start
             collayers = list(collayers)
             for layer in collayers:
                 if layer.active_render:
@@ -1582,7 +1582,7 @@ def save_single(operator, scene, filepath="",
                         collayer_alpha = collayer
                     if collayer.name == 'Alpha':
                         collayer_alpha = collayer
-            # krz end
+            # cc end
 
             for colindex, collayer in enumerate(collayers):
                 fw('\n\t\tLayerElementColor: %i {' % colindex)
@@ -1603,7 +1603,7 @@ def save_single(operator, scene, filepath="",
                     else:
                         colors = cf.color1[:], cf.color2[:], cf.color3[:]
 
-                    # krz start
+                    # cc start
                     if use_vertex_color_alpha_workaround and collayer_alpha:
                         cfa = collayer_alpha.data[fi]
                         colors_alpha = cfa.color1.v, cfa.color2.v, cfa.color3.v
@@ -1611,33 +1611,33 @@ def save_single(operator, scene, filepath="",
                             colors_alpha += (cfa.color4.v,)
                     else:
                         colors_alpha = None
-                    # krz end
+                    # cc end
 
                     # for col in colors:
                     for coli, col in enumerate(colors):
 
-                        # krz start
+                        # cc start
                         if colors_alpha:
                             a = colors_alpha[coli]
                         else:
                             a = 1.0
                         col += (a,)
-                        # krz end
+                        # cc end
                             
                         if i == -1:
                             # fw('%.4f,%.4f,%.4f,1' % col)
-                            # krz start
+                            # cc start
                             fw('%.4f,%.4f,%.4f,%.4f' % col)
-                            # krz end
+                            # cc end
                             i = 0
                         else:
                             if i == 7:
                                 fw('\n\t\t\t\t')
                                 i = 0
                             # fw(',%.4f,%.4f,%.4f,1' % col)
-                            # krz start
+                            # cc start
                             fw(',%.4f,%.4f,%.4f,%.4f' % col)
-                            # krz end
+                            # cc end
                         i += 1
                         ii += 1  # One more Color
 
@@ -3028,15 +3028,15 @@ def defaults_unity3d():
                 use_anim=True,
                 use_anim_optimize=False,
                 # use_anim_action_all=True,
-                # krz start
+                # cc start
                 use_anim_action_all=False,
-                # krz end
+                # cc end
                 batch_mode='OFF',
                 use_default_take=True,
-                # krz start
+                # cc start
                 use_vertex_color_alpha_workaround=True,
                 use_export_scene=True,
-                # krz end
+                # cc end
                 )
 
 

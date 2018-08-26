@@ -1,5 +1,5 @@
 import bpy
-import krz
+import cc
 import bmesh
 
 bl_info = {
@@ -13,7 +13,7 @@ bl_info = {
 PART_A = '_Boolean.A'
 PART_B = '_Boolean.B'
 
-@krz.ops.editmode
+@cc.ops.editmode
 def mesh_boolean(ctx, obj, mode='DIFFERENCE'):
     # remember state
     active = ctx.active_object

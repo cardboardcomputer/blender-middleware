@@ -1,5 +1,5 @@
 import bpy
-import krz
+import cc
 import math
 import mathutils as m
 
@@ -17,7 +17,7 @@ def lerp(a, b, v):
 def magnitude(v):
     return math.sqrt(v.x ** 2 + v.y ** 2 + v.z ** 2)
 
-@krz.ops.editmode
+@cc.ops.editmode
 def select_by_normal_ref(obj, ref, threshold):
     p1 = ref.location
     p2 = ref.matrix_world * m.Vector((0, 0, 1))
@@ -28,7 +28,7 @@ def select_by_normal_ref(obj, ref, threshold):
         if f >= threshold:
             poly.select = True
 
-@krz.ops.editmode
+@cc.ops.editmode
 def select_by_normal_dir(obj, direction, threshold):
     for poly in obj.data.polygons:
         f = direction.dot(poly.normal)
@@ -46,7 +46,7 @@ class SelectByNormal(bpy.types.Operator):
     def poll(cls, context):
         obj = context.active_object
         return (obj and obj.type == 'MESH'
-                and not krz.lines.is_line(obj))
+                and not cc.lines.is_line(obj))
 
     def execute(self, context):
         if len(context.selected_objects) == 2:

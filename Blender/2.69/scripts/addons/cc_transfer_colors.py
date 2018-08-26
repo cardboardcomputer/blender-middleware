@@ -1,5 +1,5 @@
 import bpy
-import krz
+import cc
 
 bl_info = {
     'name': 'Transfer Colors',
@@ -9,12 +9,12 @@ bl_info = {
     'category': 'Cardboard'
 }
 
-@krz.ops.editmode
+@cc.ops.editmode
 def transfer_colors(obj, ref, select='ALL'):
-    with krz.colors.Sampler(ref) as sampler:
-        colors = krz.colors.layer(obj)
+    with cc.colors.Sampler(ref) as sampler:
+        colors = cc.colors.layer(obj)
 
-        ref_layer_name = krz.colors.layer(ref).name
+        ref_layer_name = cc.colors.layer(ref).name
         ref_alpha_name = '%s.Alpha' % ref_layer_name
         if ref_alpha_name in ref.data.vertex_colors:
             ref_sample_alpha = True
@@ -34,7 +34,7 @@ class TransferColors(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     select = bpy.props.EnumProperty(
-        items=krz.ops.ENUM_SELECT,
+        items=cc.ops.ENUM_SELECT,
         name='Select', default='ALL')
 
     @classmethod

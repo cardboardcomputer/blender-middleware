@@ -1,5 +1,5 @@
 import bpy
-import krz
+import cc
 
 bl_info = {
     'name': 'Adjust HSV',
@@ -9,9 +9,9 @@ bl_info = {
     'category': 'Cardboard'
 }
 
-@krz.ops.editmode
+@cc.ops.editmode
 def adjust_hsv(obj, h, s, v, multiply=False, select='POLYGON'):
-    colors = krz.colors.layer(obj)
+    colors = cc.colors.layer(obj)
     for sample in colors.itersamples():
         if sample.is_selected(select.lower()):
             sample.color.h += h
@@ -27,7 +27,7 @@ class AdjustHsv(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     select = bpy.props.EnumProperty(
-        items=krz.ops.ENUM_SELECT,
+        items=cc.ops.ENUM_SELECT,
         name='Select', default='POLYGON')
     h = bpy.props.FloatProperty(name='Hue', min=-1, max=1, step=1)
     s = bpy.props.FloatProperty(name='Saturation', min=-1, max=1, step=1)
@@ -48,7 +48,7 @@ class AdjustHsv(bpy.types.Operator):
                 self.select = 'POLYGON'
 
     def execute(self, context):
-        krz.ops.show_tool_props(context)
+        cc.ops.show_tool_props(context)
         adjust_hsv(context.active_object, self.h, self.s, self.v, self.multiply, self.select)
         return {'FINISHED'}
 

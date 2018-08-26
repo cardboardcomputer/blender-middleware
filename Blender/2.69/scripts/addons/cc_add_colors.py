@@ -1,5 +1,5 @@
 import bpy
-import krz
+import cc
 
 bl_info = {
     'name': 'Add Colors',
@@ -9,9 +9,9 @@ bl_info = {
     'category': 'Cardboard'
 }
 
-@krz.ops.editmode
+@cc.ops.editmode
 def add_colors(obj, name, alpha=False):
-    colors = krz.colors.new(obj, name, alpha=alpha)
+    colors = cc.colors.new(obj, name, alpha=alpha)
     colors.activate()
 
 class AddColors(bpy.types.Operator):
@@ -19,7 +19,7 @@ class AddColors(bpy.types.Operator):
     bl_label = 'Add Colors'
     bl_options = {'REGISTER', 'UNDO'}
 
-    name = bpy.props.StringProperty(name='Name', default=krz.colors.BASENAME)
+    name = bpy.props.StringProperty(name='Name', default=cc.colors.BASENAME)
     alpha = bpy.props.BoolProperty(name='Alpha', default=True)
 
     @classmethod
@@ -40,8 +40,8 @@ class AddColors(bpy.types.Operator):
         return {'FINISHED'}
 
     def invoke(self, context, event):
-        self.name = krz.colors.Manager(context.active_object).get_unique_name(self.name)
-        self.alpha = krz.lines.is_line(context.active_object) or self.alpha
+        self.name = cc.colors.Manager(context.active_object).get_unique_name(self.name)
+        self.alpha = cc.lines.is_line(context.active_object) or self.alpha
         return context.window_manager.invoke_props_dialog(self, width=160)
 
 def menu_func(self, context):

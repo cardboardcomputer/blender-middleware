@@ -1,5 +1,5 @@
 import bpy
-import krz
+import cc
 import mathutils
 import re
 
@@ -12,10 +12,10 @@ bl_info = {
 }
 
 EXCLUDE = (
-  krz.colors.METADATA_PROP,
+  cc.colors.METADATA_PROP,
 )
 
-@krz.ops.editmode
+@cc.ops.editmode
 def copy_properties(i, o, pattern='.*', obj=True, data=True):
     p = re.compile(pattern)
 

@@ -1,5 +1,5 @@
 import bpy
-import krz
+import cc
 import random
 import math
 import mathutils
@@ -237,7 +237,7 @@ class AddDebris(bpy.types.Operator):
             for poly in self.clone.data.polygons:
                 poly.select = True
 
-            @krz.ops.editmode
+            @cc.ops.editmode
             def join():
                 bpy.ops.object.join()
             join()

@@ -1,5 +1,5 @@
 import bpy
-import krz
+import cc
 import mathutils
 
 bl_info = {
@@ -10,19 +10,19 @@ bl_info = {
     'category': 'Cardboard'
 }
 
-@krz.ops.editmode
+@cc.ops.editmode
 def sample_color(context, event, ray_max=1000.0):
-    result = krz.utils.find(context, event, 10000)
+    result = cc.utils.find(context, event, 10000)
     if result is not None:
         obj, origin, target = result
         if obj.data.vertex_colors.active:
-            with krz.colors.Sampler(obj) as sampler:
+            with cc.colors.Sampler(obj) as sampler:
                 return  sampler.raycast(origin, target)
     return mathutils.Color((0, 0, 0))
 
-@krz.ops.editmode
+@cc.ops.editmode
 def set_colors(obj, color, alpha=None, select='POLYGON'):
-    colors = krz.colors.layer(obj)
+    colors = cc.colors.layer(obj)
 
     for sample in colors.itersamples():
         if sample.is_selected(select.lower()):
@@ -36,7 +36,7 @@ class SampleColor(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def update_color(self, context):
-        self.hex_value = krz.colors.color_to_hex(self.color)
+        self.hex_value = cc.colors.color_to_hex(self.color)
 
     ref = bpy.props.FloatVectorProperty(
         name="Color", subtype='COLOR_GAMMA',

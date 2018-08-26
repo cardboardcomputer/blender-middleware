@@ -1,5 +1,5 @@
 import bpy
-import krz
+import cc
 
 bl_info = {
     'name': 'Viewport Line Colors',
@@ -10,10 +10,10 @@ bl_info = {
 }
 
 def register():
-    krz.ui.install_line_renderer()
+    cc.ui.install_line_renderer()
 
 def unregister():
-    krz.ui.uninstall_line_renderer()
+    cc.ui.uninstall_line_renderer()
 
 if __name__ == "__main__":
     register()

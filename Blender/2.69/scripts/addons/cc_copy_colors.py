@@ -1,5 +1,5 @@
 import bpy
-import krz
+import cc
 import mathutils
 
 bl_info = {
@@ -10,21 +10,21 @@ bl_info = {
     'category': 'Cardboard'
 }
 
-@krz.ops.editmode
+@cc.ops.editmode
 def copy_colors(objects, from_layer, to_layer, select='POLYGON'):
     if from_layer == to_layer:
         return
     for obj in objects:
         if obj.type == 'MESH':
-            a = krz.colors.layer(obj, from_layer)
-            b = krz.colors.layer(obj, to_layer)
+            a = cc.colors.layer(obj, from_layer)
+            b = cc.colors.layer(obj, to_layer)
             for i, s in enumerate(b.itersamples()):
                 if s.is_selected(select.lower()):
                     s.color = a.samples[i].color
                     s.alpha = a.samples[i].alpha
 
 def shared_layer_items(scene, context):
-    layers = krz.colors.find_shared_layers(context.selected_objects)
+    layers = cc.colors.find_shared_layers(context.selected_objects)
     enum = [('__NONE__', '', '')]
     for name in layers:
         enum.append((name, name, name))
@@ -36,7 +36,7 @@ class CopyColors(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     select = bpy.props.EnumProperty(
-        items=krz.ops.ENUM_SELECT,
+        items=cc.ops.ENUM_SELECT,
         name='Select', default='POLYGON')
     from_layer = bpy.props.EnumProperty(
         items=shared_layer_items, name='From')

@@ -1,5 +1,5 @@
 import bpy
-import krz
+import cc
 import mathutils
 
 bl_info = {
@@ -10,9 +10,9 @@ bl_info = {
     'category': 'Cardboard'
 }
 
-@krz.ops.editmode
+@cc.ops.editmode
 def default_color(obj, select='POLYGON'):
-    colors = krz.colors.layer(obj)
+    colors = cc.colors.layer(obj)
 
     freq = {}
     for sample in colors.itersamples():
@@ -37,9 +37,9 @@ def default_color(obj, select='POLYGON'):
     else:
         return None, None
 
-@krz.ops.editmode
+@cc.ops.editmode
 def set_colors(obj, color, alpha=None, select='POLYGON'):
-    colors = krz.colors.layer(obj)
+    colors = cc.colors.layer(obj)
 
     for sample in colors.itersamples():
         if sample.is_selected(select.lower()):
@@ -53,7 +53,7 @@ class SetColors(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     select = bpy.props.EnumProperty(
-        items=krz.ops.ENUM_SELECT,
+        items=cc.ops.ENUM_SELECT,
         name='Select', default='POLYGON')
     color = bpy.props.FloatVectorProperty(
         name="Color", subtype='COLOR_GAMMA',

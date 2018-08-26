@@ -1,6 +1,6 @@
 import bpy
 import bgl
-import krz
+import cc
 import math
 import mathutils
 from bpy_extras import view3d_utils
@@ -13,17 +13,17 @@ bl_info = {
     'category': 'Cardboard'
 }
 
-@krz.ops.editmode
+@cc.ops.editmode
 def sample_color(context, event, ray_max=1000.0):
-    result = krz.utils.find(context, event, 10000)
+    result = cc.utils.find(context, event, 10000)
     if result is not None:
         obj, origin, target = result
         if obj.data.vertex_colors.active:
-            with krz.colors.Sampler(obj) as sampler:
+            with cc.colors.Sampler(obj) as sampler:
                 return  sampler.raycast(origin, target)
     return mathutils.Color((0, 0, 0))
 
-@krz.ops.editmode
+@cc.ops.editmode
 def gradient_colors(
     obj,
     point_a,
@@ -38,7 +38,7 @@ def gradient_colors(
     bias, scale, mirror,
     select='POLYGON'):
 
-    colors = krz.colors.layer(obj)
+    colors = cc.colors.layer(obj)
 
     m = mathutils
     p1 = m.Vector(point_a)
@@ -56,7 +56,7 @@ def gradient_colors(
             distance = delta.dot(direction.normalized())
             atten = max(min(distance / direction.length, 1), 0)
         if blend_type == 'RADIAL':
-            distance = krz.utils.magnitude(delta)
+            distance = cc.utils.magnitude(delta)
             atten = max(min(distance / direction.length, 1), 0)
 
         atten = max(min((atten - bias) / scale, 1), 0)
@@ -73,15 +73,15 @@ def gradient_colors(
 
         color = m.Color((0, 0, 0))
         color_ab = m.Color((0, 0, 0))
-        color_ab = krz.utils.lerp(color_a, color_b, atten)
-        alpha_ab = krz.utils.lerp(alpha_a, alpha_b, atten)
+        color_ab = cc.utils.lerp(color_a, color_b, atten)
+        alpha_ab = cc.utils.lerp(alpha_a, alpha_b, atten)
 
         if blend_method == 'REPLACE':
             s.color = color_ab
             s.alpha = alpha_ab
 
         if blend_method == 'MIX':
-            s.color = krz.utils.lerp(s.color, color_ab, alpha_ab)
+            s.color = cc.utils.lerp(s.color, color_ab, alpha_ab)
 
         if blend_method == 'MULTIPLY':
             s.color.r *= color_ab.r;
@@ -99,7 +99,7 @@ def gradient_colors(
             s.color.b -= color_ab.b;
 
 PROP_SELECT = bpy.props.EnumProperty(
-    items=krz.ops.ENUM_SELECT,
+    items=cc.ops.ENUM_SELECT,
     name='Select', default='POLYGON')
 
 PROP_BLEND_TYPE = bpy.props.EnumProperty(

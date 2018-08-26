@@ -1,5 +1,5 @@
 import bpy
-import krz
+import cc
 
 bl_info = {
     'name': 'Transfer Normals',
@@ -9,13 +9,13 @@ bl_info = {
     'category': 'Cardboard'
 }
 
-@krz.ops.editmode
+@cc.ops.editmode
 def transfer_normals(obj, ref, select='VERTEX', from_colors=False):
-    normals = krz.lines.normals(obj)
+    normals = cc.lines.normals(obj)
 
     if from_colors:
-        with krz.colors.Sampler(ref) as sampler:
-            colors = krz.colors.layer(obj)
+        with cc.colors.Sampler(ref) as sampler:
+            colors = cc.colors.layer(obj)
             for sample in colors.itersamples():
                 if sample.is_selected(select.lower()):
                     point = sample.obj.matrix_world * sample.vertex.co
@@ -34,7 +34,7 @@ class TransferNormals(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     select = bpy.props.EnumProperty(
-        items=krz.ops.ENUM_SELECT,
+        items=cc.ops.ENUM_SELECT,
         name='Select', default='VERTEX')
     from_colors = bpy.props.BoolProperty(
         name='From Colors', default=False)
@@ -48,7 +48,7 @@ class TransferNormals(bpy.types.Operator):
             ref = ref[0]
         else:
             ref = None
-        return krz.lines.is_line(obj) and ref and ref.type == 'MESH'
+        return cc.lines.is_line(obj) and ref and ref.type == 'MESH'
 
     def execute(self, context):
         aux_objects = list(context.selected_objects)

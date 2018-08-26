@@ -1,21 +1,21 @@
 import bpy
-import krz
+import cc
 
 bl_info = {
-    'name': 'Upgrade Legacy KRZ Scenes',
+    'name': 'Upgrade Legacy CC Scenes',
     'author': 'Cardboard Computer',
     'blender': (2, 6, 9),
-    'description': 'Upgrade legacy KRZ scenes',
+    'description': 'Upgrade legacy CC scenes',
     'category': 'Cardboard'
 }
 
-@krz.ops.editmode
+@cc.ops.editmode
 def legacy_upgrade():
-    krz.legacy.upgrade()
+    cc.legacy.upgrade()
 
 class LegacyUpgrade(bpy.types.Operator):
     bl_idname = 'cc.legacy_upgrade'
-    bl_label = 'Upgrade Legacy KRZ Scenes'
+    bl_label = 'Upgrade Legacy CC Scenes'
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod

@@ -1,5 +1,5 @@
 import bpy
-import krz
+import cc
 import mathutils
 
 bl_info = {
@@ -10,11 +10,11 @@ bl_info = {
     'category': 'Cardboard'
 }
 
-@krz.ops.editmode
+@cc.ops.editmode
 def set_export(objects, layer, aux, colormap):
     for obj in objects:
         if obj.type == 'MESH':
-            m = krz.colors.Manager(obj)
+            m = cc.colors.Manager(obj)
             if layer:
                 m.set_export_layer(layer)
             if aux:
@@ -27,14 +27,14 @@ def set_export(objects, layer, aux, colormap):
                 m.set_export_colormap(colormap)
 
 def shared_colormap_items(scene, context):
-    colormaps = krz.colors.find_shared_colormaps(context.selected_objects)
+    colormaps = cc.colors.find_shared_colormaps(context.selected_objects)
     enum = [('__NONE__', '', '')]
     for name in colormaps:
         enum.append((name, name, name))
     return enum
 
 def shared_layer_items(scene, context):
-    layers = krz.colors.find_shared_layers(context.selected_objects)
+    layers = cc.colors.find_shared_layers(context.selected_objects)
     enum = [('__NONE__', '', '')]
     for name in layers:
         enum.append((name, name, name))
@@ -60,16 +60,16 @@ class SetExport(bpy.types.Operator):
         return (obj and obj.type == 'MESH')
 
     def invoke(self, context, event):
-        shared_layers = krz.colors.find_shared_layers(
+        shared_layers = cc.colors.find_shared_layers(
             context.selected_objects)
-        default_layer = krz.colors.find_default_layer(
+        default_layer = cc.colors.find_default_layer(
             context.selected_objects, for_export=True)
-        default_aux = krz.colors.find_default_layer(
+        default_aux = cc.colors.find_default_layer(
             context.selected_objects, for_aux=True)
 
-        shared_colormaps = krz.colors.find_shared_colormaps(
+        shared_colormaps = cc.colors.find_shared_colormaps(
             context.selected_objects)
-        default_colormap = krz.colors.find_default_colormap(
+        default_colormap = cc.colors.find_default_colormap(
             context.selected_objects, for_export=True)
 
         if default_layer and default_layer in shared_layers:

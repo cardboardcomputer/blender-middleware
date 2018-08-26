@@ -1,5 +1,5 @@
 import bpy
-import krz
+import cc
 from mathutils import Color
 
 bl_info = {
@@ -61,7 +61,7 @@ class SelectByColor(bpy.types.Operator):
     def poll(cls, context):
         obj = context.active_object
         return (obj and obj.type == 'MESH'
-                and not krz.lines.is_line(obj))
+                and not cc.lines.is_line(obj))
 
     def execute(self, context):
         select_by_color(context.active_object, self.threshold)

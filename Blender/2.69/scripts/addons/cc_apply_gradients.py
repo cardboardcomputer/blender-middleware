@@ -1,5 +1,5 @@
 import bpy
-import krz
+import cc
 import mathutils
 
 bl_info = {
@@ -11,7 +11,7 @@ bl_info = {
 }
 
 def apply_gradients(objects, select='POLYGON'):
-    import krz_gradient_colors
+    import cc_gradient_colors
 
     meshes = []
     gradients = []
@@ -25,9 +25,9 @@ def apply_gradients(objects, select='POLYGON'):
     gradients.sort(key=lambda o: o.name)
 
     for ref in gradients:
-        kwargs = krz_gradient_colors.gradient_to_kwargs(ref)
+        kwargs = cc_gradient_colors.gradient_to_kwargs(ref)
         for obj in meshes:
-            krz_gradient_colors.gradient_colors(
+            cc_gradient_colors.gradient_colors(
                 obj, ref,
                 select=select, update_gradient=False,
                 **kwargs)
@@ -38,7 +38,7 @@ class ApplyGradients(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     select = bpy.props.EnumProperty(
-        items=krz.ops.ENUM_SELECT,
+        items=cc.ops.ENUM_SELECT,
         name='Select', default='POLYGON')
 
     @classmethod

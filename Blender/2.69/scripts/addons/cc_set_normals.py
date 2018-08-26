@@ -1,5 +1,5 @@
 import bpy
-import krz
+import cc
 import mathutils
 
 bl_info = {
@@ -10,9 +10,9 @@ bl_info = {
     'category': 'Cardboard'
 }
 
-@krz.ops.editmode
+@cc.ops.editmode
 def set_normals(obj, ref, select='POLYGON'):
-    normals = krz.lines.normals(obj)
+    normals = cc.lines.normals(obj)
 
     normal = ref.matrix_world * mathutils.Vector((0, 0, 1))
     normal -= ref.location
@@ -35,7 +35,7 @@ class SetNormals(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     select = bpy.props.EnumProperty(
-        items=krz.ops.ENUM_SELECT,
+        items=cc.ops.ENUM_SELECT,
         name='Select', default='POLYGON')
 
     @classmethod

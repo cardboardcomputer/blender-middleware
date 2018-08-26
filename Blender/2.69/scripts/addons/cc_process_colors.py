@@ -1,5 +1,5 @@
 import bpy
-import krz
+import cc
 
 bl_info = {
     'name': 'Process Colors',
@@ -9,11 +9,11 @@ bl_info = {
     'category': 'Cardboard'
 }
 
-@krz.ops.editmode
+@cc.ops.editmode
 def process_colors(objects):
     for obj in objects:
         if obj.type == 'MESH':
-            krz.colors.Manager(obj).exec_color_ops(get_ops(obj))
+            cc.colors.Manager(obj).exec_color_ops(get_ops(obj))
 
 def get_ops(obj):
     ops = list(obj.data.vertex_color_ops)

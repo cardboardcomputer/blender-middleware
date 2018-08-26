@@ -53,7 +53,6 @@ update()
 
     cd "$A/scripts/addons"
     rsync -a --info=name cc_*.py "$B/scripts/addons/"
-    rsync -a --info=name krz_*.py "$B/scripts/addons/"
 
     cd "$C/scripts/addons/io_scene_fbx"
     rsync -a --info=name export_fbx.py "$D/scripts/addons/io_scene_fbx/"

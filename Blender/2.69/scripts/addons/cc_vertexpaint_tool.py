@@ -1,6 +1,6 @@
 import bpy
 import bgl
-import krz
+import cc
 import math
 import time
 import bmesh
@@ -9,7 +9,7 @@ import mathutils as mu
 
 from bpy import ops
 from bpy_extras import view3d_utils
-from krz.utils import lerp
+from cc.utils import lerp
 
 bl_info = {
     'name': 'Vertex Paint Tool',
@@ -73,13 +73,13 @@ STROKE_METHOD_ITEMS = (
     ('TIME', 'Time', 'Time'),
 )
 
-@krz.ops.editmode
+@cc.ops.editmode
 def sample_color(context, event, ray_max=1000.0):
-    result = krz.utils.find(context, event, 10000)
+    result = cc.utils.find(context, event, 10000)
     if result is not None:
         obj, origin, target = result
         if obj.data.vertex_colors.active:
-            with krz.colors.Sampler(obj) as sampler:
+            with cc.colors.Sampler(obj) as sampler:
                 return sampler.raycast(origin, target)
     return mu.Color((0, 0, 0))
 
@@ -506,7 +506,7 @@ class VertexPaintTool(bpy.types.Operator):
                 falloff = lambda x: x
 
                 if vps.falloff == 'SMOOTH':
-                    falloff = krz.utils.smooth
+                    falloff = cc.utils.smooth
                 elif vps.falloff == 'SHARP':
                     falloff = math.sqrt
                 elif vps.falloff == 'ROOT':

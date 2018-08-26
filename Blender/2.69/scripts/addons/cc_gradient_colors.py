@@ -1,5 +1,5 @@
 import bpy
-import krz
+import cc
 import mathutils
 
 bl_info = {
@@ -22,7 +22,7 @@ def gradient_colors(
     select='POLYGON',
     update_gradient=True):
 
-    colors = krz.colors.layer(obj)
+    colors = cc.colors.layer(obj)
 
     if update_gradient:
         ref['Gradient'] = {}
@@ -50,20 +50,20 @@ def gradient_colors(
             distance = delta.dot(direction.normalized())
             atten = max(min(distance / direction.length, 1), 0)
         if blend_type == 'RADIAL':
-            distance = krz.utils.magnitude(delta)
+            distance = cc.utils.magnitude(delta)
             atten = max(min(distance / direction.length, 1), 0)
 
         color = m.Color((0, 0, 0))
         color_ab = m.Color((0, 0, 0))
-        color_ab = krz.utils.lerp(color_a, color_b, atten)
-        alpha_ab = krz.utils.lerp(alpha_a, alpha_b, atten)
+        color_ab = cc.utils.lerp(color_a, color_b, atten)
+        alpha_ab = cc.utils.lerp(alpha_a, alpha_b, atten)
 
         if blend_method == 'REPLACE':
             s.color = color_ab
             s.alpha = alpha_ab
 
         if blend_method == 'MIX':
-            s.color = krz.utils.lerp(s.color, color_ab, alpha_ab)
+            s.color = cc.utils.lerp(s.color, color_ab, alpha_ab)
 
         if blend_method == 'MULTIPLY':
             s.color.r *= color_ab.r;
@@ -98,7 +98,7 @@ class GradientColors(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     select = bpy.props.EnumProperty(
-        items=krz.ops.ENUM_SELECT,
+        items=cc.ops.ENUM_SELECT,
         name='Select', default='POLYGON')
 
     blend_type = bpy.props.EnumProperty(

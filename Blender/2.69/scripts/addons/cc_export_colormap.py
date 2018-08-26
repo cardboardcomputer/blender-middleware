@@ -1,6 +1,6 @@
 import os
 import bpy
-import krz
+import cc
 
 bl_info = {
     'name': 'Export Colormap (.png)',
@@ -12,11 +12,11 @@ bl_info = {
 
 def export_colormap(obj, filepath, colormap=''):
     if not colormap:
-        colormap = krz.colors.Manager(obj).get_export_colormap()
+        colormap = cc.colors.Manager(obj).get_export_colormap()
         if colormap:
             colormap = colormap.name
 
-    colormap = krz.colors.colormap(obj, colormap)
+    colormap = cc.colors.colormap(obj, colormap)
 
     name, ext = os.path.splitext(filepath)
     filepath = '%s%s%s' % (name, colormap.name, ext)

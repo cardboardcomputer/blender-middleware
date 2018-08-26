@@ -1,5 +1,5 @@
 import bpy
-import krz
+import cc
 
 bl_info = {
     'name': 'View Colors',
@@ -9,16 +9,16 @@ bl_info = {
     'category': 'Cardboard'
 }
 
-@krz.ops.editmode
+@cc.ops.editmode
 def view_colors(objects, layer_name):
     for obj in objects:
         if obj.type == 'MESH':
-            layer = krz.colors.Manager(obj).get_layer(layer_name)
+            layer = cc.colors.Manager(obj).get_layer(layer_name)
             if layer:
                 layer.activate()
 
 def shared_layer_items(scene, context):
-    layers = krz.colors.find_shared_layers(context.selected_objects)
+    layers = cc.colors.find_shared_layers(context.selected_objects)
     enum = []
     for name in layers:
         enum.append((name, name, name))
@@ -30,7 +30,7 @@ class ViewColorsMenu(bpy.types.Menu):
 
     @classmethod
     def poll(cls, context):
-        layers = krz.colors.find_shared_layers(context.selected_objects)
+        layers = cc.colors.find_shared_layers(context.selected_objects)
         return len(layers)
 
     def draw(self, context):
@@ -50,8 +50,8 @@ class ViewColors(bpy.types.Operator):
         return 'MESH' in [o.type for o in context.selected_objects]
 
     def invoke(self, context, event):
-        shared_layers = krz.colors.find_shared_layers(context.selected_objects)
-        default_layer = krz.colors.find_default_layer(context.selected_objects)
+        shared_layers = cc.colors.find_shared_layers(context.selected_objects)
+        default_layer = cc.colors.find_default_layer(context.selected_objects)
 
         if default_layer and default_layer in shared_layers:
             self.layer = default_layer

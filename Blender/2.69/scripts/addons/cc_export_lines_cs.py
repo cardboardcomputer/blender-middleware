@@ -1,8 +1,8 @@
 import os
 import bpy
-import krz
+import cc
 
-from krz.export import (
+from cc.export import (
     Color,
     Vertex,
     Edge,
@@ -25,9 +25,9 @@ def export_unity_lines_cs(
     base_class='Line',
     color_layer=''):
 
-    krz.legacy.upgrade_line_attributes(obj)
+    cc.legacy.upgrade_line_attributes(obj)
 
-    export_colormap = krz.colors.Manager(obj).get_export_colormap()
+    export_colormap = cc.colors.Manager(obj).get_export_colormap()
     if export_colormap:
         map_size = export_colormap.get_size()
     else:
@@ -39,15 +39,15 @@ def export_unity_lines_cs(
     lines = []
 
     if not color_layer:
-        export_layer = krz.colors.Manager(obj).get_export_layer()
+        export_layer = cc.colors.Manager(obj).get_export_layer()
         if export_layer:
             color_layer = export_layer.name
-    export_colors = krz.colors.Manager(obj).get_layer(color_layer) is not None
+    export_colors = cc.colors.Manager(obj).get_layer(color_layer) is not None
 
-    with krz.utils.modified_mesh(obj) as mesh:
+    with cc.utils.modified_mesh(obj) as mesh:
 
         if export_colors:
-            colors = krz.colors.layer(obj, color_layer)
+            colors = cc.colors.layer(obj, color_layer)
 
         (min_x, min_y, min_z) = (max_x, max_y, max_z) = mesh.vertices[0].co
 
@@ -167,7 +167,7 @@ class UnityCsLineExporter(bpy.types.Operator):
     def invoke(self, context, event):
         if not self.filepath:
             self.filepath = bpy.path.ensure_ext(bpy.data.filepath, ".cs")
-        export_layer = krz.colors.Manager(context.active_object).get_export_layer()
+        export_layer = cc.colors.Manager(context.active_object).get_export_layer()
         if export_layer:
             self.color_layer = export_layer.name
 

@@ -64,13 +64,13 @@ class ExportFBX(bpy.types.Operator, ExportHelper):
     # List of operator properties, the attributes will be assigned
     # to the class instance from the operator settings before calling.
 
-    # krz start
+    # cc start
     for_unity = BoolProperty(
             name="For Unity",
             description="Export for Unity",
             default=False,
             )
-    # krz end
+    # cc end
     use_selection = BoolProperty(
             name="Selected Objects",
             description="Export selected objects on visible layers",
@@ -273,11 +273,11 @@ class ExportFBX(bpy.types.Operator, ExportHelper):
 
         from . import export_fbx
 
-        # krz start
+        # cc start
         if self.for_unity:
             keywords.update(export_fbx.defaults_unity3d())
         del keywords["for_unity"]
-        # krz end
+        # cc end
 
         return export_fbx.save(self, context, **keywords)
 

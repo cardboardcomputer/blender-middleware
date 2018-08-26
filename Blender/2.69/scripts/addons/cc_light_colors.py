@@ -1,5 +1,5 @@
 import bpy
-import krz
+import cc
 import mathutils
 
 bl_info = {
@@ -10,7 +10,7 @@ bl_info = {
     'category': 'Cardboard'
 }
 
-@krz.ops.editmode
+@cc.ops.editmode
 def light_colors(
     objects,
     use_normals=False,
@@ -30,14 +30,14 @@ def light_colors_obj(
     select = select.lower()
 
     lights = []
-    for l in krz.utils.traverse(bpy.context.scene.objects):
+    for l in cc.utils.traverse(bpy.context.scene.objects):
         if (l.type == 'LAMP' and
             not l.hide_render):
             lights.append(l)
 
-    final = krz.colors.layer(obj)
-    temp = krz.colors.new(obj, '_Temp')
-    base = krz.colors.layer(obj, color_layer)
+    final = cc.colors.layer(obj)
+    temp = cc.colors.new(obj, '_Temp')
+    base = cc.colors.layer(obj, color_layer)
 
     if final.name == base.name:
         light_all = True
@@ -67,7 +67,7 @@ def light_colors_obj(
             else:
                 n_dot_l = 1
 
-            distance = krz.utils.magnitude(vert - center)
+            distance = cc.utils.magnitude(vert - center)
             atten = 1 - min(distance / radius, 1)
 
             color = lcolor.copy()
@@ -91,7 +91,7 @@ class LightColors(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     select = bpy.props.EnumProperty(
-        items=krz.ops.ENUM_SELECT,
+        items=cc.ops.ENUM_SELECT,
         name='Select', default='POLYGON')
     use_normals = bpy.props.BoolProperty(name='Use Normals', default=False)
     color_layer = bpy.props.StringProperty(name='Color Layer', default='')

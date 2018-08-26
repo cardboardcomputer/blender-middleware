@@ -1,6 +1,6 @@
 import os
 import bpy
-import krz
+import cc
 import math
 import html
 import json
@@ -9,7 +9,7 @@ import struct
 import subprocess
 import mathutils as m
 
-from krz.export import (
+from cc.export import (
     Color,
     Vertex,
     Edge,
@@ -414,7 +414,7 @@ def write_lines(fp, scene, obj, mesh):
 
     # vertices
 
-    layer = krz.colors.Manager(obj).get_export_layer()
+    layer = cc.colors.Manager(obj).get_export_layer()
     transparent = False
     if not layer:
         for i, v in enumerate(mesh.vertices):
