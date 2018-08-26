@@ -6,7 +6,7 @@ import mathutils
 from bpy_extras import view3d_utils
 
 bl_info = {
-    'name': 'Add Debris',
+    'name': 'Debris Tool',
     'author': 'Cardboard Computer',
     'blender': (2, 6, 9),
     'description': 'Interactively place objects onto a mesh surface',
@@ -23,11 +23,6 @@ PROP_SELECT = bpy.props.EnumProperty(
 PROP_GROUP_NAME = bpy.props.StringProperty(name='Group', default='')
 
 PROP_OBJECT_NAME = bpy.props.StringProperty(name='Object', default='')
-
-# monkeypatch Scene with persisted debris properties
-bpy.types.Scene.debris_select = PROP_SELECT
-bpy.types.Scene.debris_group_name = PROP_GROUP_NAME
-bpy.types.Scene.debris_object_name = PROP_OBJECT_NAME
 
 class DebrisPanel(bpy.types.Panel):
     bl_label = "Debris"
@@ -51,13 +46,11 @@ class DebrisPanel(bpy.types.Panel):
 
         col.prop_search(scene, 'debris_object_name', data, 'objects', '')
 
-        layout.operator('cc.add_debris')
+        layout.operator('cc.debris_tool')
 
-bpy.utils.register_class(DebrisPanel)
-
-class AddDebris(bpy.types.Operator):
-    bl_idname = 'cc.add_debris'
-    bl_label = 'Add Debris'
+class DebrisTool(bpy.types.Operator):
+    bl_idname = 'cc.debris_tool'
+    bl_label = 'Debris Tool'
     bl_options = {'REGISTER', 'UNDO'}
 
     select = PROP_SELECT
@@ -248,10 +241,17 @@ class AddDebris(bpy.types.Operator):
         return {ret}
  
 def register():
-    bpy.utils.register_module(__name__)
+    bpy.utils.register_class(DebrisPanel)
+    bpy.utils.register_class(DebrisTool)
+
+    bpy.types.Scene.debris_select = PROP_SELECT
+    bpy.types.Scene.debris_group_name = PROP_GROUP_NAME
+    bpy.types.Scene.debris_object_name = PROP_OBJECT_NAME
 
 def unregister():
-    bpy.utils.unregister_module(__name__)
+    bpy.utils.unregister_class(DebrisPanel)
+    bpy.utils.unregister_class(DebrisTool)
 
-if __name__ == "__main__":
-    register()
+    bpy.types.Scene.debris_select = None
+    bpy.types.Scene.debris_group_name = None
+    bpy.types.Scene.debris_object_name = None
