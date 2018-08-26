@@ -50,6 +50,7 @@ class AdjustHsv(bpy.types.Operator):
                 self.select = 'POLYGON'
 
     def execute(self, context):
+        krz.ops.show_tool_props(context)
         adjust_hsv(context.active_object, self.h, self.s, self.v, self.multiply, self.select)
         return {'FINISHED'}
 

@@ -25,3 +25,26 @@ def editmode(func):
             bpy.ops.object.editmode_toggle()
         return ret
     return wrapped
+
+def show_tool_props(context):
+    """
+    Show the toolshelf if it isn't already visible.
+    """
+    for area in context.screen.areas:
+        if area.type == 'VIEW_3D':
+            for space in area.spaces:
+                if space.type == 'VIEW_3D':
+                    break
+            for region in area.regions:
+                if region.type == 'TOOLS':
+                    if region.width == 1:
+                        ctx = dict(
+                            window=context.window,
+                            screen=context.screen,
+                            area=area,
+                            region=region,
+                            space_data=space)
+                        bpy.ops.view3d.toolshelf(ctx)
+                if region.type == 'TOOL_PROPS':
+                    if region.height == 1:
+                        region.height = 300
