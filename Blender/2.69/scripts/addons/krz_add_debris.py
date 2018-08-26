@@ -8,7 +8,6 @@ from bpy_extras import view3d_utils
 bl_info = {
     'name': 'Add Debris',
     'author': 'Cardboard Computer',
-    'version': (0, 1),
     'blender': (2, 6, 9),
     'description': 'Interactively place objects onto a mesh surface',
     'category': 'Cardboard'

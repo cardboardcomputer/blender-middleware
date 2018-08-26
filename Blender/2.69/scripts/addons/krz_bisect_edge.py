@@ -6,9 +6,7 @@ from bpy_extras import view3d_utils as v3du
 bl_info = {
     'name': 'Bisect Edge',
     'author': 'Cardboard Computer',
-    'version': (0, 1),
     'blender': (2, 6, 9),
-    'location': 'View3D > Specials > Bisect Edge',
     'description': 'Bisect closest edge to cursor',
     'category': 'Cardboard'
 }

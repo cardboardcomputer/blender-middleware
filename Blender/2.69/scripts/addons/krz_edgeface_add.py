@@ -6,9 +6,7 @@ from krz.utils import lerp
 bl_info = {
     'name': 'Make Edge/Face',
     'author': 'Cardboard Computer',
-    'version': (0, 1),
     'blender': (2, 6, 9),
-    'location': 'View3D > Mesh > Make Edge/Face ',
     'description': 'Improved Make Edge/Face operator',
     'category': 'Cardboard'
 }

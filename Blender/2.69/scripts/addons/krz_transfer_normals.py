@@ -4,9 +4,7 @@ import krz
 bl_info = {
     'name': 'Transfer Normals',
     'author': 'Cardboard Computer',
-    'version': (0, 1),
     'blender': (2, 6, 9),
-    'location': 'View3D > Specials > Transfer Normals',
     'description': 'Generate line normals from reference mesh',
     'category': 'Cardboard'
 }

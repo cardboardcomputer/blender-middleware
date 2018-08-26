@@ -20,9 +20,7 @@ from krz.export import (
 bl_info = {
     'name': 'Export HTML (.html)',
     'author': 'Cardboard Computer',
-    'version': (0, 1),
     'blender': (2, 6, 9),
-    'location': 'File > Import-Export > HTML (.html)',
     'description': 'Export selection to HTML',
     'category': 'Cardboard'
 }

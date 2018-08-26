@@ -5,9 +5,7 @@ import mathutils
 bl_info = {
     'name': 'Copy Colors',
     'author': 'Cardboard Computer',
-    'version': (0, 1),
     'blender': (2, 6, 9),
-    'location': 'View3D > Specials > Copy Colors',
     'description': 'Copy colors from one layer to another',
     'category': 'Cardboard'
 }

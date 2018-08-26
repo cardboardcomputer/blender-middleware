@@ -4,9 +4,7 @@ import krz
 bl_info = {
     'name': 'Process Colors',
     'author': 'Cardboard Computer',
-    'version': (0, 1),
     'blender': (2, 6, 9),
-    'location': 'View3D > Specials > Process Colors',
     'description': 'Apply color operatos on lines/polygon colors',
     'category': 'Cardboard'
 }

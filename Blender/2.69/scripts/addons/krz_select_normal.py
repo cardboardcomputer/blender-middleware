@@ -6,9 +6,7 @@ import mathutils as m
 bl_info = {
     'name': 'Select By Normal',
     'author': 'Cardboard Computer',
-    'version': (0, 1),
     'blender': (2, 6, 9),
-    'location': 'View3D > Specials > Select By Normal',
     'description': 'Select faces via normals',
     'category': 'Cardboard'
 }

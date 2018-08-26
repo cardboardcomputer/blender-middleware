@@ -14,9 +14,7 @@ from krz.utils import lerp
 bl_info = {
     'name': 'Vertex Paint Tool',
     'author': 'Cardboard Computer',
-    'version': (0, 1),
     'blender': (2, 6, 9),
-    'location': 'View3D > Specials > Vertex Paint',
     'description': 'Homebrew vertex painting tool',
     'category': 'Cardboard'
 }

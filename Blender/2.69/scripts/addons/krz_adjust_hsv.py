@@ -4,9 +4,7 @@ import krz
 bl_info = {
     'name': 'Adjust HSV',
     'author': 'Cardboard Computer',
-    'version': (0, 1),
     'blender': (2, 6, 9),
-    'location': 'View3D > Specials > Adjust HSV',
     'description': 'HSV vertex color adjustment of the selected faces',
     'category': 'Cardboard'
 }

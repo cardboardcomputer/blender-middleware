@@ -13,9 +13,7 @@ from krz.export import (
 bl_info = {
     'name': 'Export Unity Lines (.cs)',
     'author': 'Cardboard Computer',
-    'version': (0, 1),
     'blender': (2, 6, 9),
-    'location': 'File > Import-Export > Unity Lines (.cs)',
     'description': 'Export loose edges of a mesh as Unity GL immediate-mode commands',
     'category': 'Cardboard',
 }

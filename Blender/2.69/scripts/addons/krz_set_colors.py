@@ -5,9 +5,7 @@ import mathutils
 bl_info = {
     'name': 'Set Colors',
     'author': 'Cardboard Computer',
-    'version': (0, 1),
     'blender': (2, 6, 9),
-    'location': 'View3D > Specials > Set Colors',
     'description': 'Hand-set colors on lines and polygons',
     'category': 'Cardboard'
 }

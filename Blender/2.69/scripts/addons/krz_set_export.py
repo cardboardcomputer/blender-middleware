@@ -5,9 +5,7 @@ import mathutils
 bl_info = {
     'name': 'Set Export',
     'author': 'Cardboard Computer',
-    'version': (0, 1),
     'blender': (2, 6, 9),
-    'location': 'View3D > Specials > Set Export',
     'description': 'Set export info on object',
     'category': 'Cardboard'
 }

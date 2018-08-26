@@ -5,9 +5,7 @@ import bmesh
 bl_info = {
     'name': 'Mesh Boolean',
     'author': 'Cardboard Computer',
-    'version': (0, 1),
     'blender': (2, 6, 9),
-    'location': 'View3D > Specials > Boolean',
     'description': 'Edit-mode boolean operations',
     'category': 'Cardboard'
 }
