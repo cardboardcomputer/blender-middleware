@@ -507,15 +507,19 @@ class Manager:
             yield samples
             [s.save() for s in samples]
 
-    def exec_color_ops(self):
+    def exec_color_ops(self, ops=None):
+        if ops is None:
+            ops = []
         names = []
         for key in self.obj.data.keys():
             if key.startswith('Color.'):
                 names.append(key)
         names.sort()
-        layers = self.list_layers()
         for name in names:
-            ColorOp(self.obj, name, layers).execute()
+            ops.append(str(self.obj.data[name]))
+        layers = self.list_layers()
+        for op in ops:
+            ColorOp(self.obj, op, layers).execute()
 
 class LineColorLayer:
     def __init__(self, obj, name):
@@ -843,28 +847,27 @@ class ColorOp:
         'hsv': hsv,
     }
 
-    def __init__(self, obj, name, layers):
+    def __init__(self, obj, source, layers):
         self.obj = obj
-        self.name = name
-        self.data = obj.data
+        self.source = source
         self.layers = layers
 
     def execute(self):
         obj = self.obj
         layers = self.layers
-        op_source = str(self.data[self.name])
+        source = self.source
 
         needed = []
         params = []
         for i, key in enumerate(layers):
             var = krz.utils.normalize_varname(key, lower=True)
             macro = '[%s]' % key
-            if macro in op_source:
+            if macro in source:
                 params.append(var)
                 needed.append(key)
-            op_source = op_source.replace(macro, var)
+            source = source.replace(macro, var)
 
-        op = compile(op_source, '<string>', 'exec')
+        op = compile(source, '<string>', 'exec')
 
         for symbols in foreach(self.obj, *needed):
             env = dict(zip(params, symbols))

@@ -29,6 +29,13 @@ class AddColors(bpy.types.Operator):
         obj = context.active_object
         return (obj and obj.type == 'MESH')
 
+    def draw(self, context):
+        layout = self.layout
+
+        row = layout.split(align=True, percentage=0.7)
+        row.prop(self, 'name', '')
+        row.prop(self, 'alpha', toggle=True)
+
     def execute(self, context):
         add_colors(context.active_object, self.name, self.alpha)
         return {'FINISHED'}
@@ -36,7 +43,7 @@ class AddColors(bpy.types.Operator):
     def invoke(self, context, event):
         self.name = krz.colors.Manager(context.active_object).get_unique_name(self.name)
         self.alpha = krz.lines.is_line(context.active_object)
-        return context.window_manager.invoke_props_dialog(self)
+        return context.window_manager.invoke_props_dialog(self, width=160)
 
 def menu_func(self, context):
     self.layout.operator_context = 'INVOKE_DEFAULT'
