@@ -374,6 +374,8 @@ class GradientTool(bpy.types.Operator):
     def invoke(self, context, event):
         scene = context.scene
 
+        context.space_data.viewport_shade = 'TEXTURED'
+
         self.select = scene.gradient_settings.select
         self.blend_type = scene.gradient_settings.blend_type
         self.blend_method = scene.gradient_settings.blend_method

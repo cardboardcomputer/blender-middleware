@@ -22,7 +22,7 @@ class AddColors(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     name = bpy.props.StringProperty(name='Name', default=krz.colors.BASENAME)
-    alpha = bpy.props.BoolProperty(name='Alpha', default=False)
+    alpha = bpy.props.BoolProperty(name='Alpha', default=True)
 
     @classmethod
     def poll(cls, context):
@@ -37,12 +37,13 @@ class AddColors(bpy.types.Operator):
         row.prop(self, 'alpha', toggle=True)
 
     def execute(self, context):
+        context.space_data.viewport_shade = 'TEXTURED'
         add_colors(context.active_object, self.name, self.alpha)
         return {'FINISHED'}
 
     def invoke(self, context, event):
         self.name = krz.colors.Manager(context.active_object).get_unique_name(self.name)
-        self.alpha = krz.lines.is_line(context.active_object)
+        self.alpha = krz.lines.is_line(context.active_object) or self.alpha
         return context.window_manager.invoke_props_dialog(self, width=160)
 
 def menu_func(self, context):
