@@ -1,41 +1,43 @@
 #!/usr/bin/env sh
 
 VERSION=2.69
-SUBPATH="Blender Foundation/Blender/$VERSION"
 BASEDIR=$(dirname $(readlink -f "$0"))
+
+if [ ! -f "$BASEDIR/sync.config" ]; then
+    echo "$BASEDIR/sync.config does not exist; see sync.config.example"
+    exit 1
+fi
 
 . $BASEDIR/sync.config
 
-if [ -z "$BLENDER_APP_BASEDIR" ]; then
-    echo "BLENDER_APP_BASEDIR not set"
-    echo "Missing $BASEDIR/sys.config?"
+if [ -z "$BLENDER_APP_PATH" ]; then
+    echo "BLENDER_APP_PATH not set"
+    echo "Missing $PATH/sys.config?"
     exit 1
 fi
 
-if [ -z "$BLENDER_USER_BASEDIR" ]; then
-    echo "BLENDER_USER_BASEDIR not set"
-    echo "Missing $BASEDIR/sys.config?"
+if [ -z "$BLENDER_USER_PATH" ]; then
+    echo "BLENDER_USER_PATH not set"
+    echo "Missing $PATH/sys.config?"
     exit 1
 fi
 
-BLENDER_APP_PATH=$BLENDER_APP_BASEDIR/$SUBPATH
-BLENDER_USER_PATH=$BLENDER_USER_BASEDIR/$SUBPATH
-BLENDER_REPO_PATH=$BASEDIR/Blender/$VERSION
+BLENDER_REPO_PATH="$BASEDIR/Blender"
 
 update()
 {
     if [ "$1" = "repo" ]; then
-        A="$BLENDER_USER_PATH"
-        B="$BLENDER_REPO_PATH"
-        C="$BLENDER_APP_PATH"
-        D="$BLENDER_REPO_PATH"
+        A="$BLENDER_USER_PATH/$VERSION"
+        B="$BLENDER_REPO_PATH/$VERSION"
+        C="$BLENDER_APP_PATH/$VERSION"
+        D="$BLENDER_REPO_PATH/$VERSION"
     fi
 
     if [ "$1" = "system" ]; then
-        A="$BLENDER_REPO_PATH"
-        B="$BLENDER_USER_PATH"
-        C="$BLENDER_REPO_PATH"
-        D="$BLENDER_APP_PATH"
+        A="$BLENDER_REPO_PATH/$VERSION"
+        B="$BLENDER_USER_PATH/$VERSION"
+        C="$BLENDER_REPO_PATH/$VERSION"
+        D="$BLENDER_APP_PATH/$VERSION"
     fi
 
     cd "$A/config"
@@ -49,6 +51,7 @@ update()
     rsync -a --info=name plot.py "$B/scripts/modules/"
 
     cd "$A/scripts/addons"
+    echo "$B/scripts/addons/"
     rsync -a --info=name krz_*.py "$B/scripts/addons/"
 
     cd "$C/scripts/addons/io_scene_fbx"
