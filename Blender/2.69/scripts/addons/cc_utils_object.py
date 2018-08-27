@@ -156,24 +156,20 @@ class ObjectMenu(bpy.types.Menu):
         layout.operator(CopyTransform.bl_idname, text='Copy Transform')
         layout.operator(TransferNormals.bl_idname, text='Transfer Normals')
 
+def cardboard_menu_ext(self, context):
+    self.layout.menu('CC_MT_object')
+
+def register():
+    cc.utils.register(__REGISTER__)
+    cc.ui.CardboardMenu.add_section(cardboard_menu_ext, 1)
+
+def unregister():
+    cc.utils.unregister(__REGISTER__)
+    cc.ui.CardboardMenu.remove_section(cardboard_menu_ext)
+
 __REGISTER__ = (
     CopyProperties,
     CopyTransform,
     TransferNormals,
     ObjectMenu,
 )
-
-def cardboard_menu_ext(self, context):
-    self.layout.menu('CC_MT_object')
-
-def register():
-    for cls in __REGISTER__:
-        bpy.utils.register_class(cls)
-
-    cc.ui.CardboardMenu.add_section(cardboard_menu_ext, 1)
-
-def unregister():
-    for cls in __REGISTER__:
-        bpy.utils.unregister_class(cls)
-
-    cc.ui.CardboardMenu.remove_section(cardboard_menu_ext)

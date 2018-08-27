@@ -99,8 +99,6 @@ class VertexPaintSettings(bpy.types.PropertyGroup):
     stroke_spacing = bpy.props.IntProperty(name='Stroke Spacing', default=3, min=1)
     stroke_timestep = bpy.props.FloatProperty(name='Stroke Timestep', default=0.02)
 
-bpy.utils.register_class(VertexPaintSettings)
- 
 def vertex_paint_preset_selected(self, context):
     s = context.scene
     d = context.active_object.data
@@ -110,12 +108,11 @@ def vertex_paint_preset_selected(self, context):
         for prop in s.vertex_paint.keys():
             setattr(s.vertex_paint, prop, getattr(preset, prop))
 
-bpy.types.Mesh.vertex_paint_settings = bpy.props.PointerProperty(type=VertexPaintSettings)
+PROP_VERTEX_PAINT_SETTINGS = bpy.props.PointerProperty(type=VertexPaintSettings)
 
-bpy.types.Mesh.vertex_paint_presets = bpy.props.CollectionProperty(type=VertexPaintSettings)
+PROP_VERTEX_PAINT_PRESETS = bpy.props.CollectionProperty(type=VertexPaintSettings)
 
-bpy.types.Mesh.vertex_paint_active_preset = bpy.props.StringProperty(
-    name='Preset', default='', update=vertex_paint_preset_selected)
+PROP_VERTEX_PAINT_ACTIVE_PRESET = bpy.props.StringProperty(name='Preset', default='', update=vertex_paint_preset_selected)
 
 class VertexPaintPanel(bpy.types.Panel):
     bl_label = 'Vertex Paint'
@@ -172,8 +169,6 @@ class VertexPaintPanel(bpy.types.Panel):
             row = col.row(align=True)
             row.prop(vps, 'normal', expand=True)
 
-bpy.utils.register_class(VertexPaintPanel)
-
 class VertexPaintPresetAdd(bpy.types.Operator):
     bl_idname = 'cc.vertex_paint_preset_add'
     bl_label = 'Add Preset'
@@ -199,8 +194,6 @@ class VertexPaintPresetAdd(bpy.types.Operator):
         s.vertex_paint_active_preset = preset.name
         return {'FINISHED'}
 
-bpy.utils.register_class(VertexPaintPresetAdd)
-
 class VertexPaintPresetRemove(bpy.types.Operator):
     bl_idname = 'cc.vertex_paint_preset_remove'
     bl_label = 'Remove Preset'
@@ -219,8 +212,6 @@ class VertexPaintPresetRemove(bpy.types.Operator):
         s.vertex_paint_active_preset = ''
         self.report({'INFO'}, 'Preset removed.')
         return {'FINISHED'}
-
-bpy.utils.register_class(VertexPaintPresetRemove)
 
 class VertexPaintPresetUpdate(bpy.types.Operator):
     bl_idname = 'cc.vertex_paint_preset_update'
@@ -243,8 +234,6 @@ class VertexPaintPresetUpdate(bpy.types.Operator):
         self.report({'INFO'}, 'Preset updated.')
         return {'FINISHED'}
 
-bpy.utils.register_class(VertexPaintPresetUpdate)
-
 class VertexPaintPresetRevert(bpy.types.Operator):
     bl_idname = 'cc.vertex_paint_preset_revert'
     bl_label = 'Load Preset'
@@ -265,8 +254,6 @@ class VertexPaintPresetRevert(bpy.types.Operator):
             setattr(s.vertex_paint_settings, prop, getattr(preset, prop))
         self.report({'INFO'}, 'Reverted to preset.')
         return {'FINISHED'}
-
-bpy.utils.register_class(VertexPaintPresetRevert)
 
 class VertexPaintTool(bpy.types.Operator):
     bl_idname = 'cc.vertex_paint_tool'
@@ -704,7 +691,21 @@ class VertexPaintTool(bpy.types.Operator):
 
         self._handers_installed = False
 
-bpy.utils.register_class(VertexPaintTool)
-
 def register():
-    pass
+    cc.utils.register(__REGISTER__)
+
+def unregister():
+    cc.utils.unregister(__REGISTER__)
+
+__REGISTER__ = (
+    VertexPaintSettings,
+    VertexPaintPanel,
+    VertexPaintPresetAdd,
+    VertexPaintPresetRemove,
+    VertexPaintPresetUpdate,
+    VertexPaintPresetRevert,
+    VertexPaintTool,
+    (bpy.types.Mesh, 'vertex_paint_settings', PROP_VERTEX_PAINT_SETTINGS),
+    (bpy.types.Mesh, 'vertex_paint_presets', PROP_VERTEX_PAINT_PRESETS),
+    (bpy.types.Mesh, 'vertex_paint_active_preset', PROP_VERTEX_PAINT_ACTIVE_PRESET),
+)

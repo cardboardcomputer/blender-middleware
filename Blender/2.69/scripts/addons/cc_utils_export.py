@@ -86,22 +86,18 @@ class SetExport(bpy.types.Operator):
         set_export(context.selected_objects, self.layer, self.aux, self.colormap)
         return {'FINISHED'}
 
-__REGISTER__ = (
-    SetExport,
-)
-
 def cardboard_menu_ext(self, context):
     self.layout.operator_context = 'INVOKE_DEFAULT'
     self.layout.operator(SetExport.bl_idname, text='Export Options')
 
 def register():
-    for cls in __REGISTER__:
-        bpy.utils.register_class(cls)
-
+    cc.utils.register(__REGISTER__)
     cc.ui.CardboardMenu.add_section(cardboard_menu_ext, 1000)
 
 def unregister():
-    for cls in __REGISTER__:
-        bpy.utils.unregister_class(cls)
-
+    cc.utils.unregister(__REGISTER__)
     cc.ui.CardboardMenu.remove_section(cardboard_menu_ext)
+
+__REGISTER__ = (
+    SetExport,
+)

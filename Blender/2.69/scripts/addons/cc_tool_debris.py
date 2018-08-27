@@ -239,19 +239,17 @@ class DebrisTool(bpy.types.Operator):
             return {'FINISHED'}
 
         return {ret}
- 
-def register():
-    bpy.utils.register_class(DebrisPanel)
-    bpy.utils.register_class(DebrisTool)
 
-    bpy.types.Scene.debris_select = PROP_SELECT
-    bpy.types.Scene.debris_group_name = PROP_GROUP_NAME
-    bpy.types.Scene.debris_object_name = PROP_OBJECT_NAME
+def register():
+    cc.utils.register(__REGISTER__)
 
 def unregister():
-    bpy.utils.unregister_class(DebrisPanel)
-    bpy.utils.unregister_class(DebrisTool)
+    cc.utils.unregister(__REGISTER__)
 
-    bpy.types.Scene.debris_select = None
-    bpy.types.Scene.debris_group_name = None
-    bpy.types.Scene.debris_object_name = None
+__REGISTER__ = (
+    DebrisPanel,
+    DebrisTool,
+    (bpy.types.Scene, 'debris_select', PROP_SELECT),
+    (bpy.types.Scene, 'debris_group_name', PROP_GROUP_NAME),
+    (bpy.types.Scene, 'debris_object_name', PROP_OBJECT_NAME),
+)

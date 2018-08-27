@@ -1,3 +1,4 @@
+import cc
 import bpy
 
 bl_info = {
@@ -209,7 +210,13 @@ class ConsoleDeleteForward(ConsoleOperator):
         readline.body = readline.body[:start]
         return {'FINISHED'}
 
-__REGISTER_CLASSES__ = (
+def register():
+    cc.utils.register(__REGISTER__)
+
+def unregister():
+    cc.utils.unregister(__REGISTER__)
+
+__REGISTER__ = (
     Deselect,
     DeleteLine,
     MoveIndent,
@@ -218,24 +225,6 @@ __REGISTER_CLASSES__ = (
     CopyDeselect,
     ToggleComment,
     ConsoleDeleteForward,
-)
-
-__REGISTER_PROPS__ = (
     (bpy.types.Text, 'get_selection_range', get_selection_range),
     (bpy.types.Text, 'select_active', SELECT_ACTIVE_PROP),
 )
-    
-def register():
-    for cls in __REGISTER_CLASSES__:
-        bpy.utils.register_class(cls)
-
-    for cls, prop, value in __REGISTER_PROPS__:
-        setattr(cls, prop, value)
-
-def unregister():
-    for cls in __REGISTER_CLASSES__:
-        bpy.utils.unregister_class(cls)
-
-    for cls, prop, value in __REGISTER_PROPS__:
-        if hasattr(cls, prop):
-            delattr(cls, prop)

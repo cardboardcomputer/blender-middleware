@@ -26,14 +26,12 @@ class LegacyUpgrade(bpy.types.Operator):
         legacy_upgrade()
         return {'FINISHED'}
 
+def register():
+    cc.utils.register(__REGISTER__)
+
+def unregister():
+    cc.utils.unregister(__REGISTER__)
+
 __REGISTER__ = (
     LegacyUpgrade,
 )
-
-def register():
-    for cls in __REGISTER__:
-        bpy.utils.register_class(cls)
-
-def unregister():
-    for cls in __REGISTER__:
-        bpy.utils.unregister_class(cls)

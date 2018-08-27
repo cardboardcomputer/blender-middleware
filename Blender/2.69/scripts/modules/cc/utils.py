@@ -243,3 +243,20 @@ class Noise:
         s2 = self.samples[x2 % size]
         s3 = self.samples[x3 % size]
         return cubic(s0, s1, s2, s3, x * size - x1)
+
+def register(objects):
+    for obj in objects:
+        if hasattr(obj, 'count'):
+            cls, prop, value = obj
+            setattr(cls, prop, value)
+        else:
+            bpy.utils.register_class(obj)
+
+def unregister(objects):
+    for obj in objects:
+        if hasattr(obj, 'count'):
+            cls, prop, value = obj
+            if hasattr(cls, prop):
+                delattr(cls, prop)
+        else:
+            bpy.utils.unregister_class(obj)

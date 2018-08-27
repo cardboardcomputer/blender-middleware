@@ -161,8 +161,6 @@ class GradientSettings(bpy.types.PropertyGroup):
     scale = PROP_SCALE
     mirror = PROP_MIRROR
 
-bpy.utils.register_class(GradientSettings)
-
 def gradient_preset_selected(self, context):
     s = context.scene
     if s.gradient_active_preset:
@@ -170,14 +168,11 @@ def gradient_preset_selected(self, context):
         for prop in s.gradient_settings.keys():
             setattr(s.gradient_settings, prop, getattr(preset, prop))
 
-bpy.types.Scene.gradient_settings = bpy.props.PointerProperty(
-    type=GradientSettings)
+PROP_GRADIENT_SETTINGS = bpy.props.PointerProperty(type=GradientSettings)
 
-bpy.types.Scene.gradient_presets = bpy.props.CollectionProperty(
-    type=GradientSettings)
+PROP_GRADIENT_PRESETS = bpy.props.CollectionProperty(type=GradientSettings)
 
-bpy.types.Scene.gradient_active_preset = bpy.props.StringProperty(
-    name='Preset', default='', update=gradient_preset_selected)
+PROP_GRADIENT_ACTIVE_PRESET = bpy.props.StringProperty(name='Preset', default='', update=gradient_preset_selected)
 
 def draw_gradient_settings(context, layout, data):
     s = context.scene
@@ -225,8 +220,6 @@ class GradientPanel(bpy.types.Panel):
 
         draw_gradient_settings(context, self.layout, context.scene.gradient_settings)
 
-bpy.utils.register_class(GradientPanel)
-
 class GradientPresetAdd(bpy.types.Operator):
     bl_idname = 'cc.gradient_preset_add'
     bl_label = 'Add Preset'
@@ -247,8 +240,6 @@ class GradientPresetAdd(bpy.types.Operator):
         s.gradient_active_preset = preset.name
         return {'FINISHED'}
 
-bpy.utils.register_class(GradientPresetAdd)
-
 class GradientPresetRemove(bpy.types.Operator):
     bl_idname = 'cc.gradient_preset_remove'
     bl_label = 'Remove Preset'
@@ -262,8 +253,6 @@ class GradientPresetRemove(bpy.types.Operator):
         s.gradient_active_preset = ''
         self.report({'INFO'}, 'Preset removed.')
         return {'FINISHED'}
-
-bpy.utils.register_class(GradientPresetRemove)
 
 class GradientPresetUpdate(bpy.types.Operator):
     bl_idname = 'cc.gradient_preset_update'
@@ -280,8 +269,6 @@ class GradientPresetUpdate(bpy.types.Operator):
             setattr(preset, prop, getattr(s.gradient_settings, prop))
         self.report({'INFO'}, 'Preset updated.')
         return {'FINISHED'}
-
-bpy.utils.register_class(GradientPresetUpdate)
 
 class GradientPresetRevert(bpy.types.Operator):
     bl_idname = 'cc.gradient_preset_revert'
@@ -543,10 +530,20 @@ class GradientTool(bpy.types.Operator):
             self._draw_2d = None
 
 def register():
-    bpy.utils.register_module(__name__)
+    cc.utils.register(__REGISTER__)
 
 def unregister():
-    bpy.utils.unregister_module(__name__)
+    cc.utils.unregister(__REGISTER___)
 
-if __name__ == "__main__":
-    register()
+__REGISTER__ = (
+    GradientSettings,
+    GradientPanel,
+    GradientPresetAdd,
+    GradientPresetRemove,
+    GradientPresetUpdate,
+    GradientPresetRevert,
+    GradientTool,
+    (bpy.types.Scene, 'gradient_settings', PROP_GRADIENT_SETTINGS),
+    (bpy.types.Scene, 'gradient_presets', PROP_GRADIENT_PRESETS),
+    (bpy.types.Scene, 'gradient_active_preset', PROP_GRADIENT_ACTIVE_PRESET),
+)
