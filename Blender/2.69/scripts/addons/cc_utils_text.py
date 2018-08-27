@@ -52,6 +52,17 @@ class TextEditorOperator(bpy.types.Operator):
             type(context.space_data) == bpy.types.SpaceTextEditor and
             context.space_data.text is not None)
 
+class Cut(TextEditorOperator):
+    bl_idname = 'text.cut_cc'
+    bl_label = 'Cut'
+
+    def execute(self, context):
+        space = context.space_data
+        text = space.text
+        bpy.ops.text.cut()
+        text.select_active = False
+        return {'FINISHED'}
+
 class Deselect(TextEditorOperator):
     bl_idname = 'text.deselect'
     bl_label = 'Deselect'
@@ -217,6 +228,7 @@ def unregister():
     cc.utils.unregister(__REGISTER__)
 
 __REGISTER__ = (
+    Cut,
     Deselect,
     DeleteLine,
     MoveIndent,
