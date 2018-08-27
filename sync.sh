@@ -38,6 +38,10 @@ update()
         B="$BLENDER_USER_PATH/$VERSION"
         C="$BLENDER_REPO_PATH/$VERSION"
         D="$BLENDER_APP_PATH/$VERSION"
+
+        cd "$B/scripts/addons"
+        rm -fv krz_*.py
+        rm -rf __pycache__
     fi
 
     cd "$A/config"
