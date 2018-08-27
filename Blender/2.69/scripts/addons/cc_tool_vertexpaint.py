@@ -601,7 +601,7 @@ class VertexPaintTool(bpy.types.Operator):
                 self.cleanup(context, event)
                 return {'CANCELLED'}
 
-            if event.type == 'SPACE' or event.type == 'RET':
+            if event.type == 'SPACE':
                 self.cleanup(context, event)
                 return {'FINISHED'}
 
