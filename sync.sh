@@ -11,14 +11,12 @@ fi
 . $BASEDIR/sync.config
 
 if [ -z "$BLENDER_APP_PATH" ]; then
-    echo "BLENDER_APP_PATH not set"
-    echo "Missing $PATH/sys.config?"
+    echo "BLENDER_APP_PATH not set in $BASEDIR/sys.config"
     exit 1
 fi
 
 if [ -z "$BLENDER_USER_PATH" ]; then
-    echo "BLENDER_USER_PATH not set"
-    echo "Missing $PATH/sys.config?"
+    echo "BLENDER_USER_PATH not set in $BASEDIR/sys.config"
     exit 1
 fi
 
