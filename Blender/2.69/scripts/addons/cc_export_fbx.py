@@ -1,3 +1,92 @@
+bl_info = {
+    'name': 'Export: FBX (.fbx)',
+    'author': 'Cardboard Computer',
+    'blender': (2, 6, 9),
+    'location': 'File > Import-Export',
+    'description': 'Modifications to FBX exporter',
+    'category': 'Cardboard'
+}
+
+_original_save = None
+_original_defaults = None
+_original_execute = None
+
+def register():
+    global _original_save
+    global _original_defaults
+    global _original_execute
+
+    import io_scene_fbx
+    from io_scene_fbx import export_fbx
+
+    _original_save = export_fbx.save
+    _original_defaults = export_fbx.defaults_unity3d
+    _original_execute = io_scene_fbx.ExportFBX.execute
+
+    export_fbx.save = save
+    export_fbx.defaults_unity3d = defaults_unity3d
+    io_scene_fbx.ExportFBX.execute = export_fbx_execute
+
+    io_scene_fbx.ExportFBX.for_unity = bpy.props.BoolProperty(
+        name="For Unity",
+        description="Export for Unity",
+        default=False,)
+
+def unregister():
+    global _original_save
+    global _original_defaults
+    global _original_execute
+
+    import io_scene_fbx
+    from io_scene_fbx import export_fbx
+
+    if _original_save:
+        export_fbx.save = _original_save
+    if _original_defaults:
+        export_fbx.defaults_unity3d = _original_defaults
+    if _original_execute:
+        io_scene_fbx.ExportFBX.execute = _original_execute
+        delattr(io_scene_fbx.ExportFBX, 'for_unity')
+
+def export_fbx_execute(self, context):
+        from mathutils import Matrix
+        if not self.filepath:
+            raise Exception("filepath not set")
+
+        global_matrix = Matrix()
+
+        global_matrix[0][0] = \
+        global_matrix[1][1] = \
+        global_matrix[2][2] = self.global_scale
+
+        if not self.use_rotate_workaround:
+            global_matrix = (global_matrix *
+                             axis_conversion(to_forward=self.axis_forward,
+                                             to_up=self.axis_up,
+                                             ).to_4x4())
+
+        keywords = self.as_keywords(ignore=("axis_forward",
+                                            "axis_up",
+                                            "global_scale",
+                                            "check_existing",
+                                            "filter_glob",
+                                            "xna_validate",
+                                            ))
+
+        keywords["global_matrix"] = global_matrix
+
+        from . import export_fbx
+
+        # cc start
+        if self.for_unity:
+            keywords.update(export_fbx.defaults_unity3d())
+        del keywords["for_unity"]
+        # cc end
+
+        return export_fbx.save(self, context, **keywords)
+
+# MODIFIED io_scene_fbx/export_fbx.py FOLLOWS
+
 # ##### BEGIN GPL LICENSE BLOCK #####
 #
 #  This program is free software; you can redistribute it and/or
@@ -19,7 +108,6 @@
 # <pep8 compliant>
 
 # Script copyright (C) Campbell Barton
-
 
 import os
 import time

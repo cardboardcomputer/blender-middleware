@@ -37,6 +37,10 @@ update()
         C="$BLENDER_REPO_PATH/$VERSION"
         D="$BLENDER_APP_PATH/$VERSION"
 
+        if [ ! -d "$B" ]; then
+            mkdir -p $B
+        fi
+
         cd "$B/scripts/addons"
         rm -fv krz_*.py
         rm -rf __pycache__
@@ -55,8 +59,4 @@ update()
 
     cd "$A/scripts/addons"
     rsync -a --info=name cc_*.py "$B/scripts/addons/"
-
-    cd "$C/scripts/addons/io_scene_fbx"
-    rsync -a --info=name export_fbx.py "$D/scripts/addons/io_scene_fbx/"
-    rsync -a --info=name __init__.py "$D/scripts/addons/io_scene_fbx/"
 }
