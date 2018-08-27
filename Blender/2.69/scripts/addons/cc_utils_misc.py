@@ -2,10 +2,10 @@ import bpy
 import cc
 
 bl_info = {
-    'name': 'Upgrade Legacy CC Scenes',
+    'name': 'Utils: Misc',
     'author': 'Cardboard Computer',
     'blender': (2, 6, 9),
-    'description': 'Upgrade legacy CC scenes',
+    'description': 'Various (inter)object utilities',
     'category': 'Cardboard'
 }
 
@@ -26,11 +26,14 @@ class LegacyUpgrade(bpy.types.Operator):
         legacy_upgrade()
         return {'FINISHED'}
 
+__REGISTER__ = (
+    LegacyUpgrade,
+)
+
 def register():
-    bpy.utils.register_module(__name__)
+    for cls in __REGISTER__:
+        bpy.utils.register_class(cls)
 
 def unregister():
-    bpy.utils.unregister_module(__name__)
-
-if __name__ == "__main__":
-    register()
+    for cls in __REGISTER__:
+        bpy.utils.unregister_class(cls)

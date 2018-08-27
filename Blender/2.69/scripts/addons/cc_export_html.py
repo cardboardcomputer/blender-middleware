@@ -18,7 +18,7 @@ from cc.export import (
 )
 
 bl_info = {
-    'name': 'Export HTML (.html)',
+    'name': 'Export: HTML (.html)',
     'author': 'Cardboard Computer',
     'blender': (2, 6, 9),
     'description': 'Export selection to HTML',

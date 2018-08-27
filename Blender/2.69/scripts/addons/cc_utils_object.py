@@ -1,0 +1,167 @@
+import bpy
+import cc
+import mathutils
+import re
+
+bl_info = {
+    'name': 'Utils: Object',
+    'author': 'Cardboard Computer',
+    'blender': (2, 6, 9),
+    'description': 'Various (inter)object utilities',
+    'category': 'Cardboard'
+}
+
+EXCLUDE = (
+  cc.colors.METADATA_PROP,
+)
+
+@cc.ops.editmode
+def copy_properties(i, o, pattern='.*', obj=True, data=True):
+    p = re.compile(pattern)
+
+    if obj:
+        props = {}
+        for k, v in i.items():
+            if k.startswith('_RNA'):
+                continue
+            if k in EXCLUDE:
+                continue
+            if p.match(k):
+                props[k] = v
+        for k, v in props.items():
+            for n in o:
+                n[k] = v
+
+    if data and i.data:
+        props = {}
+        for k, v in i.data.items():
+            if k.startswith('_RNA'):
+                continue
+            if k in EXCLUDE:
+                continue
+            if p.match(k):
+                props[k] = v
+        for k, v in props.items():
+            for n in o:
+                if n.data:
+                    n.data[k] = v
+
+class CopyProperties(bpy.types.Operator):
+    bl_idname = 'cc.copy_properties'
+    bl_label = 'Copy Properties'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    pattern = bpy.props.StringProperty(
+        name='Pattern', default='.*')
+    obj = bpy.props.BoolProperty(
+        name="Object", default=True)
+    data = bpy.props.BoolProperty(
+        name="Object Data", default=True)
+
+    @classmethod
+    def poll(cls, context):
+        return len(context.selected_objects) > 1
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    def execute(self, context):
+        copy_properties(context.active_object, context.selected_objects, pattern=self.pattern, obj=self.obj, data=self.data)
+        return {'FINISHED'}
+
+def copy_transform(i, o):
+    basis = i.matrix_basis
+    world = i.matrix_world
+    for obj in o:
+        obj.matrix_basis = basis.copy()
+        obj.matrix_world = world.copy()
+
+class CopyTransform(bpy.types.Operator):
+    bl_idname = 'cc.copy_transform'
+    bl_label = 'Copy Transform'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return len(bpy.context.selected_objects) > 1
+
+    def execute(self, context):
+        copy_transform(context.active_object, context.selected_objects)
+        return {'FINISHED'}
+
+@cc.ops.editmode
+def transfer_normals(obj, ref, select='VERTEX', from_colors=False):
+    normals = cc.lines.normals(obj)
+
+    if from_colors:
+        with cc.colors.Sampler(ref) as sampler:
+            colors = cc.colors.layer(obj)
+            for sample in colors.itersamples():
+                if sample.is_selected(select.lower()):
+                    point = sample.obj.matrix_world * sample.vertex.co
+                    color = sampler.closest(point)
+                    normals.set(sample.vertex.index, color.r * 2 - 1, color.g * 2 - 1, color.b * 2 - 1)
+
+    else:
+        for vert in obj.data.vertices:
+            if vert.select:
+                point, normal, face = ref.closest_point_on_mesh(vert.co)
+                normals.set(vert.index, normal.x, normal.y, normal.z)
+
+class TransferNormals(bpy.types.Operator):
+    bl_idname = 'cc.transfer_normals'
+    bl_label = 'Transfer Normals'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    select = bpy.props.EnumProperty(
+        items=cc.ops.ENUM_SELECT,
+        name='Select', default='VERTEX')
+    from_colors = bpy.props.BoolProperty(
+        name='From Colors', default=False)
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        if len(context.selected_objects) == 2:
+            ref = list(context.selected_objects)
+            ref.remove(context.active_object)
+            ref = ref[0]
+        else:
+            ref = None
+        return cc.lines.is_line(obj) and ref and ref.type == 'MESH'
+
+    def execute(self, context):
+        aux_objects = list(context.selected_objects)
+        aux_objects.remove(context.active_object)
+
+        obj = context.active_object
+        ref = aux_objects[0]
+
+        transfer_normals(obj, ref, select=self.select, from_colors=self.from_colors)
+
+        return {'FINISHED'}
+
+__REGISTER__ = (
+    CopyProperties,
+    CopyTransform,
+    TransferNormals,
+)
+
+def specials_menu_ext(self, context):
+    self.layout.operator_context = 'INVOKE_DEFAULT'
+    self.layout.operator(CopyProperties.bl_idname, text='Copy Properties')
+    self.layout.operator(CopyTransform.bl_idname, text='Copy Transform')
+    self.layout.operator(TransferNormals.bl_idname, text='Transfer Normals')
+
+def register():
+    for cls in __REGISTER__:
+        bpy.utils.register_class(cls)
+
+    bpy.types.VIEW3D_MT_object_specials.append(specials_menu_ext)
+
+def unregister():
+    for cls in __REGISTER__:
+        bpy.utils.unregister_class(cls)
+
+    bpy.types.VIEW3D_MT_object_specials.remove(specials_menu_ext)

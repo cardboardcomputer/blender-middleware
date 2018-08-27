@@ -3,7 +3,7 @@ import bpy
 import cc
 
 bl_info = {
-    'name': 'Export Colormap (.png)',
+    'name': 'Export: Colormap (.png)',
     'author': 'Cardboard Computer',
     'blender': (2, 6, 9),
     'description': 'Export an object\'s vertex colormap',

@@ -6,7 +6,7 @@ import mathutils
 from bpy_extras import view3d_utils
 
 bl_info = {
-    'name': 'Gradient Tool',
+    'name': 'Tool: Gradient',
     'author': 'Cardboard Computer',
     'blender': (2, 6, 9),
     'description': 'Apply gradients on lines/polygon colors',

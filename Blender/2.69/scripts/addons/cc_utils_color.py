@@ -5,7 +5,7 @@ import mathutils as mu
 from mathutils import Color
 
 bl_info = {
-    'name': 'Color Utilities',
+    'name': 'Utils: Vertex/Line Colors',
     'author': 'Cardboard Computer',
     'blender': (2, 6, 9),
     'description': 'Various tools to work with vertex colors.',
@@ -887,20 +887,6 @@ class ColorOpApply(bpy.types.Operator):
         apply_color_ops(context.selected_objects)
         return {'FINISHED'}
 
-def specials_menu_ext(self, context):
-    self.layout.operator_context = 'INVOKE_DEFAULT'
-    self.layout.operator(AddColors.bl_idname, text='Add Colors', icon='SPACE3')
-    self.layout.operator(AdjustHsv.bl_idname, text='Adjust HSV')
-    self.layout.operator(SelectByColor.bl_idname, text='Select By Color')
-    self.layout.operator(SelectByColor.bl_idname, text='Select Colors')
-    self.layout.operator(CopyColors.bl_idname, text='Copy Colors')
-    self.layout.operator(TransferColors.bl_idname, text='Transfer Colors')
-    self.layout.operator(ColorOpApply.bl_idname, text='Apply Color Ops')
-    self.layout.operator(ViewColors.bl_idname, text='View Colors')
-    self.layout.operator(LightColors.bl_idname, text='Light Colors')
-    self.layout.operator(GradientColors.bl_idname, text='Gradient Colors')
-    self.layout.operator(ApplyGradients.bl_idname, text='Apply Gradients')
-
 __REGISTER__ = (
     ViewColors,
     ViewColorsMenu,
@@ -924,6 +910,20 @@ __REGISTER__ = (
     ColorOpDown,
     ColorOpApply,
 )
+
+def specials_menu_ext(self, context):
+    self.layout.operator_context = 'INVOKE_DEFAULT'
+    self.layout.operator(AddColors.bl_idname, text='Add Colors', icon='SPACE3')
+    self.layout.operator(AdjustHsv.bl_idname, text='Adjust HSV')
+    self.layout.operator(SelectByColor.bl_idname, text='Select By Color')
+    self.layout.operator(SelectByColor.bl_idname, text='Select Colors')
+    self.layout.operator(CopyColors.bl_idname, text='Copy Colors')
+    self.layout.operator(TransferColors.bl_idname, text='Transfer Colors')
+    self.layout.operator(ColorOpApply.bl_idname, text='Apply Color Ops')
+    self.layout.operator(ViewColors.bl_idname, text='View Colors')
+    self.layout.operator(LightColors.bl_idname, text='Light Colors')
+    self.layout.operator(GradientColors.bl_idname, text='Gradient Colors')
+    self.layout.operator(ApplyGradients.bl_idname, text='Apply Gradients')
 
 def register():
     cc.ui.install_line_renderer()

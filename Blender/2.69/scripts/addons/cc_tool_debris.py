@@ -6,7 +6,7 @@ import mathutils
 from bpy_extras import view3d_utils
 
 bl_info = {
-    'name': 'Debris Tool',
+    'name': 'Tool: Debris',
     'author': 'Cardboard Computer',
     'blender': (2, 6, 9),
     'description': 'Interactively place objects onto a mesh surface',

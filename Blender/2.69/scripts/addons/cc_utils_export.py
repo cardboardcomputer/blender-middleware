@@ -3,10 +3,10 @@ import cc
 import mathutils
 
 bl_info = {
-    'name': 'Set Export',
+    'name': 'Utils: Export',
     'author': 'Cardboard Computer',
     'blender': (2, 6, 9),
-    'description': 'Set export info on object',
+    'description': 'Various export utilities',
     'category': 'Cardboard'
 }
 
@@ -86,17 +86,22 @@ class SetExport(bpy.types.Operator):
         set_export(context.selected_objects, self.layer, self.aux, self.colormap)
         return {'FINISHED'}
 
-def menu_func(self, context):
+__REGISTER__ = (
+    SetExport,
+)
+
+def specials_menu_ext(self, context):
     self.layout.operator_context = 'INVOKE_DEFAULT'
     self.layout.operator(SetExport.bl_idname, text='Set Export')
 
 def register():
-    bpy.utils.register_module(__name__)
-    bpy.types.VIEW3D_MT_object_specials.append(menu_func)
+    for cls in __REGISTER__:
+        bpy.utils.register_class(cls)
+
+    bpy.types.VIEW3D_MT_object_specials.append(specials_menu_ext)
 
 def unregister():
-    bpy.utils.unregister_module(__name__)
-    bpy.types.VIEW3D_MT_object_specials.remove(menu_func)
+    for cls in __REGISTER__:
+        bpy.utils.unregister_class(cls)
 
-if __name__ == "__main__":
-    register()
+    bpy.types.VIEW3D_MT_object_specials.remove(specials_menu_ext)

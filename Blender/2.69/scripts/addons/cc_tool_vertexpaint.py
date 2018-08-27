@@ -12,7 +12,7 @@ from bpy_extras import view3d_utils
 from cc.utils import lerp
 
 bl_info = {
-    'name': 'Vertex Paint Tool',
+    'name': 'Tool: Vertex Color Painting',
     'author': 'Cardboard Computer',
     'blender': (2, 6, 9),
     'description': 'Homebrew vertex painting tool',

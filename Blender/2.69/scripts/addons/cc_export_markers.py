@@ -4,7 +4,7 @@ import bpy
 import json
 
 bl_info = {
-    'name': 'Export Unity Events (.events)',
+    'name': 'Export: Unity Events (.events)',
     'author': 'Cardboard Computer',
     'blender': (2, 6, 9),
     'description': 'Export timeline markers as Unity events',
