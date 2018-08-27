@@ -887,6 +887,31 @@ class ColorOpApply(bpy.types.Operator):
         apply_color_ops(context.selected_objects)
         return {'FINISHED'}
 
+class ColorMenu(bpy.types.Menu):
+    bl_label = 'Colors'
+    bl_idname = 'CC_MT_colors'
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object and context.active_object.type == 'MESH'
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_DEFAULT'
+
+        layout.operator(AddColors.bl_idname, text='Add')
+        layout.operator(AdjustHsv.bl_idname, text='HSV')
+        layout.operator(SelectByColor.bl_idname, text='Select')
+        layout.operator(CopyColors.bl_idname, text='Copy')
+
+        layout.separator()
+
+        layout.operator(TransferColors.bl_idname, text='Transfer')
+        layout.operator(GradientColors.bl_idname, text='Set Gradient')
+        layout.operator(ApplyGradients.bl_idname, text='Apply Gradient(s)')
+        layout.operator(LightColors.bl_idname, text='Apply Lights')
+        layout.operator(ColorOpApply.bl_idname, text='Apply Ops')
+
 __REGISTER__ = (
     ViewColors,
     ViewColorsMenu,
@@ -909,21 +934,12 @@ __REGISTER__ = (
     ColorOpUp,
     ColorOpDown,
     ColorOpApply,
+
+    ColorMenu,
 )
 
-def specials_menu_ext(self, context):
-    self.layout.operator_context = 'INVOKE_DEFAULT'
-    self.layout.operator(AddColors.bl_idname, text='Add Colors', icon='SPACE3')
-    self.layout.operator(AdjustHsv.bl_idname, text='Adjust HSV')
-    self.layout.operator(SelectByColor.bl_idname, text='Select By Color')
-    self.layout.operator(SelectByColor.bl_idname, text='Select Colors')
-    self.layout.operator(CopyColors.bl_idname, text='Copy Colors')
-    self.layout.operator(TransferColors.bl_idname, text='Transfer Colors')
-    self.layout.operator(ColorOpApply.bl_idname, text='Apply Color Ops')
-    self.layout.operator(ViewColors.bl_idname, text='View Colors')
-    self.layout.operator(LightColors.bl_idname, text='Light Colors')
-    self.layout.operator(GradientColors.bl_idname, text='Gradient Colors')
-    self.layout.operator(ApplyGradients.bl_idname, text='Apply Gradients')
+def cardboard_menu_ext(self, context):
+    self.layout.menu('CC_MT_colors')
 
 def register():
     for cls in __REGISTER__:
@@ -931,8 +947,7 @@ def register():
 
     bpy.types.Mesh.vertex_color_ops = bpy.props.CollectionProperty(type=ColorOp)
 
-    bpy.types.VIEW3D_MT_object_specials.append(specials_menu_ext)
-    bpy.types.VIEW3D_MT_edit_mesh_specials.append(specials_menu_ext)
+    cc.ui.CardboardMenu.add_section(cardboard_menu_ext, 0)
 
 def unregister():
     for cls in __REGISTER__:
@@ -940,5 +955,4 @@ def unregister():
 
     bpy.types.Mesh.vertex_color_ops = None
 
-    bpy.types.VIEW3D_MT_object_specials.remove(specials_menu_ext)
-    bpy.types.VIEW3D_MT_edit_mesh_specials.remove(specials_menu_ext)
+    cc.ui.CardboardMenu.remove_section(cardboard_menu_ext)

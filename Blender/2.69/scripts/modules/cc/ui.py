@@ -219,11 +219,6 @@ def uninstall_line_renderer():
         line_renderer = None
         flag = _flag
 
-def ui_heading(self, context):
-    # self.layout.separator()
-    self.layout.label('')
-    self.layout.separator()
-
 @bpy.app.handlers.persistent
 def setup_line_renderer(scene):
     install_line_renderer()
@@ -233,7 +228,32 @@ def clear_line_renderer():
     if line_renderer is not None:
         line_renderer.clear()
 
-bpy.types.VIEW3D_MT_object_specials.append(ui_heading)
-bpy.types.VIEW3D_MT_edit_mesh_specials.append(ui_heading)
+class CardboardMenu(bpy.types.Menu):
+    bl_label = 'Cardboard Computer'
+    bl_idname = 'CC_MT_cardboard'
+
+    sections = []
+
+    def draw(self, context):
+        self.sections.sort(key=lambda fn: fn.section_index)
+        for fn in self.sections:
+            fn(self, context)
+
+    @classmethod
+    def add_section(cls, fn, index=None):
+        if index is None:
+            index = len(cls.sections)
+        fn.section_index = index
+        cls.sections.append(fn)
+
+    @classmethod
+    def remove_section(cls, fn):
+        cls.sections.remove(fn)
+
+def draw_cardboard_menu(self, context):
+    CardboardMenu.sections.sort(key=lambda fn: fn.section_index)
+    for fn in CardboardMenu.sections:
+        fn(self, context)
+
 bpy.app.handlers.load_post.append(setup_line_renderer)
 atexit.register(clear_line_renderer)

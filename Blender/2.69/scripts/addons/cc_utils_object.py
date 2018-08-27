@@ -123,6 +123,8 @@ class TransferNormals(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         obj = context.active_object
+        if not obj:
+            return False
         if len(context.selected_objects) == 2:
             ref = list(context.selected_objects)
             ref.remove(context.active_object)
@@ -142,26 +144,36 @@ class TransferNormals(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class ObjectMenu(bpy.types.Menu):
+    bl_label = 'Object'
+    bl_idname = 'CC_MT_object'
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_DEFAULT'
+
+        layout.operator(CopyProperties.bl_idname, text='Copy Properties')
+        layout.operator(CopyTransform.bl_idname, text='Copy Transform')
+        layout.operator(TransferNormals.bl_idname, text='Transfer Normals')
+
 __REGISTER__ = (
     CopyProperties,
     CopyTransform,
     TransferNormals,
+    ObjectMenu,
 )
 
-def specials_menu_ext(self, context):
-    self.layout.operator_context = 'INVOKE_DEFAULT'
-    self.layout.operator(CopyProperties.bl_idname, text='Copy Properties')
-    self.layout.operator(CopyTransform.bl_idname, text='Copy Transform')
-    self.layout.operator(TransferNormals.bl_idname, text='Transfer Normals')
+def cardboard_menu_ext(self, context):
+    self.layout.menu('CC_MT_object')
 
 def register():
     for cls in __REGISTER__:
         bpy.utils.register_class(cls)
 
-    bpy.types.VIEW3D_MT_object_specials.append(specials_menu_ext)
+    cc.ui.CardboardMenu.add_section(cardboard_menu_ext, 1)
 
 def unregister():
     for cls in __REGISTER__:
         bpy.utils.unregister_class(cls)
 
-    bpy.types.VIEW3D_MT_object_specials.remove(specials_menu_ext)
+    cc.ui.CardboardMenu.remove_section(cardboard_menu_ext)

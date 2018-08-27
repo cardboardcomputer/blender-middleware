@@ -90,18 +90,18 @@ __REGISTER__ = (
     SetExport,
 )
 
-def specials_menu_ext(self, context):
+def cardboard_menu_ext(self, context):
     self.layout.operator_context = 'INVOKE_DEFAULT'
-    self.layout.operator(SetExport.bl_idname, text='Set Export')
+    self.layout.operator(SetExport.bl_idname, text='Export Options')
 
 def register():
     for cls in __REGISTER__:
         bpy.utils.register_class(cls)
 
-    bpy.types.VIEW3D_MT_object_specials.append(specials_menu_ext)
+    cc.ui.CardboardMenu.add_section(cardboard_menu_ext, 1000)
 
 def unregister():
     for cls in __REGISTER__:
         bpy.utils.unregister_class(cls)
 
-    bpy.types.VIEW3D_MT_object_specials.remove(specials_menu_ext)
+    cc.ui.CardboardMenu.remove_section(cardboard_menu_ext)
