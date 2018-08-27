@@ -2,8 +2,5 @@
 
 # Example sync.config (using Windows/WSL paths)
 
-# Path to blender application data files
-BLENDER_APP_PATH="/mnt/c/Program Files/Blender Foundation/Blender"
-
 # Path to blender user files
 BLENDER_USER_PATH="/mnt/c/Users/<user>/AppData/Roaming/Blender Foundation/Blender"

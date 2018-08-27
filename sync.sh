@@ -10,11 +10,6 @@ fi
 
 . $BASEDIR/sync.config
 
-if [ -z "$BLENDER_APP_PATH" ]; then
-    echo "BLENDER_APP_PATH not set in $BASEDIR/sys.config"
-    exit 1
-fi
-
 if [ -z "$BLENDER_USER_PATH" ]; then
     echo "BLENDER_USER_PATH not set in $BASEDIR/sys.config"
     exit 1
@@ -27,15 +22,11 @@ update()
     if [ "$1" = "repo" ]; then
         A="$BLENDER_USER_PATH/$VERSION"
         B="$BLENDER_REPO_PATH/$VERSION"
-        C="$BLENDER_APP_PATH/$VERSION"
-        D="$BLENDER_REPO_PATH/$VERSION"
     fi
 
     if [ "$1" = "system" ]; then
         A="$BLENDER_REPO_PATH/$VERSION"
         B="$BLENDER_USER_PATH/$VERSION"
-        C="$BLENDER_REPO_PATH/$VERSION"
-        D="$BLENDER_APP_PATH/$VERSION"
 
         if [ ! -d "$B" ]; then
             mkdir -p $B
