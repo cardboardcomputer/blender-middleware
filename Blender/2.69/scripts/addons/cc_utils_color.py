@@ -5,7 +5,7 @@ import mathutils as mu
 from mathutils import Color
 
 bl_info = {
-    'name': 'Utils: Vertex/Line Colors',
+    'name': 'Utils: Colors',
     'author': 'Cardboard Computer',
     'blender': (2, 6, 9),
     'description': 'Various tools to work with vertex colors.',
@@ -926,8 +926,6 @@ def specials_menu_ext(self, context):
     self.layout.operator(ApplyGradients.bl_idname, text='Apply Gradients')
 
 def register():
-    cc.ui.install_line_renderer()
-
     for cls in __REGISTER__:
         bpy.utils.register_class(cls)
 
@@ -937,8 +935,6 @@ def register():
     bpy.types.VIEW3D_MT_edit_mesh_specials.append(specials_menu_ext)
 
 def unregister():
-    cc.ui.uninstall_line_renderer()
-
     for cls in __REGISTER__:
         bpy.utils.unregister_class(cls)
 

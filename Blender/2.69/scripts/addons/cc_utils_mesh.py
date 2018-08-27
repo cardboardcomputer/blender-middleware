@@ -6,7 +6,7 @@ from bpy_extras import view3d_utils as v3du
 from cc.utils import lerp
 
 bl_info = {
-    'name': 'Utils: Mesh Editing',
+    'name': 'Utils: Mesh',
     'author': 'Cardboard Computer',
     'blender': (2, 6, 9),
     'description': 'Various mesh-editing utilities',
