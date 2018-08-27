@@ -311,6 +311,43 @@ class SetColors(bpy.types.Operator):
         return {'FINISHED'}
 
 @cc.ops.editmode
+def invert_colors(obj, select='POLYGON'):
+    colors = cc.colors.layer(obj)
+    for sample in colors.itersamples():
+        if sample.is_selected(select.lower()):
+            sample.color.r = 1 - sample.color.r
+            sample.color.g = 1 - sample.color.g
+            sample.color.b = 1 - sample.color.b
+
+class InvertColors(bpy.types.Operator):
+    bl_idname = 'cc.invert_colors'
+    bl_label = 'Invert Colors'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    select = bpy.props.EnumProperty(
+        items=cc.ops.ENUM_SELECT,
+        name='Select', default='POLYGON')
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        return obj and obj.type == 'MESH'
+
+    def invoke(self, context, event):
+        obj = context.object
+        if obj.type == 'MESH':
+            vertex, edge, face = context.tool_settings.mesh_select_mode
+            select = 'VERTEX'
+            if face and not vertex:
+                select = 'POLYGON'
+        self.select = select
+        return self.execute(context)
+
+    def execute(self, context):
+        invert_colors(context.active_object, self.select)
+        return {'FINISHED'}
+
+@cc.ops.editmode
 def light_colors(
     objects,
     use_normals=False,
@@ -900,9 +937,11 @@ class ColorMenu(bpy.types.Menu):
         layout.operator_context = 'INVOKE_DEFAULT'
 
         layout.operator(AddColors.bl_idname, text='Add')
-        layout.operator(AdjustHsv.bl_idname, text='HSV')
-        layout.operator(SelectByColor.bl_idname, text='Select')
         layout.operator(CopyColors.bl_idname, text='Copy')
+        layout.operator(SetColors.bl_idname, text='Set')
+        layout.operator(AdjustHsv.bl_idname, text='Adjust')
+        layout.operator(InvertColors.bl_idname, text='Invert')
+        layout.operator(SelectByColor.bl_idname, text='Select')
 
         layout.separator()
 
@@ -915,14 +954,16 @@ class ColorMenu(bpy.types.Menu):
 __REGISTER__ = (
     ViewColors,
     ViewColorsMenu,
-    AddColors,
-    AdjustHsv,
     SampleColor,
-    SelectByColor,
-    SetColors,
-    CopyColors,
-    TransferColors,
 
+    AddColors,
+    CopyColors,
+    SetColors,
+    AdjustHsv,
+    InvertColors,
+    SelectByColor,
+
+    TransferColors,
     LightColors,
     GradientColors,
     ApplyGradients,
