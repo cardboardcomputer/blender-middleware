@@ -155,6 +155,8 @@ class ObjectMenu(bpy.types.Menu):
         layout.operator(CopyProperties.bl_idname, text='Copy Properties')
         layout.operator(CopyTransform.bl_idname, text='Copy Transform')
         layout.operator(TransferNormals.bl_idname, text='Transfer Normals')
+        layout.operator('cc.gradient_object', text='Add/Set Gradient')
+        layout.operator('cc.gradient_apply', text='Apply Gradients')
 
 def cardboard_menu_ext(self, context):
     self.layout.menu('CC_MT_object')

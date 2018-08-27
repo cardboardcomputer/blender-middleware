@@ -1,8 +1,10 @@
+import cc
 import bpy
 import bgl
-import cc
+import bmesh
 import math
 import mathutils
+import mathutils as mu
 from bpy_extras import view3d_utils
 
 bl_info = {
@@ -12,6 +14,90 @@ bl_info = {
     'description': 'Apply gradients on lines/polygon colors',
     'category': 'Cardboard'
 }
+
+def apply_gradient(gra, obj, select=None):
+    point_a = gra.location
+    point_b = gra.matrix_world * mu.Vector((0, 0, 1))
+
+    g = gra.data.gradient_settings
+
+    if select is None:
+        select = g.select
+
+    gradient_colors(
+        obj, point_a, point_b,
+        g.color_a, g.alpha_a,
+        g.color_b, g.alpha_b,
+        g.blend_type, g.blend_method, g.blend_falloff,
+        g.bias, g.scale, g.mirror,
+        select
+    )
+
+def gen_mesh_directional(bm, res=32):
+    bm.clear()
+
+    for i in range(res + 1):
+        t = i / float(res)
+        bm.verts.new(mu.Vector((0, 0, t)))
+    for i in range(res):
+        v1 = bm.verts[i]
+        v2 = bm.verts[i + 1]
+        e = bm.edges.new((v1, v2))
+    tip = v2
+    v1 = bm.verts.new(mu.Vector((0.05, 0, 0.9)))
+    v2 = bm.verts.new(mu.Vector((-0.05, 0, 0.9)))
+    e = bm.edges.new((tip, v1))
+    e = bm.edges.new((tip, v2))
+
+def gen_mesh_radial(bm, res=64):
+    bm.clear()
+
+    for i in range(res):
+        t = i / float(res)
+        x = math.cos(t * math.pi * 2)
+        y = math.sin(t * math.pi * 2)
+        bm.verts.new(mu.Vector((x, 0, y)))
+    for i in range(res - 1):
+        v1 = bm.verts[i]
+        v2 = bm.verts[i + 1]
+        e = bm.edges.new((v1, v2))
+    v1 = v2
+    v2 = bm.verts[0]
+    e = bm.edges.new((v1, v2))
+
+    for i in range(res):
+        t = i / float(res)
+        x = math.cos(t * math.pi * 2)
+        y = math.sin(t * math.pi * 2)
+        bm.verts.new(mu.Vector((x, y, 0)))
+    for i in range(res, res * 2 - 1):
+        v1 = bm.verts[i]
+        v2 = bm.verts[i + 1]
+        e = bm.edges.new((v1, v2))
+    v1 = v2
+    v2 = bm.verts[res]
+    e = bm.edges.new((v1, v2))
+
+    for i in range(res):
+        t = i / float(res)
+        x = math.cos(t * math.pi * 2)
+        y = math.sin(t * math.pi * 2)
+        bm.verts.new(mu.Vector((0, x, y)))
+    for i in range(res * 2, res * 3 - 1):
+        v1 = bm.verts[i]
+        v2 = bm.verts[i + 1]
+        e = bm.edges.new((v1, v2))
+    v1 = v2
+    v2 = bm.verts[res * 2]
+    e = bm.edges.new((v1, v2))
+
+    for i in range(res + 1):
+        t = i / float(res) * 2 - 1
+        bm.verts.new(mu.Vector((0, 0, t)))
+    for i in range(res * 3, res * 4):
+        v1 = bm.verts[i]
+        v2 = bm.verts[i + 1]
+        e = bm.edges.new((v1, v2))
 
 @cc.ops.editmode
 def sample_color(context, event, ray_max=1000.0):
@@ -41,15 +127,16 @@ def gradient_colors(
     colors = cc.colors.layer(obj)
 
     m = mathutils
-    p1 = m.Vector(point_a)
-    p2 = m.Vector(point_b)
+    to_obj = obj.matrix_world.inverted()
+    p1 = to_obj * m.Vector(point_a)
+    p2 = to_obj * m.Vector(point_b)
     direction = p2 - p1
 
     for s in colors.itersamples():
         if not s.is_selected(select.lower()):
             continue
 
-        vert = obj.matrix_world * s.vertex.co
+        vert = s.vertex.co
         delta = vert - p1
 
         if blend_type == 'DIRECTIONAL':
@@ -71,8 +158,6 @@ def gradient_colors(
         if blend_falloff == 'SMOOTH':
             atten = math.cos(atten * math.pi + math.pi) / 2 + .5
 
-        color = m.Color((0, 0, 0))
-        color_ab = m.Color((0, 0, 0))
         color_ab = cc.utils.lerp(color_a, color_b, atten)
         alpha_ab = cc.utils.lerp(alpha_a, alpha_b, atten)
 
@@ -97,6 +182,89 @@ def gradient_colors(
             s.color.r -= color_ab.r;
             s.color.g -= color_ab.g;
             s.color.b -= color_ab.b;
+
+@cc.ops.editmode
+def set_gradient_object(
+    obj,
+    point_a,
+    point_b,
+    color_a,
+    alpha_a,
+    color_b,
+    alpha_b,
+    blend_type,
+    blend_method,
+    blend_falloff,
+    bias, scale, mirror,
+    select='ALL'):
+
+    mesh = obj.data
+    g = mesh.gradient_settings
+
+    if not obj.is_gradient or g.blend_type != blend_type:
+        bm = bmesh.new()
+        bm.from_mesh(mesh)
+        if blend_type == 'DIRECTIONAL':
+            gen_mesh_directional(bm)
+        elif blend_type == 'RADIAL':
+            gen_mesh_radial(bm)
+        bm.to_mesh(mesh)
+        bm.free()
+
+    obj.is_gradient = True
+
+    g.color_a = color_a
+    g.alpha_a = alpha_a
+    g.color_b = color_b
+    g.alpha_b = alpha_b
+    g.blend_type = blend_type
+    g.blend_method = blend_method
+    g.blend_falloff = blend_falloff
+    g.bias = bias
+    g.scale = scale
+    g.mirror = mirror
+    g.select = select
+
+    line = mu.Vector(point_b - point_a)
+    quat = line.normalized().to_track_quat('Z', 'Y')
+    length = line.length
+
+    obj.rotation_mode = 'QUATERNION'
+    obj.rotation_quaternion = quat
+    obj.location = point_a
+    obj.scale = mu.Vector((length, length, length))
+
+    mesh.update()
+    obj.update_tag()
+    bpy.context.scene.update()
+
+    colors = cc.colors.layer(obj)
+
+    for s in colors.itersamples():
+        vert = s.vertex.co
+        if blend_type == 'DIRECTIONAL':
+            atten = vert.z
+        if blend_type == 'RADIAL':
+            atten = vert.length
+        atten = max(min((atten - bias) / scale, 1), 0)
+        if mirror:
+            atten = 1 - abs(atten % 1 * 2 - 1)
+        if blend_falloff == 'SHARP':
+            atten = atten * atten
+        if blend_falloff == 'ROOT':
+            atten = math.sqrt(atten)
+        if blend_falloff == 'SMOOTH':
+            atten = math.cos(atten * math.pi + math.pi) / 2 + .5
+        s.color = cc.utils.lerp(color_a, color_b, atten)
+
+    return obj
+
+@cc.ops.editmode
+def gen_gradient_object(*args, **kwargs):
+    mesh = bpy.data.meshes.new('Gradient')
+    obj = bpy.data.objects.new('Gradient', mesh)
+    set_gradient_object(obj, *args, **kwargs)
+    return obj
 
 PROP_SELECT = bpy.props.EnumProperty(
     items=cc.ops.ENUM_SELECT,
@@ -174,6 +342,8 @@ PROP_GRADIENT_PRESETS = bpy.props.CollectionProperty(type=GradientSettings)
 
 PROP_GRADIENT_ACTIVE_PRESET = bpy.props.StringProperty(name='Preset', default='', update=gradient_preset_selected)
 
+PROP_IS_GRADIENT = bpy.props.BoolProperty()
+
 def draw_gradient_settings(context, layout, data):
     s = context.scene
 
@@ -219,6 +389,17 @@ class GradientPanel(bpy.types.Panel):
             r.operator('cc.gradient_preset_revert', 'Revert', icon='PASTEDOWN')
 
         draw_gradient_settings(context, self.layout, context.scene.gradient_settings)
+
+        l.operator('cc.gradient_object', 'Create').create = True
+
+        obj = context.active_object
+        if obj and obj.is_gradient:
+            c = l.row(align=True)
+            c.operator('cc.gradient_object', 'Update').override = True
+            c.operator('cc.gradient_load', 'Load')
+
+        if len(context.selected_objects) > 1:
+            l.operator('cc.gradient_apply', 'Apply')
 
 class GradientPresetAdd(bpy.types.Operator):
     bl_idname = 'cc.gradient_preset_add'
@@ -286,6 +467,142 @@ class GradientPresetRevert(bpy.types.Operator):
         self.report({'INFO'}, 'Reverted to preset.')
         return {'FINISHED'}
 
+class GradientObject(bpy.types.Operator):
+    bl_idname = 'cc.gradient_object'
+    bl_label = 'Add/Set Gradient'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    select = PROP_SELECT
+    blend_type = PROP_BLEND_TYPE
+    blend_method = PROP_BLEND_METHOD
+    blend_falloff = PROP_BLEND_FALLOFF
+    color_a = PROP_COLOR_A
+    alpha_a = PROP_ALPHA_A
+    color_b = PROP_COLOR_B
+    alpha_b = PROP_ALPHA_B
+    bias = PROP_BIAS
+    scale = PROP_SCALE
+    mirror = PROP_MIRROR
+
+    create = bpy.props.BoolProperty()
+    override = bpy.props.BoolProperty()
+
+    @classmethod
+    def poll(cls, context):
+        return context.mode == 'OBJECT'
+
+    def draw(self, context):
+        draw_gradient_settings(context, self.layout, self)
+
+    def execute(self, context):
+        obj = context.active_object
+
+        args = (
+            self.color_a, self.alpha_a,
+            self.color_b, self.alpha_b,
+            self.blend_type, self.blend_method, self.blend_falloff,
+            self.bias, self.scale, self.mirror,
+            self.select
+        )
+
+        if obj and obj.is_gradient and not self.create:
+            point_a = obj.location
+            point_b = obj.matrix_world * mu.Vector((0, 0, 1))
+            set_gradient_object(obj, point_a, point_b, *args)
+        else:
+            point_a = context.scene.cursor_location
+            point_b = point_a + mu.Vector((0, 0, 1))
+            obj = gen_gradient_object(point_a, point_b, *args)
+            context.scene.objects.link(obj)
+
+        bpy.ops.object.select_all(action='DESELECT')
+        obj.select = True
+        context.scene.objects.active = obj
+        context.scene.update()
+
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        obj = context.active_object
+        scene = context.scene
+
+        context.space_data.viewport_shade = 'TEXTURED'
+
+        if obj and obj.is_gradient and not self.override:
+            g = obj.data.gradient_settings
+        else:
+            g = scene.gradient_settings
+
+        self.select = g.select
+        self.blend_type = g.blend_type
+        self.blend_method = g.blend_method
+        self.blend_falloff = g.blend_falloff
+        self.color_a = g.color_a
+        self.alpha_a = g.alpha_a
+        self.color_b = g.color_b
+        self.alpha_b = g.alpha_b
+        self.bias = g.bias
+        self.scale = g.scale
+        self.mirror = g.mirror
+
+        return self.execute(context)
+
+class GradientLoad(bpy.types.Operator):
+    bl_idname = 'cc.gradient_load'
+    bl_label = 'Load Gradient'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        return context.mode == 'OBJECT' and obj and obj.is_gradient
+
+    def execute(self, context):
+        obj = context.active_object.data.gradient_settings
+        scene = context.scene.gradient_settings
+
+        scene.select = obj.select
+        scene.blend_type = obj.blend_type
+        scene.blend_method = obj.blend_method
+        scene.blend_falloff = obj.blend_falloff
+        scene.color_a = obj.color_a
+        scene.alpha_a = obj.alpha_a
+        scene.color_b = obj.color_b
+        scene.alpha_b = obj.alpha_b
+        scene.bias = obj.bias
+        scene.scale = obj.scale
+        scene.mirror = obj.mirror
+
+        return {'FINISHED'}
+
+class GradientApply(bpy.types.Operator):
+    bl_idname = 'cc.gradient_apply'
+    bl_label = 'Apply Gradient'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return len(context.selected_objects) > 0
+
+    def execute(self, context):
+        objects = context.selected_objects
+        meshes = []
+        gradients = []
+
+        for obj in objects:
+            if obj.is_gradient:
+                gradients.append(obj)
+            elif obj.type == 'MESH':
+                meshes.append(obj)
+
+        gradients.sort(key=lambda o: o.name)
+
+        for gra in gradients:
+            for obj in meshes:
+                gra.apply_gradient(obj)
+
+        return {'FINISHED'}
+
 class GradientTool(bpy.types.Operator):
     bl_idname = 'cc.gradient_tool'
     bl_label = 'Gradient Tool'
@@ -308,6 +625,8 @@ class GradientTool(bpy.types.Operator):
     point_b = bpy.props.FloatVectorProperty(
         name='End Point', default=(0.0, 0.0, 0.0))
 
+    create = bpy.props.BoolProperty()
+
     @classmethod
     def poll(cls, context):
         obj = context.active_object
@@ -328,31 +647,38 @@ class GradientTool(bpy.types.Operator):
         draw_gradient_settings(context, self.layout, self)
 
     def execute(self, context):
-        gradient_colors(
-            context.active_object,
-            self.point_a, self.point_b,
+        args = (
+            mu.Vector(self.point_a), mu.Vector(self.point_b),
             self.color_a, self.alpha_a,
             self.color_b, self.alpha_b,
             self.blend_type, self.blend_method, self.blend_falloff,
             self.bias, self.scale, self.mirror,
-            self.select)
+            self.select,
+        )
+
+        gradient_colors(context.active_object, *args)
+        if self.create:
+            obj = gen_gradient_object(*args)
+            context.scene.objects.link(obj)
+            context.scene.update()
 
         theme = context.user_preferences.themes[0].view_3d
         theme.face_select[3] = self.face_select
         theme.editmesh_active[3] = self.editmesh_active
         context.area.tag_redraw()
 
-        context.scene.gradient_settings.select = self.select
-        context.scene.gradient_settings.blend_type = self.blend_type
-        context.scene.gradient_settings.blend_method = self.blend_method
-        context.scene.gradient_settings.blend_falloff = self.blend_falloff
-        context.scene.gradient_settings.color_a = self.color_a
-        context.scene.gradient_settings.alpha_a = self.alpha_a
-        context.scene.gradient_settings.color_b = self.color_b
-        context.scene.gradient_settings.alpha_b = self.alpha_b
-        context.scene.gradient_settings.bias = self.bias
-        context.scene.gradient_settings.scale = self.scale
-        context.scene.gradient_settings.mirror = self.mirror
+        g = context.scene.gradient_settings
+        g.select = self.select
+        g.blend_type = self.blend_type
+        g.blend_method = self.blend_method
+        g.blend_falloff = self.blend_falloff
+        g.color_a = self.color_a
+        g.alpha_a = self.alpha_a
+        g.color_b = self.color_b
+        g.alpha_b = self.alpha_b
+        g.bias = self.bias
+        g.scale = self.scale
+        g.mirror = self.mirror
 
         return {'FINISHED'}
 
@@ -385,6 +711,8 @@ class GradientTool(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
     def modal(self, context, event):
+        ret = {'PASS_THROUGH'}
+
         if self._draw_3d is None:
             self.add_viewport_handler(context)
 
@@ -411,12 +739,14 @@ class GradientTool(bpy.types.Operator):
             result, obj, matrix, location, normal = context.scene.ray_cast(origin, farpoint)
             if result:
                 endpoint = location
+            ret = {'RUNNING_MODAL'}
 
         if event.type == 'LEFTMOUSE' and event.value == 'PRESS':
             self.started = True
             self.point_a = endpoint
             self.mouse_a = mouse_pos
             self.mouse_b = mouse_pos
+            ret = {'RUNNING_MODAL'}
 
         if event.type == 'MOUSEMOVE':
             self.point_b = endpoint
@@ -432,6 +762,7 @@ class GradientTool(bpy.types.Operator):
         if event.type == 'LEFTMOUSE' and event.value == 'RELEASE':
             self.point_b = endpoint
             self.mouse_b = mouse_pos
+            self.create = event.alt
             if self.mouse_a != self.mouse_b:
                 self.execute(context)
             self.modal_cleanup(context, event)
@@ -441,7 +772,7 @@ class GradientTool(bpy.types.Operator):
             self.modal_cleanup(context, event)
             return {'CANCELLED'}
 
-        return {'PASS_THROUGH'}
+        return ret
 
     def modal_cleanup(self, context, event):
         self.del_viewport_handler()
@@ -542,8 +873,14 @@ __REGISTER__ = (
     GradientPresetRemove,
     GradientPresetUpdate,
     GradientPresetRevert,
+    GradientObject,
+    GradientLoad,
+    GradientApply,
     GradientTool,
     (bpy.types.Scene, 'gradient_settings', PROP_GRADIENT_SETTINGS),
     (bpy.types.Scene, 'gradient_presets', PROP_GRADIENT_PRESETS),
     (bpy.types.Scene, 'gradient_active_preset', PROP_GRADIENT_ACTIVE_PRESET),
+    (bpy.types.Mesh, 'gradient_settings', PROP_GRADIENT_SETTINGS),
+    (bpy.types.Object, 'is_gradient', PROP_IS_GRADIENT),
+    (bpy.types.Object, 'apply_gradient', apply_gradient),
 )
