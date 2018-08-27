@@ -8,7 +8,7 @@ from bpy_extras import view3d_utils
 bl_info = {
     'name': 'Tool: Gradient',
     'author': 'Cardboard Computer',
-    'blender': (2, 6, 9),
+    'blender': (2, 69, 0),
     'description': 'Apply gradients on lines/polygon colors',
     'category': 'Cardboard'
 }

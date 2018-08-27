@@ -5,7 +5,7 @@ import cc
 bl_info = {
     'name': 'Export: Colormap (.png)',
     'author': 'Cardboard Computer',
-    'blender': (2, 6, 9),
+    'blender': (2, 69, 0),
     'description': 'Export an object\'s vertex colormap',
     'category': 'Cardboard',
 }

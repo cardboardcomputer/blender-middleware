@@ -14,7 +14,7 @@ from cc.utils import lerp
 bl_info = {
     'name': 'Tool: Vertex Paint',
     'author': 'Cardboard Computer',
-    'blender': (2, 6, 9),
+    'blender': (2, 69, 0),
     'description': 'Homebrew vertex painting tool',
     'category': 'Cardboard'
 }

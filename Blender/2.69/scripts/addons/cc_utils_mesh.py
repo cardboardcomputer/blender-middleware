@@ -8,7 +8,7 @@ from cc.utils import lerp
 bl_info = {
     'name': 'Utils: Mesh',
     'author': 'Cardboard Computer',
-    'blender': (2, 6, 9),
+    'blender': (2, 69, 0),
     'description': 'Various mesh-editing utilities',
     'category': 'Cardboard'
 }

@@ -7,7 +7,7 @@ from mathutils import Color
 bl_info = {
     'name': 'Utils: Colors',
     'author': 'Cardboard Computer',
-    'blender': (2, 6, 9),
+    'blender': (2, 69, 0),
     'description': 'Various tools to work with vertex colors.',
     'category': 'Cardboard'
 }

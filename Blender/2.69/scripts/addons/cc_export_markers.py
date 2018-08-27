@@ -7,7 +7,7 @@ import json
 bl_info = {
     'name': 'Export: Unity Events (.events)',
     'author': 'Cardboard Computer',
-    'blender': (2, 6, 9),
+    'blender': (2, 69, 0),
     'description': 'Export timeline markers as Unity events',
     'category': 'Cardboard',
 }

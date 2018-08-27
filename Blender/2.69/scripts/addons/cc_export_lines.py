@@ -14,7 +14,7 @@ from cc.export import (
 bl_info = {
     'name': 'Export: Unity Lines (.lines)',
     'author': 'Cardboard Computer',
-    'blender': (2, 6, 9),
+    'blender': (2, 69, 0),
     'description': 'Export loose edges of a mesh for Unity',
     'category': 'Cardboard',
 }

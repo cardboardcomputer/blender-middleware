@@ -1,7 +1,7 @@
 bl_info = {
     'name': 'Export: FBX (.fbx)',
     'author': 'Cardboard Computer',
-    'blender': (2, 6, 9),
+    'blender': (2, 69, 0),
     'location': 'File > Import-Export',
     'description': 'Modifications to FBX exporter',
     'category': 'Cardboard'
