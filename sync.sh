@@ -15,18 +15,18 @@ if [ -z "$BLENDER_USER_PATH" ]; then
     exit 1
 fi
 
-BLENDER_REPO_PATH="$BASEDIR/Blender"
+BLENDER_REPO_PATH="$BASEDIR/Blender/$VERSION"
 
 update()
 {
     if [ "$1" = "repo" ]; then
-        A="$BLENDER_USER_PATH/$VERSION"
-        B="$BLENDER_REPO_PATH/$VERSION"
+        A="$BLENDER_USER_PATH"
+        B="$BLENDER_REPO_PATH"
     fi
 
     if [ "$1" = "system" ]; then
-        A="$BLENDER_REPO_PATH/$VERSION"
-        B="$BLENDER_USER_PATH/$VERSION"
+        A="$BLENDER_REPO_PATH"
+        B="$BLENDER_USER_PATH"
 
         if [ ! -d "$B" ]; then
             mkdir -p $B
@@ -61,6 +61,6 @@ if [ "$1" = "repo" ]; then
 fi
 
 if [ "$1" = "config" ]; then
-    cd "$BLENDER_USER_PATH/$VERSION/config"
-    rsync -a --info=name *.blend "$BLENDER_REPO_PATH/$VERSION/config/"
+    cd "$BLENDER_USER_PATH/config"
+    rsync -a --info=name *.blend "$BLENDER_REPO_PATH/config/"
 fi
