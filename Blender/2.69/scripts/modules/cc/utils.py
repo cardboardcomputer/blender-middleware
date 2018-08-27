@@ -243,4 +243,3 @@ class Noise:
         s2 = self.samples[x2 % size]
         s3 = self.samples[x3 % size]
         return cubic(s0, s1, s2, s3, x * size - x1)
-        

@@ -1,5 +1,13 @@
 import bpy
 
+bl_info = {
+    'name': 'Utils: Text',
+    'author': 'Cardboard Computer',
+    'blender': (2, 6, 9),
+    'description': 'Various text input features for text editor/console',
+    'category': 'Cardboard'
+}
+
 T = bpy.ops.text
 
 def set_caret(x, y):
@@ -35,8 +43,6 @@ def get_selection_range(self):
     ey = list(self.lines).index(self.select_end_line)
 
     return ((sx, sy), (ex, ey))
-
-bpy.types.Text.get_selection_range = get_selection_range
 
 class TextEditorOperator(bpy.types.Operator):
     @classmethod
@@ -107,7 +113,7 @@ MOVE_TYPE_ENUM =  (
     ('NEXT_PAGE', 'Next Page', 'Next Page'),
 )
 
-bpy.types.Text.select_active = bpy.props.BoolProperty()
+SELECT_ACTIVE_PROP = bpy.props.BoolProperty()
 
 class ToggleSelect(TextEditorOperator):
     bl_idname = 'text.toggle_select'
@@ -202,13 +208,34 @@ class ConsoleDeleteForward(ConsoleOperator):
         start = readline.current_character
         readline.body = readline.body[:start]
         return {'FINISHED'}
+
+__REGISTER_CLASSES__ = (
+    Deselect,
+    DeleteLine,
+    MoveIndent,
+    ToggleSelect,
+    MoveMaybeSelect,
+    CopyDeselect,
+    ToggleComment,
+    ConsoleDeleteForward,
+)
+
+__REGISTER_PROPS__ = (
+    (bpy.types.Text, 'get_selection_range', get_selection_range),
+    (bpy.types.Text, 'select_active', SELECT_ACTIVE_PROP),
+)
     
 def register():
-    bpy.utils.register_class(Deselect)
-    bpy.utils.register_class(DeleteLine)
-    bpy.utils.register_class(MoveIndent)
-    bpy.utils.register_class(ToggleSelect)
-    bpy.utils.register_class(MoveMaybeSelect)
-    bpy.utils.register_class(CopyDeselect)
-    bpy.utils.register_class(ToggleComment)
-    bpy.utils.register_class(ConsoleDeleteForward)
+    for cls in __REGISTER_CLASSES__:
+        bpy.utils.register_class(cls)
+
+    for cls, prop, value in __REGISTER_PROPS__:
+        setattr(cls, prop, value)
+
+def unregister():
+    for cls in __REGISTER_CLASSES__:
+        bpy.utils.unregister_class(cls)
+
+    for cls, prop, value in __REGISTER_PROPS__:
+        if hasattr(cls, prop):
+            delattr(cls, prop)

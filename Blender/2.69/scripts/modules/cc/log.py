@@ -134,7 +134,7 @@ def release_streams():
 _console_draw_handle = None
 
 @bpy.app.handlers.persistent
-def install(*args, **kwargs):
+def activate(*args, **kwargs):
     global _console_draw_handle
 
     wm = bpy.context.window_manager
@@ -153,7 +153,7 @@ def install(*args, **kwargs):
 
             capture_streams()
 
-def uninstall(*args, **kwargs):
+def deactivate(*args, **kwargs):
     global _console_draw_handle
 
     context = get_console_context()
@@ -169,11 +169,11 @@ def uninstall(*args, **kwargs):
 
 def toggle_capture(self, context):
     if self.capture_console_output:
-        install()
+        activate()
     else:
-        uninstall()
+        deactivate()
 
-bpy.types.WindowManager.capture_console_output = bpy.props.BoolProperty(
+PROP_TOGGLE_CAPTURE = bpy.props.BoolProperty(
     name='Capture Standard Output', default=False, update=toggle_capture,
     description='Route system output (stdout/stderr) to this console',)
 
@@ -191,12 +191,23 @@ def console_header_draw(self, context):
     op.history = True
     layout.prop(context.window_manager, 'capture_console_output')
 
-bpy.types.CONSOLE_HT_header.draw = console_header_draw
+_original_draw = None
 
-def register():
-    pass
+def install_output_capture():
+    global _original_draw
 
-def unregister():
-    pass
+    _original_draw = bpy.types.CONSOLE_HT_header.draw
+
+    bpy.types.CONSOLE_HT_header.draw = console_header_draw
+    bpy.types.WindowManager.capture_console_output = PROP_TOGGLE_CAPTURE
+
+def uninstall_output_capture():
+    global _original_draw
+
+    if _original_draw:
+        bpy.types.CONSOLE_HT_header.draw = _original_draw
+
+    if hasattr(bpy.types.WindowManager, 'capture_console_output'):
+        delattr(bpy.types.WindowManager, 'capture_console_output')
 
 reset()

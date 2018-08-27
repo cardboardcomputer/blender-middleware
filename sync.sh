@@ -35,13 +35,13 @@ update()
         cd "$B/scripts/addons"
         rm -fv krz_*.py
         rm -rf __pycache__
+
+        cd "$B/scripts/startup"
+        rm -fv log.py space_view3d_mod.py textutils.py
     fi
 
     cd "$A/config"
     rsync -a --info=name *.blend "$B/config/"
-
-    cd "$A/scripts/startup"
-    rsync -a --info=name *.py "$B/scripts/startup/"
 
     cd "$A/scripts/modules"
     rsync -a --info=name --exclude=__pycache__ --exclude=*.pyc cc "$B/scripts/modules/"
@@ -51,3 +51,16 @@ update()
     cd "$A/scripts/addons"
     rsync -a --info=name cc_*.py "$B/scripts/addons/"
 }
+
+if [ "$1" = "system" ]; then
+    update system
+fi
+
+if [ "$1" = "repo" ]; then
+    update repo
+fi
+
+if [ "$1" = "config" ]; then
+    cd "$BLENDER_USER_PATH/$VERSION/config"
+    rsync -a --info=name *.blend "$BLENDER_REPO_PATH/$VERSION/config/"
+fi
