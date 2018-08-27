@@ -118,6 +118,11 @@ class SampleColor(bpy.types.Operator):
     def update_color(self, context):
         self.hex_value = cc.colors.color_to_hex(self.color)
 
+    def update_hex_value(self, context):
+        color = cc.colors.hex_to_color(self.hex_value)
+        if self.color != color:
+            self.color = color
+
     ref = bpy.props.FloatVectorProperty(
         name="Color", subtype='COLOR_GAMMA',
         min=0, max=1, step=1)
@@ -125,7 +130,7 @@ class SampleColor(bpy.types.Operator):
         name="Color", subtype='COLOR_GAMMA',
         min=0, max=1, step=1, update=update_color)
     hex_value = bpy.props.StringProperty(
-        name="Hex", default='')
+        name="Hex", default='', update=update_hex_value)
 
     @classmethod
     def poll(cls, context):
