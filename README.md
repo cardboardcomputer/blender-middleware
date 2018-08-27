@@ -39,7 +39,7 @@ later versions of Blender after the viewport refactor.
    `BLENDER_USER_PATH` which should point to the user scripts
    path. This is typically:
 
-   - `/Users/<user>/AppData/Roaming/Blender Foundation/Blender1 on win
+   - `/Users/<user>/AppData/Roaming/Blender Foundation/Blender` on win
    - `/Users/<user>/Library/Application Support/Blender` on mac
    - `<home>/.config/blender` on linux
 
