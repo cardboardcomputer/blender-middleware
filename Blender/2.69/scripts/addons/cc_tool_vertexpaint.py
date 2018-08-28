@@ -19,8 +19,6 @@ bl_info = {
     'category': 'Cardboard'
 }
 
-TOOL_KMI = None
-
 class EditmodeContext:
     def __init__(self, mode_wanted):
         self.mode_wanted = mode_wanted
@@ -255,6 +253,8 @@ class VertexPaintPresetRevert(bpy.types.Operator):
         self.report({'INFO'}, 'Reverted to preset.')
         return {'FINISHED'}
 
+_vertex_paint_tool_active = False
+
 class VertexPaintTool(bpy.types.Operator):
     bl_idname = 'cc.vertex_paint_tool'
     bl_label = 'Vertex Paint Tool'
@@ -264,6 +264,16 @@ class VertexPaintTool(bpy.types.Operator):
     def poll(cls, context):
         obj = context.active_object
         return context.mode == 'EDIT_MESH' and obj and obj.type == 'MESH'
+
+    def _get_active(self):
+        global _vertex_paint_tool_active
+        return _vertex_paint_tool_active
+
+    def _set_active(self, value):
+        global _vertex_paint_tool_active
+        _vertex_paint_tool_active = value
+
+    active = property(_get_active, _set_active)
 
     def __init__(self):
         self._draw_3d = None
@@ -296,13 +306,18 @@ class VertexPaintTool(bpy.types.Operator):
         self.last_daub_position = mu.Vector((0, 0))
 
     def __del__(self):
+        self.active = False
         self.del_viewport_handlers()
 
     def execute(self, context):
         return {'FINISHED'}
 
     def invoke(self, context, event):
-        global TOOL_KMI
+        if self.active:
+            self.active = False
+            return {'CANCELLED'}
+        else:
+            self.active = True
 
         obj = context.active_object
 
@@ -322,17 +337,10 @@ class VertexPaintTool(bpy.types.Operator):
 
         context.window_manager.modal_handler_add(self)
 
-        if TOOL_KMI is None:
-            wm = context.window_manager
-            for kc in wm.keyconfigs:
-                for keymap in kc.keymaps:
-                    for kmi in keymap.keymap_items:
-                        if kmi.idname == 'cc.vertex_paint_tool':
-                            TOOL_KMI = kmi
-
         return {'RUNNING_MODAL'}
 
     def cleanup(self, context, event):
+        self.active = False
         if context.mode == 'EDIT_MESH':
             bmesh.update_edit_mesh(self.obj.data)
         self.del_viewport_handlers(context)
@@ -342,16 +350,6 @@ class VertexPaintTool(bpy.types.Operator):
         context.window.cursor_modal_restore()
         context.area.tag_redraw()
 
-    def toggled(self, context, event):
-        if TOOL_KMI:
-            if (TOOL_KMI.type == event.type and
-                TOOL_KMI.value == event.value and
-                TOOL_KMI.ctrl == event.ctrl and
-                TOOL_KMI.shift == event.shift and
-                TOOL_KMI.alt == event.alt):
-                return True
-        return False
-
     def modal(self, context, event):
         if not self._handers_installed:
             self.add_viewport_handlers(context)
@@ -359,7 +357,7 @@ class VertexPaintTool(bpy.types.Operator):
         context.window.cursor_modal_set('CROSSHAIR')
         context.area.tag_redraw()
 
-        if context.mode != 'EDIT_MESH' or self.toggled(context, event):
+        if context.mode != 'EDIT_MESH' or not self.active:
             self.cleanup(context, event)
             if self.touched:
                 return {'FINISHED'}
