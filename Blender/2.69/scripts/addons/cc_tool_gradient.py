@@ -163,7 +163,6 @@ def gradient_colors(
 
         if blend_method == 'REPLACE':
             s.color = color_ab
-            s.alpha = alpha_ab
 
         if blend_method == 'MIX':
             s.color = cc.utils.lerp(s.color, color_ab, alpha_ab)
