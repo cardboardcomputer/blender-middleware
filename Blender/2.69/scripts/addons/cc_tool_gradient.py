@@ -369,6 +369,8 @@ def draw_gradient_settings(context, layout, data):
     row.prop(data, 'alpha_a', '')
     row.prop(data, 'alpha_b', '')
 
+    return col
+
 class GradientPanel(bpy.types.Panel):
     bl_label = "Gradient"
     bl_space_type = 'VIEW_3D'
@@ -388,7 +390,8 @@ class GradientPanel(bpy.types.Panel):
             r.operator('cc.gradient_preset_update', 'Update', icon='COPYDOWN')
             r.operator('cc.gradient_preset_revert', 'Revert', icon='PASTEDOWN')
 
-        draw_gradient_settings(context, self.layout, context.scene.gradient_settings)
+        c = draw_gradient_settings(context, self.layout, context.scene.gradient_settings)
+        c.operator('cc.gradient_swap', '', icon='ARROW_LEFTRIGHT')
 
         l.operator('cc.gradient_object', 'Create').create = True
 
@@ -600,6 +603,26 @@ class GradientApply(bpy.types.Operator):
         for gra in gradients:
             for obj in meshes:
                 gra.apply_gradient(obj)
+
+        return {'FINISHED'}
+
+class GradientSwap(bpy.types.Operator):
+    bl_idname = 'cc.gradient_swap'
+    bl_label = 'Swap Gradient Colors'
+    bl_options = {'REGISTER'}
+
+    def execute(self, context):
+        g = context.scene.gradient_settings
+
+        color_a = g.color_a.copy()
+        alpha_a = g.alpha_a
+        color_b = g.color_b.copy()
+        alpha_b = g.alpha_b
+
+        g.color_a = color_b
+        g.alpha_a = alpha_b
+        g.color_b = color_a
+        g.alpha_b = alpha_a
 
         return {'FINISHED'}
 
@@ -876,6 +899,7 @@ __REGISTER__ = (
     GradientObject,
     GradientLoad,
     GradientApply,
+    GradientSwap,
     GradientTool,
     (bpy.types.Scene, 'gradient_settings', PROP_GRADIENT_SETTINGS),
     (bpy.types.Scene, 'gradient_presets', PROP_GRADIENT_PRESETS),
