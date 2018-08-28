@@ -5,6 +5,12 @@ import random
 import mathutils
 from bpy_extras import view3d_utils
 
+def sign(v):
+    if v < 0:
+        return -1
+    else:
+        return 1
+
 def clamp(v, a, b):
     return min(max(v, a), b)
 

@@ -841,8 +841,19 @@ class ColorOp:
         c.h = h
         return c
 
+    def mask(v, t=.5):
+        if v < t:
+            return 0
+        else:
+            return 1
+
     env = {
+        'smooth': cc.utils.smooth,
+        'cosine': cc.utils.cosine,
+        'clamp': cc.utils.clamp,
         'lerp': cc.utils.lerp,
+        'sign': cc.utils.sign,
+        'mask': mask,
         'rgb': rgb,
         'hsv': hsv,
     }
