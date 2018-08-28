@@ -445,9 +445,9 @@ class VertexPaintTool(bpy.types.Operator):
                     self.edge_select = [e.select for e in mesh.edges]
                     self.face_select = [f.select for f in mesh.faces]
                     self.select_none = (
-                        set(self.face_select) == set([False]) and
-                        set(self.edge_select) == set([False]) and
-                        set(self.face_select) == set([False]))
+                        (True not in self.vert_select) and
+                        (True not in self.edge_select) and
+                        (True not in self.face_select))
                     self.select_all = (
                         (False not in self.vert_select) and
                         (False not in self.edge_select) and
@@ -477,9 +477,12 @@ class VertexPaintTool(bpy.types.Operator):
                     scene.update()
 
                 elif not self.select_none:
-                    [v.select_set(s) for (v, s) in zip(mesh.verts, self.vert_select)]
-                    [e.select_set(s) for (e, s) in zip(mesh.edges, self.edge_select)]
-                    [f.select_set(s) for (f, s) in zip(mesh.faces, self.face_select)]
+                    if mesh_select_mode[0]:
+                        [v.select_set(s) for (v, s) in zip(mesh.verts, self.vert_select) if s]
+                    if mesh_select_mode[1]:
+                        [e.select_set(s) for (e, s) in zip(mesh.edges, self.edge_select) if s]
+                    if mesh_select_mode[2]:
+                        [f.select_set(s) for (f, s) in zip(mesh.faces, self.face_select) if s]
 
                 bias = vps.bias
                 scale = vps.scale
@@ -658,8 +661,11 @@ class VertexPaintTool(bpy.types.Operator):
             if self.obj and (self.obj.is_updated or self.obj.is_updated_data):
                 self.mesh_changed = True
         except:
-            if self.on_mesh_changed in bpy.app.handlers.scene_update_post:
-                bpy.app.handlers.scene_update_post.remove(self.on_mesh_changed)
+            try:
+                if self.on_mesh_changed in bpy.app.handlers.scene_update_post:
+                    bpy.app.handlers.scene_update_post.remove(self.on_mesh_changed)
+            except:
+                pass
 
     def add_viewport_handlers(self, context):
         self._draw_3d = bpy.types.SpaceView3D.draw_handler_add(
