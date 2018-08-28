@@ -119,7 +119,6 @@ class VertexPaintPanel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        obj = context.active_object
         return context.mode == 'EDIT_MESH'
 
     def draw(self, context):
@@ -263,7 +262,7 @@ class VertexPaintTool(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         obj = context.active_object
-        return context.mode == 'EDIT_MESH' and obj and obj.type == 'MESH'
+        return obj and obj.type == 'MESH'
 
     def _get_active(self):
         global _vertex_paint_tool_active
@@ -280,6 +279,7 @@ class VertexPaintTool(bpy.types.Operator):
         self._draw_2d = None
         self._timer = None
         self._handers_installed = False
+        self._editmode_toggled = False
 
         self.obj = None
         self.mesh = None
@@ -322,8 +322,11 @@ class VertexPaintTool(bpy.types.Operator):
         obj = context.active_object
 
         if not obj.data.vertex_colors.active:
-            self.report({'ERROR'}, 'No vertex colors.')
-            return {'CANCELLED'}
+            obj.data.vertex_colors.new()
+
+        if context.mode != 'EDIT_MESH':
+            self._editmode_toggled = True
+            bpy.ops.object.editmode_toggle()
 
         self.theme = context.user_preferences.themes['Default']
 
@@ -349,6 +352,8 @@ class VertexPaintTool(bpy.types.Operator):
         self.theme.view_3d.editmesh_active[3] = self.original_editmesh_active
         context.window.cursor_modal_restore()
         context.area.tag_redraw()
+        if self._editmode_toggled:
+            bpy.ops.object.editmode_toggle()
 
     def modal(self, context, event):
         if not self._handers_installed:
@@ -518,7 +523,7 @@ class VertexPaintTool(bpy.types.Operator):
             if apply_daub:
                 weights = self.weights
                 layer = mesh.loops.layers.color.active
-            
+
                 if self.select_some:
                     faces = self.mask_select_faces.intersection(self.mask_daub_faces)
                 else:
@@ -662,8 +667,9 @@ class VertexPaintTool(bpy.types.Operator):
 
     def on_mesh_changed(self, scene):
         try:
-            if self.obj and (self.obj.is_updated or self.obj.is_updated_data):
-                self.mesh_changed = True
+            if not self.painting:
+                if self.obj and (self.obj.is_updated or self.obj.is_updated_data):
+                    self.mesh_changed = True
         except:
             try:
                 if self.on_mesh_changed in bpy.app.handlers.scene_update_post:
