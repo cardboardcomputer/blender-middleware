@@ -392,12 +392,19 @@ class GradientPanel(bpy.types.Panel):
         c = draw_gradient_settings(context, self.layout, context.scene.gradient_settings)
         c.operator('cc.gradient_swap', '', icon='ARROW_LEFTRIGHT')
 
-        l.operator('cc.gradient_object', 'Create').create = True
+        op = l.operator('cc.gradient_object', 'Create')
+        op.create = True
+        op.override = False
 
         obj = context.active_object
         if obj and obj.is_gradient:
             c = l.row(align=True)
-            c.operator('cc.gradient_object', 'Update').override = True
+            op = c.operator('cc.gradient_object', 'Update')
+            op.override = True
+            op.create = False
+            op = c.operator('cc.gradient_object', 'Adjust')
+            op.override = False
+            op.create = False
             c.operator('cc.gradient_load', 'Load')
 
         if len(context.selected_objects) > 1:
