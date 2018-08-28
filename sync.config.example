@@ -1,6 +1,12 @@
 #!/usr/bin/env sh
 
-# Example sync.config (using Windows/WSL paths)
+# Example sync.config
 
-# Path to blender user files
+# Windows
 BLENDER_USER_PATH="/mnt/c/Users/<user>/AppData/Roaming/Blender Foundation/Blender/2.69"
+
+# Mac
+BLENDER_USER_PATH="/Users/<user>/Library/Application Support/Blender/2.69"
+
+# Linux
+BLENDER_USER_PATH="~/.config/blender/2.69"

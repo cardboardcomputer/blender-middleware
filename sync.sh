@@ -1,5 +1,19 @@
 #!/usr/bin/env sh
 
+# Usage:
+#
+# Make a sync.config file in this dir and define a BLENDER_USER_PATH
+# shell variable that points to your system's blender user scripts
+# folder (see sync.config.example.)
+#
+#   ./sync.sh system - Copy files over to the user scripts folder
+#   ./sync.sh repo   - Copy files back to the repository
+#   ./sync.sh config - Copy only config files back to the repo *
+#   ./sync.sh system noconfig   - Exclude config files *
+#   ./sync.sh repo noconfig     - Exclude config files *
+#
+# Config files are `startup.blend` and `userprefs.blend`
+
 VERSION=2.69
 BASEDIR=$(dirname $(readlink -f "$0"))
 
@@ -40,8 +54,10 @@ update()
         rm -fv log.py space_view3d_mod.py textutils.py
     fi
 
-    cd "$A/config"
-    rsync -a --info=name *.blend "$B/config/"
+    if [ ! "$2" = "noconfig" ]; then
+        cd "$A/config"
+        rsync -a --info=name *.blend "$B/config/"
+    fi
 
     cd "$A/scripts/modules"
     rsync -a --info=name --exclude=__pycache__ --exclude=*.pyc cc "$B/scripts/modules/"

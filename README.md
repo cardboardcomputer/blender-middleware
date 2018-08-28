@@ -14,19 +14,25 @@ later versions of Blender after the viewport refactor.
   - Test scene to make sure all features are working
 
 - Blender modules and addons, under `Blender`
+  - Improved vertex color painting tool
   - Color data for line primitives
   - Color rendering for lines in the viewport
-  - Color compositing using mesh/line color layers
+  - Color compositing using mesh/line color layers with python
   - 3D gradient coloring tools
-  - improved vertex color painting tool
-  - Line data exporter for Unity
-  - Colormap exporter for Unity
+  - Line data and colormap exporters for Unity
   - `cc` python module for programmatic usage of the features above.
 
-- Customized fbx exporter for Blender (monkeypatches existing io_scene_fbx addon)
-  - support for color alpha
+- Customized FBX exporter for Blender (monkeypatches existing io_scene_fbx addon)
+  - support for color alpha (layers named `<Layer>.Alpha` in blender)
   - support for using Export scene, if present in blendfile
   - customized `unity3d_defaults` function (which is called by Unity)
+
+- Customized blender ui config files (`startup.blend` and
+  `userprefs.blend`) that have the tools and extensions above
+  integrated.
+
+- `sync.sh` shell script for easy installation if you prefer the
+  terminal (including WSL). See comments in `sync.sh` for full usage.
 
 ## Installation
 
@@ -36,20 +42,31 @@ later versions of Blender after the viewport refactor.
    that Unity doesn't accidentally use the wrong instance.
 
 2. Copy the contents of `Blender/2.69` in the repo to your *user
-   scripts folder* (make sure to remove any previous versions of this
-   middleware from that folder first):
+   scripts path* (make sure to remove any previous versions of this
+   middleware from that folder first, and remove the `__pycache__`
+   folder if it exists):
 
    - Mac: `/Users/<username>/Library/Application Support/Blender/2.69`
    - Win: `C:\Users\<username>\AppData\Roaming\Blender Foundation\Blender\2.69`
    - Linux: `~/.config/blender/2.69`
 
+   If you prefer to copy over the addons and not the startup config
+   files and keep your own, only copy over `Blender/2.69/scripts`. The
+   `startup.blend` and `userprefs.blend` config files won't be copied
+   over but you'll have to enabled the addons manually in order for
+   them to be active when Unity invokes blender for FBX import. You can
+   find all the addons under the `Cardboard` tab.
+
    Alternately, you can use the included `sync.sh` shell script to
    copy the files. Create a `sync.config` file in the repository root
    (the same location as `sync.sh`), and define `BLENDER_USER_PATH`
-   which should point to the user scripts path (one of the paths
+   which should point to the *user scripts path* (one of the paths
    above).
 
    Run `./sync.sh system` to copy the files over.
+
+   Run `./sync.sh system noconfig` to copy the files over without the
+   startup config files.
 
 3. Open `Unity/Blender-Middleware/Assets/TestScene/Meshes/Test.blend`
    in Blender and save the scene. This should trigger the embedded
@@ -90,6 +107,6 @@ later versions of Blender after the viewport refactor.
 
 ## Updating
 
-Update the repository and follow step 2-4 and make sure there aren't
-any warnings or errors in both the system and Unity's
-console/terminal.
+After pulling the latest changes from github, follow step 2-4 and make
+sure there aren't any warnings or errors in both the system and
+Unity's console/terminal.
