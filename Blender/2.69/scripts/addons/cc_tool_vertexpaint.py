@@ -310,10 +310,15 @@ class VertexPaintTool(bpy.types.Operator):
             self.report({'ERROR'}, 'No vertex colors.')
             return {'CANCELLED'}
 
+        self.theme = context.user_preferences.themes['Default']
+
         self.original_viewport_shade = context.space_data.viewport_shade
         self.original_show_faces = obj.data.show_faces
+        self.original_editmesh_active = self.theme.view_3d.editmesh_active[3]
+
         obj.data.show_faces = False
         context.space_data.viewport_shade = 'TEXTURED'
+        self.theme.view_3d.editmesh_active[3] = 0
 
         context.window_manager.modal_handler_add(self)
 
@@ -333,6 +338,7 @@ class VertexPaintTool(bpy.types.Operator):
         self.del_viewport_handlers(context)
         context.space_data.viewport_shade = self.original_viewport_shade
         self.obj.data.show_faces = self.original_show_faces
+        self.theme.view_3d.editmesh_active[3] = self.original_editmesh_active
         context.window.cursor_modal_restore()
         context.area.tag_redraw()
 
