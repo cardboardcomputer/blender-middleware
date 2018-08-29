@@ -20,6 +20,8 @@ later versions of Blender after the viewport refactor.
   - Color compositing using mesh/line color layers with python
   - 3D gradient coloring tools
   - Line data and colormap exporters for Unity
+  - Save and restore mesh selections
+  - Quicksave and backup features
   - `cc` python module for programmatic usage of the features above.
 
 - Customized FBX exporter for Blender (monkeypatches existing io_scene_fbx addon)
