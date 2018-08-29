@@ -106,6 +106,8 @@ def vertex_paint_preset_selected(self, context):
         for prop in s.vertex_paint.keys():
             setattr(s.vertex_paint, prop, getattr(preset, prop))
 
+PROP_SHOW_COLOR_PICKER = bpy.props.BoolProperty(name='Show Color Picker')
+
 PROP_VERTEX_PAINT_SETTINGS = bpy.props.PointerProperty(type=VertexPaintSettings)
 
 PROP_VERTEX_PAINT_PRESETS = bpy.props.CollectionProperty(type=VertexPaintSettings)
@@ -136,9 +138,12 @@ class VertexPaintPanel(bpy.types.Panel):
             r.operator('cc.vertex_paint_preset_update', 'Update', icon='COPYDOWN')
             r.operator('cc.vertex_paint_preset_revert', 'Revert', icon='PASTEDOWN')
 
-        layout.template_color_picker(vps, 'color', value_slider=True)
-
-        layout.prop(vps, 'color', '')
+        c = layout.column(align=True)
+        r = c.row(align=True)
+        r.prop(vps, 'color', '')
+        r.prop(context.scene, 'vertex_paint_show_color_picker', '', icon='COLOR', toggle=True)
+        if context.scene.vertex_paint_show_color_picker:
+            c.template_color_picker(vps, 'color', value_slider=True)
 
         col = layout.column(align=True)
         col.prop(vps, 'radius')
@@ -738,4 +743,5 @@ __REGISTER__ = (
     (bpy.types.Mesh, 'vertex_paint_settings', PROP_VERTEX_PAINT_SETTINGS),
     (bpy.types.Mesh, 'vertex_paint_presets', PROP_VERTEX_PAINT_PRESETS),
     (bpy.types.Mesh, 'vertex_paint_active_preset', PROP_VERTEX_PAINT_ACTIVE_PRESET),
+    (bpy.types.Scene, 'vertex_paint_show_color_picker', PROP_SHOW_COLOR_PICKER),
 )
