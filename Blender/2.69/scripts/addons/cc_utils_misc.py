@@ -11,15 +11,70 @@ bl_info = {
     'category': 'Cardboard'
 }
 
+_save_path = None
+_save_lock = False
+
+def save_blendfile_copy(path):
+    global _save_lock
+
+    _save_lock = True
+    bpy.ops.wm.save_as_mainfile(
+        filepath=path,
+        check_existing=False,
+        compress=True,
+        copy=True,
+    )
+    _save_lock = False
+
+def get_scratch_path():
+    if 'BLENDER_SCRATCH_PATH' in os.environ:
+        return os.environ['BLENDER_SCRATCH_PATH']
+    elif bpy.data.filepath:
+        dirname = os.path.dirname(bpy.data.filepath)
+        subdir = bpy.path.basename(bpy.path.ensure_ext(bpy.data.filepath, '.scratch'))
+        return os.path.join(dirname, subdir)
+    else:
+        return bpy.context.user_preferences.filepaths.temporary_directory
+
+def get_filename_timestamp():
+    basename = bpy.path.basename(bpy.path.ensure_ext(bpy.data.filepath, ''))
+    if not basename:
+        basename = 'untitled'
+    timestamp = ('%.2f' % time.time()).replace('.', '')
+    filename = '%s.%s.blend' % (basename, timestamp)
+    return filename
+
+def save_scratch_blendfile(dirpath=None, dirty_only=False):
+    if dirty_only and not bpy.data.is_dirty:
+        return None
+    if not dirpath:
+        dirpath = get_scratch_path()
+    os.makedirs(dirpath, exist_ok=True)
+    filename = get_filename_timestamp()
+    path = os.path.join(dirpath, filename)
+    save_blendfile_copy(path)
+    return path
+
+def update_backups_prop(self, context):
+    for scene in bpy.data.scenes:
+        if scene.backups != self.backups:
+            scene.backups = self.backups
+
+PROP_BACKUPS = bpy.props.BoolProperty(name='Backups', update=update_backups_prop)
+
 @bpy.app.handlers.persistent
 def load_pre(scene):
-    cc.ops.quicksaving = False
-    cc.ops.quicksave = ''
+    global _save_path
+    _save_path = None
 
 @bpy.app.handlers.persistent
 def save_post(scene):
-    if not cc.ops.quicksaving:
-        bpy.ops.cc.quicksave()
+    global _save_lock
+    global _save_path
+    if not _save_lock and bpy.context.scene.backups:
+        path = save_scratch_blendfile(dirty_only=True)
+        if path:
+            _save_path = path
 
 class Quicksave(bpy.types.Operator):
     bl_idname = 'cc.quicksave'
@@ -27,42 +82,25 @@ class Quicksave(bpy.types.Operator):
     bl_options = {'REGISTER'}
 
     def execute(self, context):
-        if not bpy.data.is_dirty:
-            return {'CANCELLED'}
-
-        if 'BLENDER_QUICKSAVE_PATH' not in os.environ:
-            self.report({'ERROR'}, 'BLENDER_QUICKSAVE_PATH environment variable not set.')
-            return {'CANCELLED'}
-
-        dirpath = os.environ['BLENDER_QUICKSAVE_PATH']
-        basename = bpy.path.basename(bpy.path.ensure_ext(bpy.data.filepath, ''))
-        if not basename:
-            basename = 'untitled'
-        timestamp = ('%.2f' % time.time()).replace('.', '')
-        filename = '%s.%s.blend' % (basename, timestamp)
-
-        path = os.path.join(dirpath, filename)
-
-        cc.ops.quicksaving = True
-        bpy.ops.wm.save_as_mainfile(
-            filepath=path,
-            check_existing=False,
-            compress=True,
-            copy=True,
-        )
-        cc.ops.quicksaving = False
-        cc.ops.quicksave = path
-
-        self.report({'INFO'}, 'Quicksave: %s' % path)
+        global _save_path
+        path = save_scratch_blendfile(dirty_only=True)
+        if path:
+            _save_path = path
+            self.report({'INFO'}, 'Quicksave: %s' % os.path.basename(path))
         return {'FINISHED'}
 
 def quicksave_info(panel, context):
+    global _save_path
     layout = panel.layout
-    if cc.ops.quicksave:
-        layout.label('(%s)' % cc.ops.quicksave)
+    if _save_path:
+        layout.label('(%s)' % _save_path)
+
+def cardboard_menu_ext(self, context):
+    self.layout.prop(context.scene, 'backups')
 
 def register():
     cc.utils.register(__REGISTER__)
+    cc.ui.CardboardMenu.add_section(cardboard_menu_ext, 9000)
 
     bpy.app.handlers.load_pre.append(load_pre)
     bpy.app.handlers.save_post.append(save_post)
@@ -70,6 +108,7 @@ def register():
 
 def unregister():
     cc.utils.unregister(__REGISTER__)
+    cc.ui.CardboardMenu.remove_section(cardboard_menu_ext)
 
     bpy.app.handlers.load_pre.remove(load_pre)
     bpy.app.handlers.save_post.remove(save_post)
@@ -77,4 +116,5 @@ def unregister():
 
 __REGISTER__ = (
     Quicksave,
+    (bpy.types.Scene, 'backups', PROP_BACKUPS),
 )
