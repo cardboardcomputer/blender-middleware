@@ -6,6 +6,9 @@ ENUM_SELECT = (
     ('VERTEX', 'Vertex', 'Vertex'),
 )
 
+quicksave = ''
+quicksaving = False
+
 def editmode(func):
     """
     Temporarily escape editmode to allow programmatic manipulation of
