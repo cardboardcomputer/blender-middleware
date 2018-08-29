@@ -11,6 +11,7 @@ bl_info = {
     'category': 'Cardboard'
 }
 
+_save_iter = 0
 _save_path = None
 _save_lock = False
 
@@ -27,14 +28,15 @@ def save_blendfile_copy(path):
     _save_lock = False
 
 def get_scratch_path():
+    subdir = bpy.path.basename(bpy.path.ensure_ext(bpy.data.filepath, '.scratch'))
     if 'BLENDER_SCRATCH_PATH' in os.environ:
-        return os.environ['BLENDER_SCRATCH_PATH']
+        dirname = os.environ['BLENDER_SCRATCH_PATH']
     elif bpy.data.filepath:
         dirname = os.path.dirname(bpy.data.filepath)
-        subdir = bpy.path.basename(bpy.path.ensure_ext(bpy.data.filepath, '.scratch'))
-        return os.path.join(dirname, subdir)
     else:
-        return bpy.context.user_preferences.filepaths.temporary_directory
+        dirname = bpy.context.user_preferences.filepaths.temporary_directory
+        subdir = 'untitled.scratch'
+    return os.path.join(dirname, subdir)
 
 def get_filename_timestamp():
     basename = bpy.path.basename(bpy.path.ensure_ext(bpy.data.filepath, ''))
@@ -55,6 +57,10 @@ def save_scratch_blendfile(dirpath=None, dirty_only=False):
     save_blendfile_copy(path)
     return path
 
+def count_scratch_iterations(path):
+    dirname = os.path.dirname(path)
+    return len([name for name in os.listdir(dirname) if name.endswith('.blend')])
+
 def update_backups_prop(self, context):
     for scene in bpy.data.scenes:
         if scene.backups != self.backups:
@@ -65,16 +71,20 @@ PROP_BACKUPS = bpy.props.BoolProperty(name='Backups', update=update_backups_prop
 @bpy.app.handlers.persistent
 def load_pre(scene):
     global _save_path
+    global _save_iter
     _save_path = None
+    _save_iter = 0
 
 @bpy.app.handlers.persistent
 def save_post(scene):
     global _save_lock
     global _save_path
+    global _save_iter
     if not _save_lock and bpy.context.scene.backups:
         path = save_scratch_blendfile(dirty_only=True)
         if path:
             _save_path = path
+            _save_iter = count_scratch_iterations(path)
 
 class Quicksave(bpy.types.Operator):
     bl_idname = 'cc.quicksave'
@@ -83,17 +93,20 @@ class Quicksave(bpy.types.Operator):
 
     def execute(self, context):
         global _save_path
+        global _save_iter
         path = save_scratch_blendfile(dirty_only=True)
         if path:
             _save_path = path
+            _save_iter = count_scratch_iterations(path)
             self.report({'INFO'}, 'Quicksave: %s' % os.path.basename(path))
         return {'FINISHED'}
 
 def quicksave_info(panel, context):
     global _save_path
+    global _save_iter
     layout = panel.layout
     if _save_path:
-        layout.label('(%s)' % _save_path)
+        layout.label('(%s) %s' % (_save_iter, os.path.dirname(_save_path)))
 
 def cardboard_menu_ext(self, context):
     self.layout.prop(context.scene, 'backups')
