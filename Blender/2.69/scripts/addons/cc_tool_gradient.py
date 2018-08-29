@@ -893,7 +893,7 @@ def register():
     cc.utils.register(__REGISTER__)
 
 def unregister():
-    cc.utils.unregister(__REGISTER___)
+    cc.utils.unregister(__REGISTER__)
 
 __REGISTER__ = (
     GradientSettings,

@@ -17,6 +17,9 @@ class Quicksave(bpy.types.Operator):
     bl_options = {'REGISTER'}
 
     def execute(self, context):
+        if not bpy.data.is_dirty:
+            return {'CANCELLED'}
+
         dirpath = os.environ.get(
             'BLENDER_QUICKSAVE_PATH',
             context.user_preferences.filepaths.temporary_directory)
@@ -38,12 +41,12 @@ class Quicksave(bpy.types.Operator):
         self.report({'INFO'}, 'Quicksave: %s' % path)
         return {'FINISHED'}
 
-__REGISTER__ = (
-    Quicksave,
-)
-
 def register():
     cc.utils.register(__REGISTER__)
 
 def unregister():
     cc.utils.unregister(__REGISTER__)
+
+__REGISTER__ = (
+    Quicksave,
+)
