@@ -2,14 +2,15 @@ import bpy
 import bmesh
 import cc
 
-def save(obj, name, mode=(True, False, False)):
+BASENAME = 'Sel'
+
+def save(obj, name):
     if name not in obj.data.selections:
         sel = obj.data.selections.add()
         sel.name = name
-        sel.mode = mode
     else:
         sel = obj.data.selections[name]
-    sel.save(mode)
+    sel.save()
     return sel
 
 def load(obj, name):

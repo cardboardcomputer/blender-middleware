@@ -11,7 +11,31 @@ bl_info = {
 
 class MESH_UL_selections(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
-        layout.label(text=item.name, icon='UV_SYNC_SELECT')
+        row = layout.row()
+
+        column = row.column()
+        column.label(text=item.name, icon='UV_SYNC_SELECT')
+
+        column = row.column()
+        column.alignment = 'RIGHT'
+        row = column.row(align=True)
+        row.alignment = 'RIGHT'
+        if item.mode[0]:
+            row.label(text='', icon='VERTEXSEL')
+        else:
+            row.label(text='', icon='LAYER_USED')
+        row.separator()
+        if item.mode[1]:
+            row.label(text='', icon='EDGESEL')
+        else:
+            row.label(text='', icon='LAYER_USED')
+        row.separator()
+        if item.mode[2]:
+            row.label(text='', icon='FACESEL')
+        else:
+            row.label(text='', icon='LAYER_USED')
+        row.separator()
+        row.separator()
 
 class SelectionPanel(bpy.types.Panel):
     bl_label = 'Selections'
@@ -45,10 +69,23 @@ class SelectionPanel(bpy.types.Panel):
             row.operator('cc.selection_save', 'Save')
             row.operator('cc.selection_load', 'Load')
 
+def get_unique_name(obj, name):
+    if name in obj.data.selections:
+        count = 1
+        while True:
+            n = '%s.%03d' % (name, count)
+            if n in obj.data.selections:
+                count += 1
+                continue
+            else:
+                name = n
+                break
+    return name
+
 class SelectionAdd(bpy.types.Operator):
     bl_idname = 'cc.selection_add'
     bl_label = 'Add Selection'
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     @classmethod
     def poll(cls, context):
@@ -57,17 +94,7 @@ class SelectionAdd(bpy.types.Operator):
 
     def execute(self, context):
         obj = context.active_object
-        name = 'Sel'
-        if name in obj.data.selections:
-            count = 1
-            while True:
-                n = '%s.%03d' % (name, count)
-                if n in obj.data.selections:
-                    count += 1
-                    continue
-                else:
-                    name = n
-                    break
+        name = get_unique_name(obj, cc.select.BASENAME)
         sel = obj.data.selections.add()
         sel.name = name
         sel.clear()
@@ -77,7 +104,7 @@ class SelectionAdd(bpy.types.Operator):
 class SelectionRemove(bpy.types.Operator):
     bl_idname = 'cc.selection_remove'
     bl_label = 'Remove Selection'
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     @classmethod
     def poll(cls, context):
@@ -96,7 +123,7 @@ class SelectionRemove(bpy.types.Operator):
 class SelectionSave(bpy.types.Operator):
     bl_idname = 'cc.selection_save'
     bl_label = 'Save Selection'
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     @classmethod
     def poll(cls, context):
@@ -113,7 +140,7 @@ class SelectionSave(bpy.types.Operator):
 class SelectionLoad(bpy.types.Operator):
     bl_idname = 'cc.selection_load'
     bl_label = 'Load Selection'
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     @classmethod
     def poll(cls, context):
@@ -137,7 +164,7 @@ def available_selections(scene, context):
 class SelectionLoadEnum(bpy.types.Operator):
     bl_idname = 'cc.selection_load_enum'
     bl_label = 'Load Selection'
-    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
+    bl_options = {'REGISTER', 'UNDO'}
 
     name = bpy.props.EnumProperty(items=available_selections, name='Name')
 
@@ -151,6 +178,33 @@ class SelectionLoadEnum(bpy.types.Operator):
         sel = obj.data.selections[self.name]
         sel.load()
         return {'FINISHED'}
+
+class SelectionAddDialog(bpy.types.Operator):
+    bl_idname = 'cc.selection_add_dialog'
+    bl_label = 'Add Selection'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    name = bpy.props.StringProperty(name='Name', default=cc.select.BASENAME)
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        return obj and obj.type == 'MESH'
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, 'name', '')
+
+    def execute(self, context):
+        if not self.name:
+            return {'CANCELLED'}
+        else:
+            cc.select.save(context.active_object, self.name)
+            return {'FINISHED'}
+
+    def invoke(self, context, event):
+        self.name = get_unique_name(context.active_object, self.name)
+        return context.window_manager.invoke_props_dialog(self, width=160)
 
 class SelectionMenu(bpy.types.Menu):
     bl_label = "Selections"
@@ -177,5 +231,6 @@ __REGISTER__ = (
     SelectionSave,
     SelectionLoad,
     SelectionLoadEnum,
+    SelectionAddDialog,
     SelectionMenu,
 )
