@@ -628,13 +628,15 @@ class ColorOpApply(bpy.types.Operator):
     bl_label = 'Apply Color Operators'
     bl_options = {'REGISTER', 'UNDO'}
 
-    @classmethod
-    def poll(cls, context):
-        obj = context.active_object
-        return 'MESH' in (obj.type for obj in context.selected_objects)
-
     def execute(self, context):
-        apply_color_ops(context.selected_objects)
+        obj = context.active_object
+        objects = list(context.selected_objects)
+        if obj and obj not in objects:
+            objects.append(context.active_object)
+        objects = [o for o in objects if o.type == 'MESH']
+        if objects:
+            apply_color_ops(objects)
+            self.report({'INFO'}, 'Color operations applied.')
         return {'FINISHED'}
 
 class ColorMenu(bpy.types.Menu):
