@@ -601,13 +601,27 @@ class VertexPaintTool(bpy.types.Operator):
                 vps.color = sample_color(context, event)
                 return {'RUNNING_MODAL'}
     
-            if event.type == 'WHEELUPMOUSE' and event.ctrl:
-                vps.radius = max(1, math.floor(vps.radius * 0.9))
-                return {'RUNNING_MODAL'}
+            if event.type == 'WHEELUPMOUSE':
+                if event.ctrl:
+                    vps.radius = max(1, math.floor(vps.radius * 0.9))
+                    return {'RUNNING_MODAL'}
+                elif event.shift:
+                    if event.alt:
+                        vps.strength = max(0.01, cc.utils.roundq(vps.strength - 0.01, 0.01))
+                    else:
+                        vps.strength = max(0.1, cc.utils.roundq(vps.strength - 0.1, 0.1))
+                    return {'RUNNING_MODAL'}
 
-            if event.type == 'WHEELDOWNMOUSE' and event.ctrl:
-                vps.radius = max(1, math.ceil(vps.radius * 1.1))
-                return {'RUNNING_MODAL'}
+            if event.type == 'WHEELDOWNMOUSE':
+                if event.ctrl:
+                    vps.radius = max(1, math.ceil(vps.radius * 1.1))
+                    return {'RUNNING_MODAL'}
+                elif event.shift:
+                    if event.alt:
+                        vps.strength = min(1, cc.utils.roundq(vps.strength + 0.01, 0.01))
+                    else:
+                        vps.strength = min(1, cc.utils.roundq(vps.strength + 0.1, 0.1))
+                    return {'RUNNING_MODAL'}
 
             if event.type == 'ESC':
                 self.cleanup(context, event)

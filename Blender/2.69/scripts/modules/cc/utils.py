@@ -11,6 +11,15 @@ def sign(v):
     else:
         return 1
 
+def roundq(v, q):
+    return round(v / q) * q
+
+def ceilq(v, q):
+    return math.ceil(v / q) * q
+
+def floorq(v, q):
+    return math.floor(v / q) * q
+
 def clamp(v, a, b):
     return min(max(v, a), b)
 
