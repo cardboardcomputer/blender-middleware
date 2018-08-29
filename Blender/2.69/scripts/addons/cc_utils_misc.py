@@ -101,6 +101,24 @@ class Quicksave(bpy.types.Operator):
             self.report({'INFO'}, 'Quicksave: %s' % os.path.basename(path))
         return {'FINISHED'}
 
+class DeleteScratch(bpy.types.Operator):
+    bl_idname = 'cc.delete_scratch'
+    bl_label = 'Delete Scratch Files'
+    bl_options = {'REGISTER'}
+
+    def execute(self, context):
+        global _save_path
+        global _save_iter
+        path = get_scratch_path()
+        names = [name for name in os.listdir(path) if name.endswith('.blend')]
+        for name in names:
+            filename = os.path.join(path, name)
+            os.remove(filename)
+        _save_path = ''
+        _save_iter = 0
+        self.report({'INFO'}, 'Scratch files deleted: %s' % len(names))
+        return {'FINISHED'}
+
 def quicksave_info(panel, context):
     global _save_path
     global _save_iter
@@ -129,5 +147,6 @@ def unregister():
 
 __REGISTER__ = (
     Quicksave,
+    DeleteScratch,
     (bpy.types.Scene, 'backups', PROP_BACKUPS),
 )
