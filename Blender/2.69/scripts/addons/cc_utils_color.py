@@ -70,7 +70,7 @@ class AdjustHsv(bpy.types.Operator):
     h = bpy.props.FloatProperty(name='Hue', min=-1, max=1, step=1)
     s = bpy.props.FloatProperty(name='Saturation', min=-1, max=1, step=1)
     v = bpy.props.FloatProperty(name='Value', min=-1, max=1, step=1)
-    multiply = bpy.props.BoolProperty(name='Multiply Value', default=False)
+    multiply = bpy.props.BoolProperty(name='Multiply Value', default=True)
 
     @classmethod
     def poll(cls, context):
@@ -84,6 +84,15 @@ class AdjustHsv(bpy.types.Operator):
             self.select = 'VERTEX'
             if face and not vertex:
                 self.select = 'POLYGON'
+
+    def draw(self, context):
+        l = self.layout
+        c = l.column(align=True)
+        c.prop(self, 'select', '')
+        c.prop(self, 'h', 'H')
+        c.prop(self, 's', 'S')
+        c.prop(self, 'v', 'V')
+        c.prop(self, 'multiply', 'Multiply', toggle=True)
 
     def execute(self, context):
         cc.ops.show_tool_props(context)
