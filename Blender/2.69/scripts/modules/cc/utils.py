@@ -277,23 +277,23 @@ def unregister(objects):
             bpy.utils.unregister_class(obj)
 
 class Bmesh:
-    def __init__(self, obj, context=None):
+    def __init__(self, data, context=None):
         if not context:
             context = bpy.context
         self.context = context
-        self.obj = obj
+        self.data = data
 
     def __enter__(self):
         if self.context.mode == 'EDIT_MESH':
-            self.bm = bmesh.from_edit_mesh(self.obj.data)
+            self.bm = bmesh.from_edit_mesh(self.data)
         else:
             self.bm = bmesh.new()
-            self.bm.from_mesh(self.obj.data)
+            self.bm.from_mesh(self.data)
         return self.bm
 
     def __exit__(self, cls, value, tb):
         if self.context.mode == 'EDIT_MESH':
-            bmesh.update_edit_mesh(self.obj.data)
+            bmesh.update_edit_mesh(self.data)
         else:
-            self.bm.to_mesh(self.obj.data)
-        self.bm.free()
+            self.bm.to_mesh(self.data)
+            self.bm.free()
