@@ -545,7 +545,8 @@ class ColorOpPanel(bpy.types.Panel):
 
     @classmethod
     def poll(self, context):
-        return context.active_object.type == 'MESH'
+        obj = context.active_object
+        return obj and obj.type == 'MESH'
 
     def draw(self, context):
         layout = self.layout
