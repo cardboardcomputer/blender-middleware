@@ -516,17 +516,30 @@ class ViewColors(bpy.types.Operator):
 def apply_color_ops(objects):
     for obj in objects:
         if obj.type == 'MESH':
-            cc.colors.Manager(obj).exec_color_ops(get_ops(obj))
+            cc.colors.Manager(obj).exec_color_ops(get_ops(obj.data))
 
-def get_ops(obj):
-    ops = list(obj.data.vertex_color_ops)
+def get_ops(data):
+    # panel ops
+    ops = list(data.vertex_color_ops)
     ops.sort(key=lambda o: o.index)
-    text = obj.data.vertex_color_ops_text
+
+    # text ops
+    text = data.vertex_color_ops_text
     ops = [o.op for o in ops if o.op]
     if text and text in bpy.data.texts:
         text = bpy.data.texts[text].as_string()
         if text:
             ops.insert(0, text)
+
+    # data prop ops
+    names = []
+    for key in data.keys():
+        if key.startswith('Color.'):
+            names.append(key)
+    names.sort()
+    for name in names:
+        ops.append(str(data[name]))
+
     return ops
 
 def set_ops(obj, ops):
@@ -718,6 +731,34 @@ class ColorOpTextView(bpy.types.Operator):
             cc.ops.view_text(obj.data.vertex_color_ops_text)
         return {'FINISHED'}
 
+class ColorOpTextApply(bpy.types.Operator):
+    bl_idname = 'cc.color_op_text_apply'
+    bl_label = 'Apply Color Operators From Text'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        obj = bpy.context.active_object
+        return (
+            obj and obj.type == 'MESH' and
+            context.space_data.type == 'TEXT_EDITOR' and
+            context.space_data.text)
+
+    def execute(self, context):
+        obj = context.active_object
+        objects = list(context.selected_objects)
+        if obj and obj not in objects:
+            objects.append(context.active_object)
+        objects = [o for o in objects if o.type == 'MESH']
+        op = context.space_data.text.as_string()
+        if objects:
+            with cc.ops.mode_object:
+                for obj in objects:
+                    if obj.type == 'MESH':
+                        cc.colors.Manager(obj).exec_color_ops([op])
+            self.report({'INFO'}, 'Color operations applied.')
+        return {'FINISHED'}
+
 class ColorMenu(bpy.types.Menu):
     bl_label = 'Colors'
     bl_idname = 'CC_MT_colors'
@@ -770,6 +811,7 @@ __REGISTER__ = (
     ColorOpApply,
     ColorOpTextAdd,
     ColorOpTextView,
+    ColorOpTextApply,
     ColorMenu,
     (bpy.types.Mesh, 'vertex_color_ops', PROP_VERTEX_COLOR_OPS),
     (bpy.types.Mesh, 'vertex_color_ops_text', PROP_VERTEX_COLOR_OPS_TEXT),

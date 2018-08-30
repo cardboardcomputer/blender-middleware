@@ -507,16 +507,7 @@ class Manager:
             yield samples
             [s.save() for s in samples]
 
-    def exec_color_ops(self, ops=None):
-        if ops is None:
-            ops = []
-        names = []
-        for key in self.obj.data.keys():
-            if key.startswith('Color.'):
-                names.append(key)
-        names.sort()
-        for name in names:
-            ops.append(str(self.obj.data[name]))
+    def exec_color_ops(self, ops):
         layers = self.list_layers()
         for op in ops:
             ColorOp(self.obj, op, layers).execute()

@@ -61,3 +61,25 @@ def view_text(text):
                     for space in area.spaces:
                         if space.type == 'TEXT_EDITOR':
                             space.text = text
+
+class EditmodeContext:
+    def __init__(self, mode_wanted):
+        self.mode_wanted = mode_wanted
+        self.toggled = False
+
+    def __enter__(self):
+        self.mode_original = bpy.context.mode
+        if self.mode_wanted != self.mode_original:
+            bpy.ops.object.editmode_toggle()
+            self.toggled = True
+        bpy.context.scene.update()
+        return self
+
+    def __exit__(self, type, value, traceback):
+        if self.toggled:
+            bpy.ops.object.editmode_toggle()
+        bpy.context.scene.update()
+        self.toggled = False
+
+mode_object = EditmodeContext('OBJECT')
+mode_edit_mesh = EditmodeContext('EDIT_MESH')

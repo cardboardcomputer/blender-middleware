@@ -19,28 +19,6 @@ bl_info = {
     'category': 'Cardboard'
 }
 
-class EditmodeContext:
-    def __init__(self, mode_wanted):
-        self.mode_wanted = mode_wanted
-        self.toggled = False
-
-    def __enter__(self):
-        self.mode_original = bpy.context.mode
-        if self.mode_wanted != self.mode_original:
-            ops.object.editmode_toggle()
-            self.toggled = True
-        bpy.context.scene.update()
-        return self
-
-    def __exit__(self, type, value, traceback):
-        if self.toggled:
-            ops.object.editmode_toggle()
-        bpy.context.scene.update()
-        self.toggled = False
-
-OBJECT_MODE = EditmodeContext('OBJECT')
-EDIT_MODE = EditmodeContext('EDIT_MESH')
-
 BLEND_ITEMS = (
     ('MIX', 'Mix', 'Mix'),
     ('MULTIPLY', 'Multiply', 'Multiply'),
