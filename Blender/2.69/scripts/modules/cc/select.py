@@ -4,10 +4,15 @@ import cc
 
 BASENAME = 'Sel'
 
+def new(obj, name):
+    sel = obj.data.selections.add()
+    sel.name = get_unique_name(obj.data, name)
+    sel.id = get_unique_id(obj.data)
+    return sel
+
 def save(obj, name):
     if name not in obj.data.selections:
-        sel = obj.data.selections.add()
-        sel.name = name
+        sel = new(obj.data, name)
     else:
         sel = obj.data.selections[name]
     sel.save()
@@ -31,8 +36,56 @@ def delete(obj, name):
         selections = list(obj.data.selections)
         obj.data.selections.remove(selections.index(sel))
 
+def get_unique_name(data, name):
+    if name in data.selections:
+        count = 1
+        while True:
+            n = '%s.%03d' % (name, count)
+            if n in data.selections:
+                count += 1
+                continue
+            else:
+                name = n
+                break
+    return name
+
+def get_unique_id(data):
+    used = [sel.id for sel in data.selections]
+    num = 0
+    while True:
+        if num in used:
+            num += 1
+            continue
+        else:
+            break
+    return num
+
+def check_unique_name(self, context):
+    name = self.name
+    data = self.id_data
+
+    if '__sel_renaming__' in data:
+        return
+
+    names = [sel.name for sel in data.selections if sel != self]
+
+    if name in names:
+        data['__sel_renaming__'] = True
+        count = 1
+        while True:
+            n = '%s.%03d' % (name, count)
+            if n in names:
+                count += 1
+                continue
+            else:
+                name = n
+                break
+        self.name = name
+        del data['__sel_renaming__']
+
 class Selection(bpy.types.PropertyGroup):
-    name = bpy.props.StringProperty(name='Name')
+    id = bpy.props.IntProperty()
+    name = bpy.props.StringProperty(name='Name', update=check_unique_name)
     mode = bpy.props.BoolVectorProperty(name='Mode')
 
     def save(self):
@@ -108,9 +161,9 @@ class Selection(bpy.types.PropertyGroup):
             self._delete_layers(bm)
 
     def _get_or_create_layers(self, bm):
-        vert_name = 'sel_vert_%s' % self.name
-        edge_name = 'sel_edge_%s' % self.name
-        face_name = 'sel_face_%s' % self.name
+        vert_name = 'sel_vert_%s' % self.id
+        edge_name = 'sel_edge_%s' % self.id
+        face_name = 'sel_face_%s' % self.id
 
         if vert_name not in bm.verts.layers.int:
             vert_layer = bm.verts.layers.int.new(vert_name)
@@ -130,20 +183,20 @@ class Selection(bpy.types.PropertyGroup):
         return (vert_layer, edge_layer, face_layer)
 
     def _delete_layers(self, bm):
-        vert_name = 'sel_vert_%s' % self.name
-        edge_name = 'sel_edge_%s' % self.name
-        face_name = 'sel_face_%s' % self.name
+        vert_name = 'sel_vert_%s' % self.id
+        edge_name = 'sel_edge_%s' % self.id
+        face_name = 'sel_face_%s' % self.id
 
         if vert_name in bm.verts.layers.int:
-            vert_layer = bm.verts.layers.int[vert_layer]
+            vert_layer = bm.verts.layers.int[vert_name]
             bm.verts.layers.int.remove(vert_layer)
 
         if edge_name in bm.edges.layers.int:
-            edge_layer = bm.edges.layers.int[edge_layer]
-            bm.faces.layers.int.remove(face_layer)
+            edge_layer = bm.edges.layers.int[edge_name]
+            bm.edges.layers.int.remove(edge_layer)
 
         if face_name in bm.faces.layers.int:
-            face_layer = bm.faces.layers.int[face_layer]
+            face_layer = bm.faces.layers.int[face_name]
             bm.faces.layers.int.remove(face_layer)
 
 def _get_active_selection(self):

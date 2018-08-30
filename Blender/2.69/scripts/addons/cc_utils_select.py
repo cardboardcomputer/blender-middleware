@@ -94,9 +94,7 @@ class SelectionAdd(bpy.types.Operator):
 
     def execute(self, context):
         obj = context.active_object
-        name = get_unique_name(obj, cc.select.BASENAME)
-        sel = obj.data.selections.add()
-        sel.name = name
+        sel = cc.select.new(obj, cc.select.BASENAME)
         sel.clear()
         obj.data.active_selection = sel
         return {'FINISHED'}
