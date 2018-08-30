@@ -48,3 +48,16 @@ def show_tool_props(context):
                 if region.type == 'TOOL_PROPS':
                     if region.height == 1:
                         region.height = 300
+
+def view_text(text):
+    if isinstance(text, str):
+        text = bpy.data.texts[text]
+
+        for screen in bpy.data.screens:
+            for area in screen.areas:
+                if area.type == 'TEXT_EDITOR':
+                    bpy.context.window.screen = screen
+
+                    for space in area.spaces:
+                        if space.type == 'TEXT_EDITOR':
+                            space.text = text
