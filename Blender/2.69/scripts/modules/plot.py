@@ -3,16 +3,16 @@ import bmesh
 
 NAME = '(Plot)'
 
-def line(gen):
+def line(gen, name=NAME):
     """Plot arbitrary x,y values as line"""
-    with Plotter(NAME) as p:
+    with Plotter(name) as p:
         for x, y in gen:
             p.extend(x, y)
         p.link(bpy.context.scene)
   
-def plot(fn, res=1024, extents=1):
+def plot(fn, res=1024, extents=1, name=NAME):
     """Plot y values as a function of x"""
-    with Plotter(NAME) as p:
+    with Plotter(name) as p:
         for x in range(res * (extents * 2 + 1) + 1):
             x -= res * extents
             x = float(x) / float(res)
