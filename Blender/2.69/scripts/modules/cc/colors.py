@@ -861,6 +861,11 @@ class ColorOp:
 
         needed = []
         params = []
+
+        if '__active__' in source:
+            active = layer(obj).name
+            source = source.replace('__active__', '[%s]' % active)
+
         for i, key in enumerate(layers):
             var = cc.utils.normalize_varname(key, lower=True)
             macro = '[%s]' % key
