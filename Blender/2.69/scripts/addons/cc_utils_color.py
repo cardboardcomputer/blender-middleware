@@ -738,11 +738,8 @@ class ColorOpTextApply(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        obj = bpy.context.active_object
-        return (
-            obj and obj.type == 'MESH' and
-            context.space_data.type == 'TEXT_EDITOR' and
-            context.space_data.text)
+        obj = context.active_object
+        return (obj and obj.type == 'MESH')
 
     def execute(self, context):
         obj = context.active_object
@@ -750,7 +747,15 @@ class ColorOpTextApply(bpy.types.Operator):
         if obj and obj not in objects:
             objects.append(context.active_object)
         objects = [o for o in objects if o.type == 'MESH']
-        op = context.space_data.text.as_string()
+        if context.space_data.type == 'TEXT_EDITOR':
+            op = context.space_data.text.as_string()
+        else:
+            text = cc.ops.get_active_text(context.screen)
+            if text:
+                op = text.as_string()
+            else:
+                self.report({'ERROR'}, 'Could not find active text on screen to execute.')
+                return {'CANCELLED'}
         if objects:
             with cc.ops.mode_object:
                 for obj in objects:

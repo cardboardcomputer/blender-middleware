@@ -62,6 +62,18 @@ def view_text(text):
                         if space.type == 'TEXT_EDITOR':
                             space.text = text
 
+def get_active_text(screen=None):
+    if not screen:
+        for screen in bpy.data.screens:
+            for area in screen.areas:
+                if area.type == 'TEXT_EDITOR':
+                    break
+    for area in screen.areas:
+        if area.type == 'TEXT_EDITOR':
+            for space in area.spaces:
+                if space.type == 'TEXT_EDITOR':
+                    return space.text
+
 class EditmodeContext:
     def __init__(self, mode_wanted):
         self.mode_wanted = mode_wanted
