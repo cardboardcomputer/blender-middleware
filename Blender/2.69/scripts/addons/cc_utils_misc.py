@@ -94,11 +94,12 @@ def save_post(scene):
     global _save_path
     global _save_iter
     global _save_main
-    if not _save_lock and bpy.context.scene.backups:
-        filename = save_scratch_blendfile(dirty_only=True)
-        if filename:
-            _save_path = os.path.dirname(filename)
-            _save_iter = count_scratch_iterations(_save_path)
+    if not _save_lock:
+        if bpy.context.scene.backups:
+            filename = save_scratch_blendfile(dirty_only=True)
+            if filename:
+                _save_path = os.path.dirname(filename)
+                _save_iter = count_scratch_iterations(_save_path)
         _save_main = True
 
 class Quicksave(bpy.types.Operator):
@@ -110,7 +111,7 @@ class Quicksave(bpy.types.Operator):
         global _save_path
         global _save_iter
         global _save_main
-        filename = save_scratch_blendfile(dirty_only=True and not _save_main)
+        filename = save_scratch_blendfile(dirty_only=not _save_main)
         if filename:
             _save_path = os.path.dirname(filename)
             _save_iter = count_scratch_iterations(_save_path)
