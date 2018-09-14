@@ -60,7 +60,8 @@ def sample_color(context, event, ray_max=1000.0):
     return mu.Color((0, 0, 0))
 
 class VertexPaintSettings(bpy.types.PropertyGroup):
-    color = bpy.props.FloatVectorProperty(name="Color", subtype='COLOR_GAMMA', min=0, max=1, step=1,)
+    color = bpy.props.FloatVectorProperty(name="Color", subtype='COLOR_GAMMA', min=0, max=1, step=1, default=(1, 1, 1))
+    swap = bpy.props.FloatVectorProperty(name="Swap", subtype='COLOR_GAMMA', min=0, max=1, step=1, default=(0, 0, 0))
     blend = bpy.props.EnumProperty(name='Blend', items=BLEND_ITEMS, default='MIX')
     radius = bpy.props.IntProperty(name='Radius', min=0, default=32)
     strength = bpy.props.FloatProperty(name='Strength', min=0, max=1, step=1, default=1)
@@ -119,6 +120,8 @@ class VertexPaintPanel(bpy.types.Panel):
         c = layout.column(align=True)
         r = c.row(align=True)
         r.prop(vps, 'color', '')
+        r.operator('cc.vertex_paint_swap_colors', '', icon='ARROW_LEFTRIGHT')
+        r.prop(vps, 'swap', '')
         r.prop(context.scene, 'vertex_paint_show_color_picker', '', icon='COLOR', toggle=True)
         if context.scene.vertex_paint_show_color_picker:
             c.template_color_picker(vps, 'color', value_slider=True)
@@ -233,6 +236,24 @@ class VertexPaintPresetRevert(bpy.types.Operator):
         for prop in s.vertex_paint_settings.keys():
             setattr(s.vertex_paint_settings, prop, getattr(preset, prop))
         self.report({'INFO'}, 'Reverted to preset.')
+        return {'FINISHED'}
+
+class VertexPaintSwapColors(bpy.types.Operator):
+    bl_idname = 'cc.vertex_paint_swap_colors'
+    bl_label = 'Swap Colors'
+    bl_options = {'REGISTER'}
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        return obj and obj.type == 'MESH'
+
+    def execute(self, context):
+        vps = context.active_object.data.vertex_paint_settings
+        a = mu.Color((vps.color.r, vps.color.g, vps.color.b))
+        b = mu.Color((vps.swap.r, vps.swap.g, vps.swap.b))
+        vps.color = b
+        vps.swap = a
         return {'FINISHED'}
 
 _vertex_paint_tool_active = False
@@ -583,6 +604,13 @@ class VertexPaintTool(bpy.types.Operator):
             if event.type == 'D' and event.value == 'PRESS':
                 vps.color = sample_color(context, event)
                 return {'RUNNING_MODAL'}
+
+            if event.type in ('I', 'S') and event.value == 'PRESS':
+                a = mu.Color((vps.color.r, vps.color.g, vps.color.b))
+                b = mu.Color((vps.swap.r, vps.swap.g, vps.swap.b))
+                vps.color = b
+                vps.swap = a
+                return {'RUNNING_MODAL'}
     
             if event.type == 'WHEELUPMOUSE':
                 if event.ctrl:
@@ -717,6 +745,7 @@ __REGISTER__ = (
     VertexPaintPresetRemove,
     VertexPaintPresetUpdate,
     VertexPaintPresetRevert,
+    VertexPaintSwapColors,
     VertexPaintTool,
     (bpy.types.Mesh, 'vertex_paint_settings', PROP_VERTEX_PAINT_SETTINGS),
     (bpy.types.Mesh, 'vertex_paint_presets', PROP_VERTEX_PAINT_PRESETS),

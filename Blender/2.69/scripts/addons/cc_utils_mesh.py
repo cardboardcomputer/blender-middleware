@@ -160,6 +160,12 @@ class EdgeFaceAdd(bpy.types.Operator):
                             if link_loops:
                                 colors = {}
                                 for layer in bm.loops.layers.color.items():
+                                    # FIXME
+                                    try:
+                                        layer.name
+                                    except RuntimeError:
+                                        continue
+
                                     base = mu.Color((0, 0, 0))
                                     corners = 0
                                     for l in link_loops:
