@@ -1,5 +1,6 @@
 import bpy
 import cc
+import mathutils as mu
 
 bl_info = {
     'name': 'Utils: UI',
@@ -66,6 +67,37 @@ def uninstall_view3d_header():
 
     bpy.types.VIEW3D_HT_header.draw = _VIEW3D_HT_header_draw
 
+
+WIREFRAME_ATTRIBUTES = (
+    'wire_edit',
+    'vertex',
+    'vertex_unreferenced',
+    'edge_sharp',
+)
+
+WIREFRAME_DARK = mu.Color((.102, .102, .102))
+
+WIREFRAME_LITE = mu.Color((.745, .745, .745))
+
+WIREFRAME_INVERT = False
+
+class InvertWireframe(bpy.types.Operator):
+    bl_idname = 'cc.invert_wireframe'
+    bl_label = 'Invert Wireframe'
+    bl_options = {'REGISTER', 'INTERNAL'}
+
+    def execute(self, context):
+        global WIREFRAME_INVERT
+        theme = context.user_preferences.themes['Default']
+        WIREFRAME_INVERT = not WIREFRAME_INVERT
+        if WIREFRAME_INVERT:
+            color = WIREFRAME_LITE
+        else:
+            color = WIREFRAME_DARK
+        for attr in WIREFRAME_ATTRIBUTES:
+            setattr(theme.view_3d, attr, color)
+        return {'FINISHED'}
+
 def object_specials_menu_ext(self, context):
     self.layout.menu(DrawTypeMenu.bl_idname)
 
@@ -99,4 +131,5 @@ def unregister():
 __REGISTER__ = (
     cc.ui.CardboardMenu,
     DrawTypeMenu,
+    InvertWireframe,
 )
