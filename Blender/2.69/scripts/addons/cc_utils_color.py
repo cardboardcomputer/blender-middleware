@@ -458,6 +458,31 @@ class TransferColors(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class ColorToGroup(bpy.types.Operator):
+    bl_idname = 'cc.color_to_group'
+    bl_label = 'Color To Group'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object and context.active_object.type == 'MESH'
+
+    def execute(self, context):
+        obj = context.active_object
+        layer = cc.colors.layer(obj)
+        groups = obj.vertex_groups
+
+        if groups.active_index >= 0:
+            group = groups[groups.active_index]
+        else:
+            group = groups.new()
+            group.name = layer.name
+
+        for sample in layer.itersamples():
+            group.add([sample.vertex.index], sample.color.v, type='REPLACE')
+
+        return {'FINISHED'}
+
 @cc.ops.editmode
 def view_colors(objects, layer_name):
     for obj in objects:
@@ -783,6 +808,7 @@ class ColorMenu(bpy.types.Menu):
         layout.operator(InvertColors.bl_idname, text='Invert')
         layout.operator(SelectByColor.bl_idname, text='Select')
         layout.operator(TransferColors.bl_idname, text='Transfer')
+        layout.operator(ColorToGroup.bl_idname, text='To Group')
         layout.operator(ColorOpApply.bl_idname, text='Apply Ops')
 
 def cardboard_menu_ext(self, context):
@@ -807,6 +833,7 @@ __REGISTER__ = (
     InvertColors,
     SelectByColor,
     TransferColors,
+    ColorToGroup,
     ColorOp,
     ColorOpPanel,
     ColorOpAdd,
