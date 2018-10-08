@@ -70,8 +70,8 @@ class BisectEdge(bpy.types.Operator):
         m = obj.matrix_world
 
         for edge in edges:
-            v = v3du.location_3d_to_region_2d(region, region_3d, edge.verts[0].co * m)
-            w = v3du.location_3d_to_region_2d(region, region_3d, edge.verts[1].co * m)
+            v = v3du.location_3d_to_region_2d(region, region_3d, m * edge.verts[0].co)
+            w = v3du.location_3d_to_region_2d(region, region_3d, m * edge.verts[1].co)
             d = distance_to_edge(v, w, mouse)
             distances.append((edge, d, v, w))
 
