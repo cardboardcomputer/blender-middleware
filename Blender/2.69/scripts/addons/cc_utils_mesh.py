@@ -125,7 +125,12 @@ class EdgeFaceAdd(bpy.types.Operator):
                     common_edges[0].select_set(True)
                     changed = True
 
+        # disabling recreated edge_face_add behavior using mesh, too buggy
         if not changed:
+            bpy.ops.mesh.edge_face_add()
+            changed = True
+        if False:
+        # if not changed:
             created = {}
             mesh_select_mode = list(context.tool_settings.mesh_select_mode)
 
