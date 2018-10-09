@@ -104,9 +104,14 @@ def transfer_normals(obj, ref, select='VERTEX', from_colors=False):
                     normals.set(sample.vertex.index, color.r * 2 - 1, color.g * 2 - 1, color.b * 2 - 1)
 
     else:
+        to_ref = ref.matrix_world.inverted()
+        rotate = ref.matrix_world.to_quaternion()
         for vert in obj.data.vertices:
             if vert.select:
-                point, normal, face = ref.closest_point_on_mesh(vert.co)
+                co = to_ref * (obj.matrix_world * vert.co)
+                point, normal, face = ref.closest_point_on_mesh(co)
+                normal = rotate * normal
+                print(normal)
                 normals.set(vert.index, normal.x, normal.y, normal.z)
 
 class TransferNormals(bpy.types.Operator):
