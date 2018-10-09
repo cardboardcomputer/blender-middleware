@@ -111,7 +111,6 @@ def transfer_normals(obj, ref, select='VERTEX', from_colors=False):
                 co = to_ref * (obj.matrix_world * vert.co)
                 point, normal, face = ref.closest_point_on_mesh(co)
                 normal = rotate * normal
-                print(normal)
                 normals.set(vert.index, normal.x, normal.y, normal.z)
 
 class TransferNormals(bpy.types.Operator):
