@@ -34,18 +34,14 @@ class DebrisPanel(bpy.types.Panel):
         scene = context.scene
 
         layout.prop(scene, 'debris_select', '')
-
         col = layout.column(align=True)
         col.prop_search(scene, 'debris_group_name', bpy.data, 'groups', '')
-
         if scene.debris_group_name:
             data = bpy.data.groups[scene.debris_group_name]
         else:
-            data = bpy.data
-            col.enabled = False
-
-        col.prop_search(scene, 'debris_object_name', data, 'objects', '')
-
+            data = None
+        if data:
+            col.prop_search(scene, 'debris_object_name', data, 'objects', '')
         layout.operator('cc.debris_tool')
 
 class DebrisTool(bpy.types.Operator):
