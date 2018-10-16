@@ -261,7 +261,7 @@ _vertex_paint_tool_active = False
 class VertexPaintTool(bpy.types.Operator):
     bl_idname = 'cc.vertex_paint_tool'
     bl_label = 'Vertex Paint Tool'
-    bl_options = {'REGISTER'}
+    bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
     def poll(cls, context):

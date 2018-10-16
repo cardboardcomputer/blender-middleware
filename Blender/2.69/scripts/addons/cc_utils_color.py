@@ -64,6 +64,14 @@ class AdjustHsv(bpy.types.Operator):
     bl_label = 'Adjust HSV'
     bl_options = {'REGISTER', 'UNDO'}
 
+    def reset_func(self, context):
+        if self.reset:
+            self.h = 0
+            self.s = 0
+            self.v = 0
+            self.multiply = True
+            self.reset = False
+
     select = bpy.props.EnumProperty(
         items=cc.ops.ENUM_SELECT,
         name='Select', default='POLYGON')
@@ -71,6 +79,7 @@ class AdjustHsv(bpy.types.Operator):
     s = bpy.props.FloatProperty(name='Saturation', min=-1, max=1, step=1)
     v = bpy.props.FloatProperty(name='Value', min=-1, max=1, step=1)
     multiply = bpy.props.BoolProperty(name='Multiply Value', default=True)
+    reset = bpy.props.BoolProperty(name='Reset', default=False, update=reset_func)
 
     @classmethod
     def poll(cls, context):
@@ -87,6 +96,7 @@ class AdjustHsv(bpy.types.Operator):
 
     def draw(self, context):
         l = self.layout
+        l.prop(self, 'reset', toggle=True)
         c = l.column(align=True)
         c.prop(self, 'select', '')
         c.prop(self, 'h', 'H')

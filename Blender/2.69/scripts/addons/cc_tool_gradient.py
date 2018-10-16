@@ -392,6 +392,8 @@ class GradientPanel(bpy.types.Panel):
         c = draw_gradient_settings(context, self.layout, context.scene.gradient_settings)
         c.operator('cc.gradient_swap', '', icon='ARROW_LEFTRIGHT')
 
+        l.operator('cc.gradient_default', 'Reset')
+
         op = l.operator('cc.gradient_object', 'Create')
         op.create = True
         op.override = False
@@ -632,6 +634,28 @@ class GradientSwap(bpy.types.Operator):
 
         return {'FINISHED'}
 
+def reset_gradient_props(obj):
+    setattr(obj, 'blend_type', 'DIRECTIONAL')
+    setattr(obj, 'blend_method', 'REPLACE')
+    setattr(obj, 'blend_falloff', 'LINEAR')
+    setattr(obj, 'bias', 0)
+    setattr(obj, 'scale', 1)
+    setattr(obj, 'mirror', False)
+    setattr(obj, 'color_a', mu.Color((0, 0, 0)))
+    setattr(obj, 'alpha_a', 1)
+    setattr(obj, 'color_b', mu.Color((1, 1, 1)))
+    setattr(obj, 'alpha_b', 1)
+
+class GradientDefault(bpy.types.Operator):
+    bl_idname = 'cc.gradient_default'
+    bl_label = 'Reset Gradient Colors'
+    bl_options = {'REGISTER'}
+
+    def execute(self, context):
+        g = context.scene.gradient_settings
+        reset_gradient_props(g)
+        return {'FINISHED'}
+
 class GradientTool(bpy.types.Operator):
     bl_idname = 'cc.gradient_tool'
     bl_label = 'Gradient Tool'
@@ -648,6 +672,13 @@ class GradientTool(bpy.types.Operator):
     bias = PROP_BIAS
     scale = PROP_SCALE
     mirror = PROP_MIRROR
+
+    def reset_func(self, context):
+        if self.reset:
+            reset_gradient_props(self)
+            self.reset = False
+
+    reset = bpy.props.BoolProperty(name='Reset', update=reset_func)
 
     point_a = bpy.props.FloatVectorProperty(
         name='Start Point', default=(0.0, 0.0, 0.0))
@@ -674,6 +705,7 @@ class GradientTool(bpy.types.Operator):
 
     def draw(self, context):
         draw_gradient_settings(context, self.layout, self)
+        self.layout.prop(self, 'reset', toggle=True)
 
     def execute(self, context):
         args = (
@@ -906,6 +938,7 @@ __REGISTER__ = (
     GradientLoad,
     GradientApply,
     GradientSwap,
+    GradientDefault,
     GradientTool,
     (bpy.types.Scene, 'gradient_settings', PROP_GRADIENT_SETTINGS),
     (bpy.types.Scene, 'gradient_presets', PROP_GRADIENT_PRESETS),
