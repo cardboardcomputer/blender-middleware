@@ -417,7 +417,7 @@ class CopyColors(bpy.types.Operator):
         return {'FINISHED'}
 
 @cc.ops.editmode
-def transfer_colors(obj, ref, select='ALL'):
+def transfer_colors(obj, ref, alpha=True, select='ALL'):
     with cc.colors.Sampler(ref) as sampler:
         colors = cc.colors.layer(obj)
 
@@ -426,6 +426,9 @@ def transfer_colors(obj, ref, select='ALL'):
         if ref_alpha_name in ref.data.vertex_colors:
             ref_sample_alpha = True
         else:
+            ref_sample_alpha = False
+
+        if not alpha:
             ref_sample_alpha = False
 
         for sample in colors.itersamples():
@@ -443,6 +446,9 @@ class TransferColors(bpy.types.Operator):
     select = bpy.props.EnumProperty(
         items=cc.ops.ENUM_SELECT,
         name='Select', default='ALL')
+
+    alpha = bpy.props.BoolProperty(
+        name='Alpha', default=True)
 
     @classmethod
     def poll(cls, context):
@@ -464,7 +470,7 @@ class TransferColors(bpy.types.Operator):
         obj = context.active_object
         ref = aux_objects[0]
 
-        transfer_colors(obj, ref, select=self.select)
+        transfer_colors(obj, ref, alpha=self.alpha, select=self.select)
 
         return {'FINISHED'}
 
