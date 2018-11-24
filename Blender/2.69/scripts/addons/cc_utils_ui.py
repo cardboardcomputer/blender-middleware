@@ -22,6 +22,32 @@ class DrawTypeMenu(bpy.types.Menu):
         layout = self.layout
         layout.props_enum(context.object, 'draw_type')
 
+TRANSFORM_ORIENTATION_OPTIONS = (
+    'VIEW',
+    'NORMAL',
+    'LOCAL',
+)
+
+class CycleTransformOrientation(bpy.types.Operator):
+    # to bypass 'CUSTOM' enum option that throws error and also only
+    # cycle the ones i actually switch between often
+
+    bl_label = 'Cycle Transform Orientation'
+    bl_idname = 'cc.cycle_transform_orientation'
+
+    def execute(self, context):
+        current = context.space_data.transform_orientation
+        if current not in TRANSFORM_ORIENTATION_OPTIONS:
+            current = 'VIEW'
+        else:
+            index = TRANSFORM_ORIENTATION_OPTIONS.index(current)
+            index += 1
+            if index >= len(TRANSFORM_ORIENTATION_OPTIONS):
+                index = 0
+            current = TRANSFORM_ORIENTATION_OPTIONS[index]
+        context.space_data.transform_orientation = current
+        return {'FINISHED'}
+
 _VIEW3D_HT_header_draw = bpy.types.VIEW3D_HT_header.draw
 
 def view3d_header_draw(self, context):
@@ -131,5 +157,6 @@ def unregister():
 __REGISTER__ = (
     cc.ui.CardboardMenu,
     DrawTypeMenu,
+    CycleTransformOrientation,
     InvertWireframe,
 )
