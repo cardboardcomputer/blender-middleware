@@ -57,6 +57,10 @@ def view3d_header_draw(self, context):
     obj = context.active_object
     layout = self.layout
 
+    if hasattr(s, 'y_up'):
+        row = layout.row(align=True)
+        row.prop(s, 'y_up', 'Y', toggle=True)
+
     row = layout.row(align=True)
     row.prop(s, 'show_header_object', '', icon='OBJECT_DATAMODE', toggle=True)
     if s.show_header_object and obj:
