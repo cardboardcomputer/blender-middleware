@@ -340,6 +340,9 @@ def save_single(operator, scene, filepath="",
             if 'exclude' not in obj:
                 context_objects.append(obj)
         scene.update()
+        if 'y_up' in scene:
+            global_matrix = None
+            use_rotate_workaround = True
     # cc end
 
     import bpy_extras.io_utils
