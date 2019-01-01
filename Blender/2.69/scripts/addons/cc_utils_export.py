@@ -1,5 +1,6 @@
-import bpy
+import os
 import cc
+import bpy
 import mathutils
 
 bl_info = {
@@ -9,6 +10,93 @@ bl_info = {
     'description': 'Various export utilities',
     'category': 'Cardboard'
 }
+
+EXPORT_SCENE_NAMES = (
+    'Export', 'export',
+    '_Export', '_export',
+    '__Export__', '__export__',
+)
+
+def update_autoexport_prop(self, context):
+    if self.autoexport and export not in bpy.app.handlers.save_pre:
+        bpy.app.handlers.save_pre.append(export)
+    if not self.autoexport and export in bpy.app.handlers.save_pre:
+        bpy.app.handlers.save_pre.remove(export)
+
+PROP_AUTOEXPORT = bpy.props.BoolProperty(
+    name='Auto-export', update=update_autoexport_prop,
+    description='Auto export lines and colormap textures on save'
+)
+
+def get_export_scene():
+    for name in EXPORT_SCENE_NAMES:
+        if name in bpy.data.scenes:
+            return bpy.data.scenes[name]
+    return bpy.context.scene
+
+def export(datapath=None):
+    blendname = os.path.splitext(os.path.basename(bpy.data.filepath))[0]
+
+    if datapath is None:
+        datapath = os.path.join(os.path.dirname(bpy.data.filepath), '%s.data' % blendname)
+        infopath = '%s.data' % blendname
+    else:
+        infopath = datapath
+
+    lines = []
+    colormaps = []
+    scene = get_export_scene()
+
+    for obj in scene.objects:
+        if cc.lines.is_line(obj):
+            lines.append(obj)
+        if obj.type == 'MESH':
+            colormap = cc.colors.Manager(obj).get_export_colormap()
+            if colormap:
+                colormaps.append(obj)
+
+    if lines or colormaps:
+        if not os.path.exists(datapath):
+            os.mkdir(datapath)
+
+    if lines:
+        import cc_export_lines
+        for obj in lines:
+            objname = obj.name
+            if objname.endswith('.Lines'):
+                objname = objname[:-6]
+            elif objname.endswith('Lines'):
+                objname = objname[:-5]
+            objname = cc.utils.normalize_varname(objname.replace('.', ''))
+            name = '%s%s' % (blendname, objname)
+            filename = '%s.lines' % name
+            filepath = os.path.join(datapath, filename)
+            cc_export_lines.export_unity_lines(obj, filepath)
+            print('Exported %s' % os.path.join(infopath, filename))
+
+    if colormaps:
+        import cc_export_colormap
+        for obj in colormaps:
+            objname = cc.utils.normalize_varname(obj.name.replace('.', ''))
+            name = '%s%s' % (blendname, objname)
+            filename = '%s.png' % name
+            filepath = os.path.join(datapath, filename)
+            cc_export_colormap.export_colormap(obj, filepath)
+            colormap = cc.colors.Manager(obj).get_export_colormap()
+            print('Exported %s' % os.path.join(infopath, filename))
+
+    return lines, colormaps
+
+class ExportData(bpy.types.Operator):
+    bl_idname = 'cc.export'
+    bl_label = 'Export Ancillary Data'
+    bl_options = {'REGISTER'}
+
+    def execute(self, context):
+        lines, colormaps = export()
+        if lines or colormaps:
+            self.report({'INFO'}, "Exported %i lines, %i colormaps" % (len(lines), len(colormaps)))
+        return {'FINISHED'}
 
 @cc.ops.editmode
 def set_export(objects, layer, aux, colormap):
@@ -86,18 +174,39 @@ class SetExport(bpy.types.Operator):
         set_export(context.selected_objects, self.layer, self.aux, self.colormap)
         return {'FINISHED'}
 
+class ExportMenu(bpy.types.Menu):
+    bl_label = 'Export'
+    bl_idname = 'CC_MT_export'
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator_context = 'INVOKE_DEFAULT'
+        layout.operator(ExportData.bl_idname, text='Export Ancillary Data')
+        layout.operator(SetExport.bl_idname, text='Export Options')
+        layout.prop(get_export_scene(), 'autoexport')
+
 def cardboard_menu_ext(self, context):
-    self.layout.operator_context = 'INVOKE_DEFAULT'
-    self.layout.operator(SetExport.bl_idname, text='Export Options')
+    self.layout.menu('CC_MT_export')
+
+@bpy.app.handlers.persistent
+def setup_autoexport(scene):
+    scene = get_export_scene()
+    if scene and scene.autoexport and export not in bpy.app.handlers.save_pre:
+        bpy.app.handlers.save_pre.append(export)
 
 def register():
     cc.utils.register(__REGISTER__)
     cc.ui.CardboardMenu.add_section(cardboard_menu_ext, 1000)
+    bpy.app.handlers.load_post.append(setup_autoexport)
 
 def unregister():
     cc.utils.unregister(__REGISTER__)
     cc.ui.CardboardMenu.remove_section(cardboard_menu_ext)
+    bpy.app.handlers.load_post.remove(setup_autoexport)
 
 __REGISTER__ = (
+    ExportMenu,
+    ExportData,
     SetExport,
+    (bpy.types.Scene, 'autoexport', PROP_AUTOEXPORT),
 )
