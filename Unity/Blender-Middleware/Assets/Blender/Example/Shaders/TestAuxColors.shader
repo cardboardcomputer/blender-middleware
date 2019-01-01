@@ -1,4 +1,4 @@
-Shader "BlenderMiddleware/TestAuxColors" {
+Shader "Examples/TestAuxColors" {
     Properties {
         _Albedo ("Albedo", Float) = 1.0
     }
@@ -6,7 +6,7 @@ Shader "BlenderMiddleware/TestAuxColors" {
     SubShader {
         CGPROGRAM
             #pragma surface surf Unlit vertex:vert
-            #include "../../Shaders/Include/ColorConversion.cginc"
+            #include "../../Shaders/Include/Blender.cginc"
 
             struct Input {
                 half4 color : COLOR;
