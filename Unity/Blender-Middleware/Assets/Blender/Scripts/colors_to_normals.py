@@ -1,9 +1,9 @@
 import bpy
-import krz
+import cc
 
 obj = bpy.context.active_object
-colors = krz.colors.layer(obj)
-normals = krz.lines.normals(obj)
+colors = cc.colors.layer(obj)
+normals = cc.lines.normals(obj)
 
 for sample in colors.itersamples():
     normals.set(
