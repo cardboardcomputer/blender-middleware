@@ -1,3 +1,6 @@
+#ifndef _COLOR_CONVERSION
+#define _COLOR_CONVERSION
+
 float3 hue2rgb(in float h)
   {
     float r = abs(h * 6 - 3) - 1;
@@ -50,3 +53,5 @@ float4 uv2rgba(in float2 uv)
 
     return c;
   }
+
+#endif
