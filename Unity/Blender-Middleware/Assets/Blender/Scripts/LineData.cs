@@ -1,23 +1,8 @@
 using UnityEngine;
-using UnityEditor;
-using System.IO;
 
-public class LinesPostprocessor : AssetPostprocessor
+public class LineData
 {
-  private static void OnPostprocessAllAssets(
-    string[] importedAssets,
-    string[] deletedAssets,
-    string[] movedAssets,
-    string[] movedFromPath)
-  {
-    foreach (string path in importedAssets)
-      {
-        if (path.EndsWith(".lines"))
-          ProcessLineAsset(path);
-      }
-  }
-
-  private static void ProcessLineAsset(string path)
+  static public void Parse(string data, ref Mesh mesh)
   {
     int size;
     int[] indices;
@@ -26,25 +11,8 @@ public class LinesPostprocessor : AssetPostprocessor
     Vector3[] normals;
     Color[] colors;
     Vector2[] uv;
-    Mesh mesh;
 
-    StreamReader reader = new StreamReader(path);
-    string data = reader.ReadToEnd();
-    reader.Close();
-
-    string assetPath = path.Replace(".lines", ".asset");
-    string[] bits = assetPath.Replace(".asset", "").Split('/');
-    string name = bits[bits.Length - 1];
-    
-    mesh = (Mesh)AssetDatabase.LoadAssetAtPath(assetPath, typeof(Mesh));
-    if (!mesh)
-      {
-        mesh = new Mesh();
-        mesh.name = name;
-        AssetDatabase.CreateAsset(mesh, assetPath);
-      }
-    else
-      mesh.Clear();
+    mesh.Clear();
 
     string[] lines = data.Split('\n');
 
@@ -117,7 +85,7 @@ public class LinesPostprocessor : AssetPostprocessor
         uv = new Vector2[size];
         for (int i = 0; i < size; i++)
           {
-            uv[i] = ColorUtils.Color2UV(new Color(
+            uv[i] = Color2UV(new Color(
               float.Parse(buffer[i * 4]),
               float.Parse(buffer[i * 4 + 1]),
               float.Parse(buffer[i * 4 + 2]),
@@ -125,7 +93,23 @@ public class LinesPostprocessor : AssetPostprocessor
           }
         mesh.uv2 = uv;
       }
+  }
 
-    AssetDatabase.SaveAssets();
+  static public Vector2 Color2UV(Color c)
+  {
+    int precision = 4096;
+    int p = precision - 1;
+
+    float r, g, b, a, u, v;
+
+    r = Mathf.Floor(c.r * p);
+    g = Mathf.Floor(c.g * p);
+    b = Mathf.Floor(c.b * p);
+    a = Mathf.Floor(c.a * p);
+
+    u = (r * precision) + g;
+    v = (b * precision) + a;
+
+    return new Vector2(u, v);
   }
 }
