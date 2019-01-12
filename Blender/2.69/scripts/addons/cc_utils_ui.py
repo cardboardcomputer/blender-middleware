@@ -1,5 +1,6 @@
 import bpy
 import cc
+import math
 import mathutils as mu
 
 bl_info = {
@@ -128,6 +129,23 @@ class InvertWireframe(bpy.types.Operator):
             setattr(theme.view_3d, attr, color)
         return {'FINISHED'}
 
+DPI = -1
+
+class AdjustDpi(bpy.types.Operator):
+    bl_label = 'Adjust DPI'
+    bl_idname = 'cc.adjust_dpi'
+    bl_options = {'REGISTER', 'INTERNAL'}
+
+    factor = bpy.props.FloatProperty(default=1.25)
+
+    def execute(self, context):
+        global DPI
+        if DPI < 0:
+            DPI = context.user_preferences.system.dpi
+        DPI *= self.factor
+        context.user_preferences.system.dpi = DPI
+        return {'FINISHED'}
+
 def object_specials_menu_ext(self, context):
     self.layout.menu(DrawTypeMenu.bl_idname)
 
@@ -163,4 +181,5 @@ __REGISTER__ = (
     DrawTypeMenu,
     CycleTransformOrientation,
     InvertWireframe,
+    AdjustDpi,
 )
