@@ -115,7 +115,7 @@ def find(context, event, ray_max=1000.0):
                 obj.dupli_list_create(scene)
                 for dob in obj.dupli_list:
                     obj_dupli = dob.object
-                    if obj_dupli.type == 'MESH':
+                    if not obj_dupli.hide and obj_dupli.type == 'MESH':
                         yield (obj_dupli, dob.matrix.copy())
 
             obj.dupli_list_clear()
@@ -132,7 +132,8 @@ def find(context, event, ray_max=1000.0):
             ray_target_obj = matrix_inv * ray_target
             hit, normal, face_index = obj.ray_cast(ray_origin_obj, ray_target_obj)
             if face_index != -1:
-                length_squared = (hit - ray_origin).length_squared
+                hit_world = matrix * hit
+                length_squared = (hit_world - ray_origin).length_squared
                 if length_squared < best_length_squared:
                     best_length_squared = length_squared
                     best_obj = obj

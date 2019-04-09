@@ -1,3 +1,4 @@
+import os
 import bpy
 import cc
 import math
@@ -130,19 +131,25 @@ class InvertWireframe(bpy.types.Operator):
         return {'FINISHED'}
 
 DPI = -1
+DPI_DEFAULT_FACTOR = 1.2
 
 class AdjustDpi(bpy.types.Operator):
     bl_label = 'Adjust DPI'
     bl_idname = 'cc.adjust_dpi'
     bl_options = {'REGISTER', 'INTERNAL'}
 
-    factor = bpy.props.FloatProperty(default=1.25)
+    factor = bpy.props.FloatProperty(default=DPI_DEFAULT_FACTOR)
 
     def execute(self, context):
         global DPI
         if DPI < 0:
             DPI = context.user_preferences.system.dpi
-        DPI *= self.factor
+        if 'BLENDER_DPI_FACTOR' in os.environ:
+            factor = float(os.environ['BLENDER_DPI_FACTOR'])
+        else:
+            factor = DPI_DEFAULT_FACTOR
+        DPI *= factor
+        # DPI *= self.factor
         context.user_preferences.system.dpi = DPI
         return {'FINISHED'}
 
