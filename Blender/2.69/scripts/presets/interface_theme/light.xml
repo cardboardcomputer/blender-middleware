@@ -600,7 +600,7 @@
     </properties>
     <text_editor>
       <ThemeTextEditor line_numbers_background="#313133"
-                       selected_text="#19191a"
+                       selected_text="#ffffa2"
                        cursor="#ff0000"
                        syntax_builtin="#001dff"
                        syntax_symbols="#001dff"
