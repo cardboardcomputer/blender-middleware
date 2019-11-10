@@ -73,28 +73,30 @@ def on_scene_change(scene):
     _scene = scene
 
 def y_up_activate():
-    global _z_kmi
-    global _y_kmi
-    global y_up_active
+    pass
+    # global _z_kmi
+    # global _y_kmi
+    # global y_up_active
 
-    collect_kmi()
-    for kmi in _z_kmi:
-        kmi.active = False
-    for kmi in _y_kmi:
-        kmi.active = True
-    y_up_active = True
+    # collect_kmi()
+    # for kmi in _z_kmi:
+    #     kmi.active = False
+    # for kmi in _y_kmi:
+    #     kmi.active = True
+    # y_up_active = True
 
 def y_up_deactivate():
-    global _z_kmi
-    global _y_kmi
-    global y_up_active
+    pass
+    # global _z_kmi
+    # global _y_kmi
+    # global y_up_active
 
-    collect_kmi()
-    for kmi in _z_kmi:
-        kmi.active = True
-    for kmi in _y_kmi:
-        kmi.active = False
-    y_up_active = False
+    # collect_kmi()
+    # for kmi in _z_kmi:
+    #     kmi.active = True
+    # for kmi in _y_kmi:
+    #     kmi.active = False
+    # y_up_active = False
 
 PROP_Y_UP = bpy.props.BoolProperty(name='Y-axis is Up', update=update_y_prop)
 

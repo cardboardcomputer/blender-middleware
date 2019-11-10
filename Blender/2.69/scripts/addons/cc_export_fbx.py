@@ -50,6 +50,8 @@ def unregister():
 
 def export_fbx_execute(self, context):
         from mathutils import Matrix
+        from bpy_extras.io_utils import axis_conversion
+
         if not self.filepath:
             raise Exception("filepath not set")
 
@@ -59,7 +61,9 @@ def export_fbx_execute(self, context):
         global_matrix[1][1] = \
         global_matrix[2][2] = self.global_scale
 
-        if not self.use_rotate_workaround:
+        use_rotate_workaround = getattr(self, 'use_rotate_workaround', False)
+
+        if not use_rotate_workaround:
             global_matrix = (global_matrix *
                              axis_conversion(to_forward=self.axis_forward,
                                              to_up=self.axis_up,
@@ -75,12 +79,13 @@ def export_fbx_execute(self, context):
 
         keywords["global_matrix"] = global_matrix
 
-        from . import export_fbx
+        from io_scene_fbx import export_fbx
 
         # cc start
-        if self.for_unity:
+        if 'for_unity' in context.scene or self.for_unity:
             keywords.update(export_fbx.defaults_unity3d())
-        del keywords["for_unity"]
+        if 'for_unity' in keywords:
+            del keywords['for_unity']
         # cc end
 
         return export_fbx.save(self, context, **keywords)
@@ -343,6 +348,8 @@ def save_single(operator, scene, filepath="",
         if 'y_up' in scene:
             global_matrix = None
             use_rotate_workaround = True
+    else:
+        context_objects = scene.objects
     # cc end
 
     import bpy_extras.io_utils
