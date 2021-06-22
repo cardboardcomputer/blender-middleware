@@ -329,6 +329,9 @@ def save_single(operator, scene, filepath="",
         # cc end
     ):
 
+    if scene is None:
+        scene = bpy.context.scene
+
     # cc start
     export_scene = None
     if 'Export' in bpy.data.scenes:
@@ -1493,6 +1496,13 @@ def save_single(operator, scene, filepath="",
         me_vertices = me.vertices[:]
         me_edges = me.edges[:] if use_mesh_edges else ()
         me_faces = me.tessfaces[:]
+
+        # cc start
+        # unity 202x and up recalculates some mesh stuff for accidental loose edges
+        # on non lines geometry causing the vertex colors to default to white
+        if len(me_faces) > 0:
+            me_edges = ()
+        # cc end
 
         poseMatrix = write_object_props(my_mesh.blenObject, None, my_mesh.parRelMatrix())[3]
 

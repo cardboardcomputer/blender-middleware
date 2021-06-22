@@ -3,6 +3,8 @@ Unity/Blender-Middleware/Temp
 Unity/Blender-Middleware/Build
 Unity/Blender-Middleware/Logs
 Unity/Blender-Middleware/Packages
+Blender/2.69/config/bookmarks.txt
+Blender/2.69/config/recent-files.txt
 *.csproj
 *.pidb
 *.sln
